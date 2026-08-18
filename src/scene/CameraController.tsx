@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
+import { Vector3 } from "three";
 import type { OrthographicCamera } from "three";
 import {
   CAMERA_MAX_ZOOM,
   CAMERA_MIN_ZOOM,
 } from "../game/constants/gameConstants";
+import { getGroundPanDelta } from "./cameraPan";
 
 interface PointerPosition {
   x: number;
@@ -16,6 +18,8 @@ export function CameraController(): null {
   const target = useRef({ x: 0, z: 0 });
   const pointers = useRef(new Map<number, PointerPosition>());
   const lastPinchDistance = useRef<number | null>(null);
+  const cameraRight = useRef(new Vector3());
+  const cameraUp = useRef(new Vector3());
 
   useEffect(() => {
     const activeCamera = camera as OrthographicCamera;
@@ -36,9 +40,17 @@ export function CameraController(): null {
     };
 
     const panBy = (deltaX: number, deltaY: number): void => {
-      const scale = 0.045 * (35 / activeCamera.zoom);
-      target.current.x = Math.max(-7, Math.min(7, target.current.x - deltaX * scale));
-      target.current.z = Math.max(-7, Math.min(7, target.current.z + deltaY * scale));
+      activeCamera.updateMatrixWorld();
+      cameraRight.current.setFromMatrixColumn(activeCamera.matrixWorld, 0);
+      cameraUp.current.setFromMatrixColumn(activeCamera.matrixWorld, 1);
+      const delta = getGroundPanDelta(deltaX, deltaY, activeCamera.zoom, {
+        rightX: cameraRight.current.x,
+        rightZ: cameraRight.current.z,
+        upX: cameraUp.current.x,
+        upZ: cameraUp.current.z,
+      });
+      target.current.x = Math.max(-7, Math.min(7, target.current.x + delta.x));
+      target.current.z = Math.max(-7, Math.min(7, target.current.z + delta.z));
       updateCamera();
     };
 
