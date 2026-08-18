@@ -1,5 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { CanvasTexture, SRGBColorSpace } from "three";
 import type { Group, Mesh } from "three";
 import { getCountryDefinition } from "../../game/data/countries";
 import type { Resident } from "../../game/types/Resident";
@@ -14,10 +15,46 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
   const group = useRef<Group>(null);
   const ballGroup = useRef<Group>(null);
   const shadow = useRef<Mesh>(null);
+  const heading = useRef(0);
   const selectResident = useGameStore((store) => store.selectResident);
   const country = getCountryDefinition(resident.countryId);
   const colors = country?.flagColors ?? ["#fffaf2", "#9fb7d8"];
   const world = gridToWorld(resident.position);
+  const flagTexture = useMemo(() => {
+    if (typeof document === "undefined") return undefined;
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext("2d");
+    if (!context) return undefined;
+
+    const first = colors[0] ?? "#fffaf2";
+    const second = colors[1] ?? first;
+    context.fillStyle = first;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (country?.flagPattern === "vertical") {
+      const stripeWidth = canvas.width / 3;
+      colors.slice(0, 3).forEach((color, index) => {
+        context.fillStyle = color;
+        context.fillRect(index * stripeWidth, 0, stripeWidth + 1, canvas.height);
+      });
+    } else if (country?.flagPattern === "circle") {
+      context.fillStyle = second;
+      context.beginPath();
+      context.arc(canvas.width / 2, canvas.height / 2, 122, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.fillStyle = second;
+      context.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+    }
+
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }, [country?.id, country?.flagPattern, colors]);
+
+  useEffect(() => () => flagTexture?.dispose(), [flagTexture]);
   const bouncePhase = Array.from(resident.id).reduce(
     (total, character) => total + character.charCodeAt(0),
     0,
@@ -28,6 +65,13 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     const time = clock.elapsedTime;
     const isWalking = resident.state === "walking";
     const isAction = resident.state === "action";
+    if (isWalking && resident.destination) {
+      const directionX = resident.destination.x - resident.position.x;
+      const directionZ = resident.destination.z - resident.position.z;
+      if (Math.hypot(directionX, directionZ) > 0.01) {
+        heading.current = Math.atan2(directionX, directionZ);
+      }
+    }
     const bounceSpeed = isAction ? 4.2 : isWalking ? 7.2 : 2.35;
     const bounce = Math.abs(Math.sin(time * bounceSpeed + bouncePhase));
     const bounceHeight = isAction ? 0.26 : isWalking ? 0.2 : 0.09;
@@ -37,6 +81,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     group.current.rotation.z = isWalking
       ? Math.sin(time * 4.8 + bouncePhase) * 0.06
       : 0;
+    group.current.rotation.y = heading.current;
     const targetScale = isAction ? 1.08 + Math.sin(time * 4) * 0.04 : 1;
     const squash = landing * (isAction ? 0.055 : isWalking ? 0.05 : 0.035);
     ballGroup.current?.scale.set(
@@ -66,25 +111,8 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
       <group ref={ballGroup}>
         <mesh castShadow>
           <sphereGeometry args={[0.48, 18, 14]} />
-          <meshStandardMaterial color={colors[0]} roughness={0.8} />
+          <meshStandardMaterial map={flagTexture} color="#ffffff" roughness={0.8} />
         </mesh>
-        <group position={[0, 0.02, 0.43]}>
-          {country?.flagLayout === "vertical" ? (
-            colors.map((color, index) => (
-              <mesh key={color} position={[(index - 1) * 0.14, 0, 0]}>
-                <planeGeometry args={[0.15, 0.29]} />
-                <meshBasicMaterial color={color} />
-              </mesh>
-            ))
-          ) : (
-            colors.slice(0, 2).map((color, index) => (
-              <mesh key={color} position={[0, (index === 0 ? 0.075 : -0.075), 0]}>
-                <planeGeometry args={[0.3, 0.15]} />
-                <meshBasicMaterial color={color} />
-              </mesh>
-            ))
-          )}
-        </group>
         <group position={[0, 0.1, 0.43]}>
           <mesh position={[-0.15, 0, 0.02]}>
             <sphereGeometry args={[0.065, 10, 8]} />
