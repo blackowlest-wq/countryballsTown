@@ -6,6 +6,9 @@ import { getCountryDefinition } from "../../game/data/countries";
 import type { Resident } from "../../game/types/Resident";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
+import { getFlagPresentation } from "./flagPresentation";
+
+const DEFAULT_FLAG_COLORS = ["#fffaf2", "#9fb7d8"];
 
 interface CountryBallProps {
   resident: Resident;
@@ -18,7 +21,9 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
   const heading = useRef(0);
   const selectResident = useGameStore((store) => store.selectResident);
   const country = getCountryDefinition(resident.countryId);
-  const colors = country?.flagColors ?? ["#fffaf2", "#9fb7d8"];
+  const colors = country?.flagColors ?? DEFAULT_FLAG_COLORS;
+  const flagPattern = country?.flagPattern ?? "horizontal";
+  const flagPresentation = getFlagPresentation(flagPattern);
   const world = gridToWorld(resident.position);
   const flagTexture = useMemo(() => {
     if (typeof document === "undefined") return undefined;
@@ -33,18 +38,24 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     context.fillStyle = first;
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (country?.flagPattern === "vertical") {
+    if (flagPresentation.texturePattern === "vertical") {
       const stripeWidth = canvas.width / 3;
       colors.slice(0, 3).forEach((color, index) => {
         context.fillStyle = color;
         context.fillRect(index * stripeWidth, 0, stripeWidth + 1, canvas.height);
       });
-    } else if (country?.flagPattern === "circle") {
+    } else if (flagPresentation.texturePattern === "circle") {
       context.fillStyle = second;
       context.beginPath();
-      context.arc(canvas.width / 2, canvas.height / 2, 122, 0, Math.PI * 2);
+      context.arc(
+        canvas.width * (flagPresentation.circleCenterU ?? 0.5),
+        canvas.height / 2,
+        122,
+        0,
+        Math.PI * 2,
+      );
       context.fill();
-    } else {
+    } else if (flagPresentation.texturePattern === "horizontal") {
       context.fillStyle = second;
       context.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
     }
@@ -52,7 +63,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
     return texture;
-  }, [country?.id, country?.flagPattern, colors]);
+  }, [country?.id, flagPresentation.texturePattern, colors]);
 
   useEffect(() => () => flagTexture?.dispose(), [flagTexture]);
   const bouncePhase = Array.from(resident.id).reduce(
