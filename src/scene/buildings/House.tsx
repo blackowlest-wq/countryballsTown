@@ -5,7 +5,7 @@ export function House(): JSX.Element {
         <boxGeometry args={[1.75, 1.45, 1.45]} />
         <meshStandardMaterial color="#fff4df" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 1.65, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
+      <mesh position={[0, 1.65, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
         <coneGeometry args={[1.28, 0.9, 4]} />
         <meshStandardMaterial color="#dc684e" roughness={0.85} />
       </mesh>

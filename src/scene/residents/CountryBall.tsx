@@ -30,7 +30,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     const isAction = resident.state === "action";
     const bounceSpeed = isAction ? 4.2 : isWalking ? 5.2 : 2.35;
     const bounce = Math.abs(Math.sin(time * bounceSpeed + bouncePhase));
-    const bounceHeight = isAction ? 0.13 : isWalking ? 0.085 : 0.045;
+    const bounceHeight = isAction ? 0.26 : isWalking ? 0.17 : 0.09;
     const walkBob = isWalking ? Math.sin(time * 5.2 + bouncePhase) * 0.018 : 0;
     const landing = 1 - bounce;
     group.current.position.y = 0.72 + bounce * bounceHeight + walkBob;
