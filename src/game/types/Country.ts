@@ -1,0 +1,14 @@
+export type FlagLayout = "horizontal" | "vertical";
+export type FlagPattern = "horizontal" | "circle" | "vertical";
+
+export interface CountryDefinition {
+  id: string;
+  name: string;
+  flagTexture: string;
+  flagColors: string[];
+  flagLayout: FlagLayout;
+  flagPattern: FlagPattern;
+  favoriteBuildingIds: string[];
+  unlockedBuildingIds: string[];
+  accentColor: string;
+}

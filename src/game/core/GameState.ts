@@ -1,0 +1,19 @@
+import { createInitialResident } from "../systems/ResidentSystem";
+import type { GameState } from "../types/Village";
+
+export function createInitialGameState(now = Date.now()): GameState {
+  return {
+    coins: 100,
+    villageLevel: 1,
+    residents: [createInitialResident("poland", { x: 6.5, z: 5.5 })],
+    buildings: [
+      { id: "house-1", buildingId: "house", gridX: 5, gridY: 5 },
+      { id: "fountain-1", buildingId: "fountain", gridX: 9, gridY: 9 },
+      { id: "tree-1", buildingId: "tree", gridX: 3, gridY: 3 },
+      { id: "tree-2", buildingId: "tree", gridX: 16, gridY: 4 },
+    ],
+    unlockedCountries: ["poland"],
+    unlockedBuildings: ["tree", "flower"],
+    lastSavedAt: now,
+  };
+}
