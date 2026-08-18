@@ -1,4 +1,5 @@
 export type BuildingCategory = "building" | "decoration";
+export type ResidentCollision = "blocking" | "passable";
 
 export interface BuildingDefinition {
   id: string;
@@ -7,6 +8,7 @@ export interface BuildingDefinition {
   height: number;
   cost: number;
   category: BuildingCategory;
+  residentCollision: ResidentCollision;
   countryId?: string;
   interactionType?: string;
   description: string;

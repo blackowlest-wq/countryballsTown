@@ -19,7 +19,7 @@ function randomBetween(min: number, max: number, random: RandomSource): number {
 function isBlockedByBuilding(state: GameState, position: GridPosition): boolean {
   return state.buildings.some((instance) => {
     const definition = getBuildingDefinition(instance.buildingId);
-    if (!definition) return false;
+    if (!definition || definition.residentCollision !== "blocking") return false;
     return (
       position.x >= instance.gridX - 0.2 &&
       position.x <= instance.gridX + definition.width - 0.8 &&
@@ -131,6 +131,15 @@ export function advanceResidents(
     const nextPosition = clampToMap(
       moveTowards(resident.position, resident.destination, deltaMs),
     );
+    if (isBlockedByBuilding(state, nextPosition)) {
+      return {
+        ...resident,
+        state: "idle" as const,
+        destination: undefined,
+        actionBuildingId: undefined,
+        nextDecisionAt: now + randomBetween(700, 1_600, random),
+      };
+    }
     if (distanceBetween(nextPosition, resident.destination) > 0.12) {
       return { ...resident, position: nextPosition };
     }
