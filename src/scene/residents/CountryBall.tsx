@@ -6,7 +6,7 @@ import { getCountryDefinition } from "../../game/data/countries";
 import type { Resident } from "../../game/types/Resident";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
-import { FRONT_CIRCLE_Z, getFlagPresentation } from "./flagPresentation";
+import { FRONT_FLAG_Z, getFlagPresentation } from "./flagPresentation";
 
 const DEFAULT_FLAG_COLORS = ["#fffaf2", "#9fb7d8"];
 
@@ -35,7 +35,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
 
     const first = colors[0] ?? "#fffaf2";
     const second = colors[1] ?? first;
-    context.fillStyle = first;
+    context.fillStyle = flagPresentation.frontPattern ? "#fffaf2" : first;
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     if (flagPresentation.texturePattern === "vertical") {
@@ -54,30 +54,42 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     return texture;
   }, [country?.id, flagPresentation.texturePattern, colors]);
 
-  const frontCircleTexture = useMemo(() => {
-    if (!flagPresentation.frontCircle || typeof document === "undefined") return undefined;
+  const frontFlagTexture = useMemo(() => {
+    const frontPattern = flagPresentation.frontPattern;
+    if (!frontPattern || typeof document === "undefined") return undefined;
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 256;
     const context = canvas.getContext("2d");
     if (!context) return undefined;
 
-    context.fillStyle = colors[1] ?? "#ed5a67";
+    context.save();
     context.beginPath();
     context.arc(canvas.width / 2, canvas.height / 2, 108, 0, Math.PI * 2);
-    context.fill();
+    context.clip();
+    if (frontPattern === "circle") {
+      context.fillStyle = colors[1] ?? "#ed5a67";
+      context.fill();
+    } else {
+      const stripeWidth = canvas.width / 3;
+      colors.slice(0, 3).forEach((color, index) => {
+        context.fillStyle = color;
+        context.fillRect(index * stripeWidth, 0, stripeWidth + 1, canvas.height);
+      });
+    }
+    context.restore();
 
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
     return texture;
-  }, [country?.id, flagPresentation.frontCircle, colors]);
+  }, [country?.id, flagPresentation.frontPattern, colors]);
 
   useEffect(() => {
     return () => {
       flagTexture?.dispose();
-      frontCircleTexture?.dispose();
+      frontFlagTexture?.dispose();
     };
-  }, [flagTexture, frontCircleTexture]);
+  }, [flagTexture, frontFlagTexture]);
   const bouncePhase = Array.from(resident.id).reduce(
     (total, character) => total + character.charCodeAt(0),
     0,
@@ -136,14 +148,14 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
           <sphereGeometry args={[0.48, 18, 14]} />
           <meshStandardMaterial map={flagTexture} color="#ffffff" roughness={0.8} />
         </mesh>
-        {flagPresentation.frontCircle && frontCircleTexture && (
+        {flagPresentation.frontPattern && frontFlagTexture && (
           <sprite
-            position={[0, 0.1, FRONT_CIRCLE_Z]}
+            position={[0, 0.1, FRONT_FLAG_Z]}
             scale={[0.36, 0.36, 1]}
             renderOrder={1}
           >
             <spriteMaterial
-              map={frontCircleTexture}
+              map={frontFlagTexture}
               alphaTest={0.5}
               depthTest={false}
               depthWrite={false}
