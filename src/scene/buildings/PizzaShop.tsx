@@ -1,3 +1,11 @@
+import { Shape } from "three";
+
+const pizzaSliceShape = new Shape();
+pizzaSliceShape.moveTo(-0.52, -0.36);
+pizzaSliceShape.lineTo(0.52, -0.36);
+pizzaSliceShape.quadraticCurveTo(0.28, 0.08, -0.06, 0.38);
+pizzaSliceShape.quadraticCurveTo(-0.3, 0.46, -0.52, -0.36);
+
 export function PizzaShop(): JSX.Element {
   return (
     <group>
@@ -35,6 +43,54 @@ export function PizzaShop(): JSX.Element {
         <cylinderGeometry args={[0.25, 0.25, 0.05, 12]} />
         <meshStandardMaterial color="#e86a5b" />
       </mesh>
+      <mesh position={[0, 1.58, -0.02]} rotation-x={-Math.PI / 2} castShadow>
+        <extrudeGeometry
+          args={[pizzaSliceShape, {
+            depth: 0.08,
+            bevelEnabled: true,
+            bevelThickness: 0.025,
+            bevelSize: 0.02,
+            bevelSegments: 2,
+          }]}
+        />
+        <meshStandardMaterial color="#f4b653" roughness={0.82} />
+      </mesh>
+      <group position={[0, 1.66, -0.02]}>
+        <mesh position={[-0.18, 0, 0.08]}>
+          <cylinderGeometry args={[0.075, 0.075, 0.028, 12]} />
+          <meshStandardMaterial color="#df554b" roughness={0.7} />
+        </mesh>
+        <mesh position={[0.18, 0, 0.03]}>
+          <cylinderGeometry args={[0.07, 0.07, 0.028, 12]} />
+          <meshStandardMaterial color="#df554b" roughness={0.7} />
+        </mesh>
+        <mesh position={[0.03, 0, -0.2]}>
+          <cylinderGeometry args={[0.065, 0.065, 0.028, 12]} />
+          <meshStandardMaterial color="#df554b" roughness={0.7} />
+        </mesh>
+      </group>
+      <group position={[0, 1.72, 0.78]} rotation-x={Math.PI / 2}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.38, 0.38, 0.07, 24]} />
+          <meshStandardMaterial color="#fff3d4" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 0.045, 0]}>
+          <torusGeometry args={[0.3, 0.04, 8, 24]} />
+          <meshStandardMaterial color="#e76755" roughness={0.7} />
+        </mesh>
+        <mesh position={[-0.13, 0.055, 0.11]}>
+          <cylinderGeometry args={[0.075, 0.075, 0.025, 12]} />
+          <meshStandardMaterial color="#df554b" roughness={0.7} />
+        </mesh>
+        <mesh position={[0.14, 0.055, 0.02]}>
+          <cylinderGeometry args={[0.068, 0.068, 0.025, 12]} />
+          <meshStandardMaterial color="#df554b" roughness={0.7} />
+        </mesh>
+        <mesh position={[-0.04, 0.055, -0.13]}>
+          <cylinderGeometry args={[0.06, 0.06, 0.025, 12]} />
+          <meshStandardMaterial color="#df554b" roughness={0.7} />
+        </mesh>
+      </group>
       <mesh position={[-0.58, 0.62, 0.7]}>
         <boxGeometry args={[0.42, 0.62, 0.05]} />
         <meshStandardMaterial color="#72aecd" />
