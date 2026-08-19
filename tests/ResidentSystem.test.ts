@@ -137,7 +137,7 @@ describe("ResidentSystem", () => {
     expect(idle[1]).toMatchObject({ state: "idle", motion: "idle" });
   });
 
-  it("allows residents to pass through flowers but stops them at houses", () => {
+  it("uses object-specific collision padding and lets residents pass through flowers and onsen", () => {
     const flowerState = stateWithBuilding(createInitialGameState(0), "flower", 12, 8);
     const flowerResident = {
       ...createInitialResident("poland", { x: 11.2, z: 8.5 }, "flower-walker"),
@@ -152,10 +152,24 @@ describe("ResidentSystem", () => {
     expect(flowerMoved.position.x).toBeGreaterThan(flowerResident.position.x);
     expect(flowerMoved.state).toBe("walking");
 
+    const onsenState = stateWithBuilding(createInitialGameState(0), "onsen", 12, 8);
+    const onsenResident = {
+      ...createInitialResident("japan", { x: 11.2, z: 8.5 }, "onsen-walker"),
+      destination: { x: 13.5, z: 8.5 },
+    };
+    const onsenMoved = advanceResidents(
+      { ...onsenState, residents: [onsenResident] },
+      1_000,
+      1_000,
+      () => 0.5,
+    ).residents[0];
+    expect(onsenMoved.position.x).toBeGreaterThan(onsenResident.position.x);
+    expect(onsenMoved.state).toBe("walking");
+
     const houseState = stateWithBuilding(createInitialGameState(0), "house", 12, 8);
     const houseResident = {
-      ...createInitialResident("poland", { x: 11.2, z: 8.5 }, "house-walker"),
-      destination: { x: 13.5, z: 8.5 },
+      ...createInitialResident("poland", { x: 10.5, z: 8.5 }, "house-walker"),
+      destination: { x: 14, z: 8.5 },
     };
     const houseStopped = advanceResidents(
       { ...houseState, residents: [houseResident] },

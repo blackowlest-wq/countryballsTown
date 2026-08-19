@@ -177,3 +177,15 @@ CharacterShowcase.tsx ── 固定位置の目視確認
 モーションの状態処理は [`ResidentSystem.ts`](../src/game/systems/ResidentSystem.ts)、球体の姿勢・跳ね・転倒処理は [`CountryBall.tsx`](../src/scene/residents/CountryBall.tsx)、吹き出し・睡眠マーク・ハートなどの演出は [`ResidentMotionEffects.tsx`](../src/scene/residents/ResidentMotionEffects.tsx) に分かれています。確認画面自体は [`MotionShowcase.tsx`](../src/dev/MotionShowcase.tsx) です。
 
 通常ゲームでは、住民が一定時間ごとに行動を選びます。木・噴水・建物へ歩いて向かう行動は、目的地に到着してから注視または利用を開始します。住民同士の行動は、近づく、会話する、会話終了後にハートを出す、という順番です。転倒は低い確率で発生し、一定時間後に通常状態へ戻ります。
+
+## 8. オブジェクトごとの通過・衝突範囲
+
+住民の衝突判定は、建物の中心座標だけではなく、[`BuildingDefinition`](../src/game/types/Building.ts) の次のパラメータで管理します。
+
+- `residentCollision: "blocking"`: 住民が通過できない
+- `residentCollision: "passable"`: 住民が通過できる
+- `residentCollisionPadding: { x, z }`: グリッド占有範囲から外側へ広げる禁止範囲。オブジェクトの見た目とボール半径に合わせて個別に設定する
+
+現在の設定は、家・噴水・木・ピザ屋が個別の禁止範囲を持ち、温泉・花・鳥居は通過可能です。新しいオブジェクトを追加するときは、まず3Dモデルの外周と住民ボールの半径を確認し、`residentCollisionPadding` を個別に決めます。値を省略した場合は、互換用の小さい既定値が使われます。
+
+確認は [`ResidentSystem.test.ts`](../tests/ResidentSystem.test.ts) で、花と温泉は通過できること、家は十分手前で止まることを自動検証します。画面では、家の屋根・壁・噴水の縁にボールがめり込まないことを、斜め視点でも目視します。

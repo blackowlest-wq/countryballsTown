@@ -1,6 +1,11 @@
 export type BuildingCategory = "building" | "decoration";
 export type ResidentCollision = "blocking" | "passable";
 
+export interface ResidentCollisionPadding {
+  x: number;
+  z: number;
+}
+
 export interface BuildingDefinition {
   id: string;
   name: string;
@@ -9,6 +14,7 @@ export interface BuildingDefinition {
   cost: number;
   category: BuildingCategory;
   residentCollision: ResidentCollision;
+  residentCollisionPadding?: ResidentCollisionPadding;
   countryId?: string;
   interactionType?: string;
   description: string;

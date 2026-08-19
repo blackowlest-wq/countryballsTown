@@ -36,11 +36,12 @@ function isBlockedByBuilding(state: GameState, position: GridPosition): boolean 
   return state.buildings.some((instance) => {
     const definition = getBuildingDefinition(instance.buildingId);
     if (!definition || definition.residentCollision !== "blocking") return false;
+    const padding = definition.residentCollisionPadding ?? { x: 0.2, z: 0.2 };
     return (
-      position.x >= instance.gridX - 0.2 &&
-      position.x <= instance.gridX + definition.width - 0.8 &&
-      position.z >= instance.gridY - 0.2 &&
-      position.z <= instance.gridY + definition.height - 0.8
+      position.x >= instance.gridX - padding.x &&
+      position.x <= instance.gridX + definition.width - 1 + padding.x &&
+      position.z >= instance.gridY - padding.z &&
+      position.z <= instance.gridY + definition.height - 1 + padding.z
     );
   });
 }
