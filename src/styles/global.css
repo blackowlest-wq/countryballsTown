@@ -42,6 +42,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .showcase-dot.poland { background: linear-gradient(#fffaf2 50%, #e94f64 50%); }
 .showcase-dot.japan { background: radial-gradient(circle at center, #ed5a67 0 38%, #fffaf2 40%); }
 .showcase-dot.italy { background: linear-gradient(90deg, #61a978 0 33%, #fffaf2 33% 66%, #e56a62 66%); }
+.motion-showcase-legend { position: absolute; right: 24px; bottom: 24px; z-index: 2; display: grid; grid-template-columns: repeat(3, auto); gap: 6px 12px; padding: 11px 14px; color: var(--ink); background: rgba(255, 250, 238, .94); border: 1px solid rgba(255,255,255,.84); border-radius: 16px; box-shadow: var(--shadow); font-size: 11px; font-weight: 800; }
+.motion-showcase-legend span::before { display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; content: ""; background: #ed9aa8; border-radius: 50%; }
 
 .top-hud { position: absolute; inset: 18px 24px auto; z-index: 5; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
 .top-hud > * { pointer-events: auto; }
@@ -127,6 +129,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .showcase-heading span { font-size: 9px; }
   .showcase-legend { bottom: 10px; gap: 8px; padding: 8px 10px; font-size: 10px; }
   .showcase-dot { width: 10px; height: 10px; }
+  .motion-showcase-legend { right: 10px; bottom: 10px; left: 10px; grid-template-columns: repeat(2, 1fr); gap: 4px 8px; padding: 8px 10px; font-size: 9px; }
   .top-hud { top: 10px; inset-inline: 10px; }
   .level-card { min-width: auto; padding: 8px 12px 8px 8px; border-radius: 18px; }
   .level-badge { width: 47px; height: 47px; border-radius: 15px; font-size: 24px; }

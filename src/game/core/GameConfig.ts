@@ -5,6 +5,14 @@ import {
   RESIDENT_ACTION_MS,
   RESIDENT_DECISION_MAX_MS,
   RESIDENT_DECISION_MIN_MS,
+  RESIDENT_FALL_MS,
+  RESIDENT_HAPPY_MS,
+  RESIDENT_HEART_MS,
+  RESIDENT_LOOK_MS,
+  RESIDENT_MEETING_DISTANCE,
+  RESIDENT_MEETING_WAIT_MS,
+  RESIDENT_SLEEP_MS,
+  RESIDENT_TALK_MS,
   RESIDENT_WALK_SPEED,
 } from "../constants/gameConstants";
 
@@ -16,4 +24,12 @@ export const gameConfig = {
   residentActionMs: RESIDENT_ACTION_MS,
   residentDecisionMinMs: RESIDENT_DECISION_MIN_MS,
   residentDecisionMaxMs: RESIDENT_DECISION_MAX_MS,
+  residentLookMs: RESIDENT_LOOK_MS,
+  residentHappyMs: RESIDENT_HAPPY_MS,
+  residentSleepMs: RESIDENT_SLEEP_MS,
+  residentFallMs: RESIDENT_FALL_MS,
+  residentTalkMs: RESIDENT_TALK_MS,
+  residentHeartMs: RESIDENT_HEART_MS,
+  residentMeetingDistance: RESIDENT_MEETING_DISTANCE,
+  residentMeetingWaitMs: RESIDENT_MEETING_WAIT_MS,
 } as const;

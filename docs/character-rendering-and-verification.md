@@ -155,3 +155,25 @@ CharacterShowcase.tsx ── 固定位置の目視確認
 ```
 
 この順番で確認すると、「国旗の座標ルールの問題」「球体への描画の問題」「移動やカメラとの組み合わせの問題」を分けて調査できます。
+
+## 7. モーションの確認方法
+
+今回追加した自律モーションは、次の開発用URLでまとめて確認できます。
+
+[モーション表示確認画面を開く](https://countryballstown.pages.dev/?showcase=motions)
+
+この画面には、固定位置に次のモーションを配置しています。
+
+- ぼーっとする
+- 木を見る
+- 噴水を見る
+- 建物を利用する
+- 喜ぶ
+- 寝る
+- たまに転ぶ
+- 2人で会話する
+- 近づいてハートが出る
+
+モーションの状態処理は [`ResidentSystem.ts`](../src/game/systems/ResidentSystem.ts)、球体の姿勢・跳ね・転倒処理は [`CountryBall.tsx`](../src/scene/residents/CountryBall.tsx)、吹き出し・睡眠マーク・ハートなどの演出は [`ResidentMotionEffects.tsx`](../src/scene/residents/ResidentMotionEffects.tsx) に分かれています。確認画面自体は [`MotionShowcase.tsx`](../src/dev/MotionShowcase.tsx) です。
+
+通常ゲームでは、住民が一定時間ごとに行動を選びます。木・噴水・建物へ歩いて向かう行動は、目的地に到着してから注視または利用を開始します。住民同士の行動は、近づく、会話する、会話終了後にハートを出す、という順番です。転倒は低い確率で発生し、一定時間後に通常状態へ戻ります。
