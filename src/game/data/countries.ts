@@ -4,6 +4,7 @@ export const countries: CountryDefinition[] = [
   {
     id: "poland",
     name: "ポーランド",
+    flagEmoji: "🇵🇱",
     flagTexture: "/assets/textures/flags/poland.webp",
     flagColors: ["#fffaf2", "#e94f64"],
     flagLayout: "horizontal",
@@ -15,6 +16,7 @@ export const countries: CountryDefinition[] = [
   {
     id: "japan",
     name: "日本",
+    flagEmoji: "🇯🇵",
     flagTexture: "/assets/textures/flags/japan.webp",
     flagColors: ["#fffaf2", "#ed5a67"],
     flagLayout: "horizontal",
@@ -26,6 +28,7 @@ export const countries: CountryDefinition[] = [
   {
     id: "italy",
     name: "イタリア",
+    flagEmoji: "🇮🇹",
     flagTexture: "/assets/textures/flags/italy.webp",
     flagColors: ["#61a978", "#fffaf2", "#e56a62"],
     flagLayout: "vertical",

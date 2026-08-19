@@ -1,5 +1,9 @@
-import { SAVE_KEY } from "../constants/gameConstants";
+import {
+  RESIDENT_REQUEST_INITIAL_DELAY_MS,
+  SAVE_KEY,
+} from "../constants/gameConstants";
 import { createInitialGameState } from "../core/GameState";
+import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 
 export interface StorageLike {
@@ -17,6 +21,17 @@ function isGameState(value: unknown): value is GameState {
     Array.isArray(candidate.buildings) &&
     Array.isArray(candidate.unlockedCountries) &&
     Array.isArray(candidate.unlockedBuildings)
+  );
+}
+
+function isActiveResidentRequest(value: unknown): value is ActiveResidentRequest {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<ActiveResidentRequest>;
+  return (
+    typeof candidate.definitionId === "string" &&
+    typeof candidate.residentId === "string" &&
+    typeof candidate.progress === "number" &&
+    typeof candidate.startedAt === "number"
   );
 }
 
@@ -47,7 +62,21 @@ export function loadGameState(
     if (!raw) return createInitialGameState(now);
     const parsed: unknown = JSON.parse(raw);
     if (!isGameState(parsed)) return createInitialGameState(now);
-    return { ...parsed, lastSavedAt: parsed.lastSavedAt || now };
+    return {
+      ...parsed,
+      activeResidentRequest: isActiveResidentRequest(parsed.activeResidentRequest)
+        ? parsed.activeResidentRequest
+        : null,
+      nextResidentRequestAt:
+        typeof parsed.nextResidentRequestAt === "number"
+          ? parsed.nextResidentRequestAt
+          : now + RESIDENT_REQUEST_INITIAL_DELAY_MS,
+      lastResidentRequestDefinitionId:
+        typeof parsed.lastResidentRequestDefinitionId === "string"
+          ? parsed.lastResidentRequestDefinitionId
+          : undefined,
+      lastSavedAt: parsed.lastSavedAt || now,
+    };
   } catch {
     return createInitialGameState(now);
   }

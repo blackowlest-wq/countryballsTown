@@ -8,6 +8,11 @@ import {
 } from "../game/systems/BuildingSystem";
 import { advanceEconomy } from "../game/systems/EconomySystem";
 import { advanceResidents } from "../game/systems/ResidentSystem";
+import {
+  advanceResidentRequest,
+  describeResidentRequestEvent,
+  maybeStartResidentRequest,
+} from "../game/systems/ResidentRequestSystem";
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import type { GameState } from "../game/types/Village";
@@ -51,6 +56,10 @@ function withProgress(state: GameState): { game: GameState; notice: string | nul
   return { game: progress.state, notice };
 }
 
+function combineNotices(...notices: Array<string | null>): string | null {
+  return notices.filter((notice): notice is string => Boolean(notice)).join(" ") || null;
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: loadGameState(),
   economyRemainderMs: 0,
@@ -66,12 +75,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const economy = advanceEconomy(current.game, deltaMs, current.economyRemainderMs);
     const withResidents = advanceResidents(economy.state, deltaMs, now);
     const progress = withProgress(withResidents);
-    const shouldPersist = progress.notice !== null;
-    const nextGame = shouldPersist ? persist(progress.game) : progress.game;
+    const requestProgress = advanceResidentRequest(
+      progress.game,
+      { type: "coins-earned", amount: economy.coinsEarned },
+      now,
+    );
+    const requestStart = maybeStartResidentRequest(requestProgress.state, now);
+    const requestEvent = requestProgress.event ?? requestStart.event;
+    const requestNotice = requestEvent ? describeResidentRequestEvent(requestEvent) : null;
+    const nextNotice = combineNotices(progress.notice, requestNotice);
+    const nextGame = nextNotice ? persist(requestStart.state) : requestStart.state;
     set({
       game: nextGame,
       economyRemainderMs: economy.remainderMs,
-      notice: progress.notice ?? current.notice,
+      notice: nextNotice ?? current.notice,
     });
   },
 
@@ -108,12 +125,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return false;
     }
     const progress = withProgress(result.state);
-    const saved = persist(progress.game);
+    const request = advanceResidentRequest(
+      progress.game,
+      { type: "building-placed", buildingId: current.selectedBuildingId },
+      Date.now(),
+    );
+    const requestNotice = request.event ? describeResidentRequestEvent(request.event) : null;
+    const saved = persist(request.state);
     set({
       game: saved,
       interactionMode: "inspect",
       selectedBuildingId: null,
-      notice: progress.notice,
+      notice: combineNotices(progress.notice, requestNotice),
     });
     return true;
   },

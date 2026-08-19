@@ -7,6 +7,7 @@ import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
 import { BALL_RADIUS, getFlagPresentation } from "./flagPresentation";
 import { ResidentMotionEffects } from "./ResidentMotionEffects";
+import { ResidentRequestMarker } from "./ResidentRequestMarker";
 import { createSphereFlagMaterial } from "./sphereFlagMaterial";
 
 const DEFAULT_FLAG_COLORS = ["#fffaf2", "#9fb7d8"];
@@ -22,6 +23,9 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
   const shadow = useRef<Mesh>(null);
   const heading = useRef(0);
   const selectResident = useGameStore((store) => store.selectResident);
+  const hasActiveRequest = useGameStore(
+    (store) => store.game.activeResidentRequest?.residentId === resident.id,
+  );
   const country = getCountryDefinition(resident.countryId);
   const colors = country?.flagColors ?? DEFAULT_FLAG_COLORS;
   const flagPattern = country?.flagPattern ?? "horizontal";
@@ -175,6 +179,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
         </group>
         <group ref={motionEffectsGroup}>
           <ResidentMotionEffects motion={motion} />
+          {hasActiveRequest && <ResidentRequestMarker />}
         </group>
       </group>
       <mesh ref={shadow} rotation-x={-Math.PI / 2} position={[0, -0.64, 0]}>

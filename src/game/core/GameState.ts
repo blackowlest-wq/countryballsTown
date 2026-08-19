@@ -1,4 +1,5 @@
 import { createInitialResident } from "../systems/ResidentSystem";
+import { RESIDENT_REQUEST_INITIAL_DELAY_MS } from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
 
 export function createInitialGameState(now = Date.now()): GameState {
@@ -14,6 +15,8 @@ export function createInitialGameState(now = Date.now()): GameState {
     ],
     unlockedCountries: ["poland"],
     unlockedBuildings: ["tree", "flower"],
+    activeResidentRequest: null,
+    nextResidentRequestAt: now + RESIDENT_REQUEST_INITIAL_DELAY_MS,
     lastSavedAt: now,
   };
 }

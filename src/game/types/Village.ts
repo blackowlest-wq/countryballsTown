@@ -5,5 +5,8 @@ export interface GameState {
   buildings: import("./Building").BuildingInstance[];
   unlockedCountries: string[];
   unlockedBuildings: string[];
+  activeResidentRequest: import("./ResidentRequest").ActiveResidentRequest | null;
+  nextResidentRequestAt: number;
+  lastResidentRequestDefinitionId?: string;
   lastSavedAt: number;
 }

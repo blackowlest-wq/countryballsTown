@@ -242,6 +242,25 @@ function beginTimedMotion(
   };
 }
 
+export function celebrateResident(
+  state: GameState,
+  residentId: string,
+  now: number,
+): GameState {
+  return {
+    ...state,
+    residents: state.residents.map((resident) =>
+      resident.id === residentId
+        ? beginTimedMotion(resident, "happy", now, {
+            actionBuildingId: undefined,
+            lookAt: undefined,
+            targetResidentId: undefined,
+          })
+        : resident,
+    ),
+  };
+}
+
 function returnToIdle(
   resident: Resident,
   now: number,

@@ -4,6 +4,7 @@ export type FlagPattern = "horizontal" | "circle" | "vertical";
 export interface CountryDefinition {
   id: string;
   name: string;
+  flagEmoji: string;
   flagTexture: string;
   flagColors: string[];
   flagLayout: FlagLayout;

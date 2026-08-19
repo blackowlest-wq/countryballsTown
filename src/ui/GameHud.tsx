@@ -3,6 +3,7 @@ import { useGameStore } from "../store/gameStore";
 import { BgmToggle } from "./BgmToggle";
 import { CoinDisplay } from "./CoinDisplay";
 import { VillageLevelDisplay } from "./VillageLevelDisplay";
+import { ResidentRequestCard } from "./ResidentRequestCard";
 
 export function GameHud(): JSX.Element {
   const game = useGameStore((store) => store.game);
@@ -34,6 +35,7 @@ export function GameHud(): JSX.Element {
           <p className="goal-text">{nextGoal}</p>
         </div>
       </div>
+      <ResidentRequestCard />
       {notice && (
         <div className="notice-banner" role="status">
           <span>{notice}</span>

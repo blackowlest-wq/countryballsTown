@@ -49,7 +49,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .top-hud > * { pointer-events: auto; }
 .hud-right { display: flex; align-items: center; gap: 10px; flex-direction: column; align-items: flex-end; }
 
-.level-card, .resource-pill, .mood-pill, .goal-card, .floating-panel, .bottom-menu, .interaction-hint { background: rgba(255, 250, 238, 0.94); border: 1px solid rgba(255, 255, 255, 0.84); box-shadow: var(--shadow); backdrop-filter: blur(8px); }
+.level-card, .resource-pill, .mood-pill, .goal-card, .request-card, .floating-panel, .bottom-menu, .interaction-hint { background: rgba(255, 250, 238, 0.94); border: 1px solid rgba(255, 255, 255, 0.84); box-shadow: var(--shadow); backdrop-filter: blur(8px); }
 .level-card { display: flex; gap: 12px; align-items: center; min-width: 245px; padding: 12px 18px 12px 12px; border-radius: 24px; }
 .level-badge { display: grid; width: 62px; height: 62px; place-items: center; color: #fff; font-size: 31px; font-weight: 900; line-height: 1; background: #f3aa3c; border: 4px solid #ffd478; border-radius: 20px 20px 25px 25px; transform: rotate(-4deg); text-shadow: 0 2px 0 rgba(136, 87, 25, 0.2); }
 .eyebrow { margin: 0 0 2px; color: #a0988a; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
@@ -70,6 +70,20 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .goal-sparkle { display: grid; width: 27px; height: 27px; place-items: center; color: #fff; background: #84b960; border-radius: 50%; font-size: 15px; }
 .goal-label { margin: 0; color: #a0988a; font-size: 10px; font-weight: 800; }
 .goal-text { margin: 2px 0 0; color: #4c5c4b; font-size: 12px; font-weight: 900; }
+
+.request-card { position: absolute; top: 196px; left: 24px; z-index: 5; width: min(338px, calc(100vw - 48px)); padding: 12px 14px; border-radius: 19px; }
+.request-speaker { display: flex; gap: 10px; align-items: center; }
+.request-flag { display: block; flex: 0 0 auto; width: 38px; height: 38px; background: #f3ead9; border: 3px solid #fffaf0; border-radius: 13px; box-shadow: 0 2px 6px rgba(91, 97, 79, .14); }
+.request-flag-poland { background: linear-gradient(#fffaf2 0 50%, #e94f64 50%); }
+.request-flag-japan { background: radial-gradient(circle at center, #ed5a67 0 28%, #fffaf2 30%); }
+.request-flag-italy { background: linear-gradient(90deg, #61a978 0 33%, #fffaf2 33% 66%, #e56a62 66%); }
+.request-label { margin: 0 0 2px; color: #9a8e7e; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
+.request-message { margin: 0; color: #3f4c42; font-size: 13px; font-weight: 900; }
+.request-progress-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; margin-top: 9px; color: #6c756a; font-size: 10px; font-weight: 800; }
+.request-progress-row strong { color: #4f7550; font-size: 11px; }
+.request-reward { padding: 3px 7px; color: #956419; background: #fff0c5; border-radius: 9px; }
+.request-progress-track { height: 6px; margin-top: 7px; overflow: hidden; background: #e8dfcf; border-radius: 999px; }
+.request-progress-track span { display: block; height: 100%; background: linear-gradient(90deg, #88bd61, #afd376); border-radius: inherit; transition: width .25s ease; }
 
 .notice-banner { position: absolute; top: 24px; left: 50%; z-index: 20; display: flex; gap: 18px; align-items: center; max-width: min(530px, calc(100vw - 40px)); padding: 12px 13px 12px 19px; color: #fff; background: rgba(61, 84, 69, .92); border: 1px solid rgba(255,255,255,.3); border-radius: 18px; box-shadow: 0 9px 24px rgba(43, 70, 58, .28); transform: translateX(-50%); font-size: 13px; font-weight: 800; }
 .notice-banner button { width: 24px; height: 24px; padding: 0; color: #fff; background: transparent; border: 0; cursor: pointer; font-size: 20px; line-height: 1; }
@@ -148,6 +162,10 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .goal-card { top: 76px; left: 10px; padding: 8px 11px; border-radius: 15px; }
   .goal-text { font-size: 10px; }
   .goal-sparkle { width: 23px; height: 23px; font-size: 12px; }
+  .request-card { top: 137px; left: 10px; width: min(322px, calc(100vw - 20px)); padding: 10px 11px; border-radius: 16px; }
+  .request-flag { width: 33px; height: 33px; border-radius: 11px; font-size: 20px; }
+  .request-message { font-size: 11px; }
+  .request-progress-row { margin-top: 7px; font-size: 9px; }
   .floating-panel { left: 10px; right: 10px; bottom: 93px; width: auto; max-height: calc(100vh - 160px); padding: 16px; border-radius: 19px; }
   .building-panel { left: 10px; right: 10px; width: auto; }
   .bottom-menu { bottom: 10px; padding: 6px; }
