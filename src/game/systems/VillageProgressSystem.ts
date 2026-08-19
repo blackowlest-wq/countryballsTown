@@ -19,7 +19,11 @@ function requirementMet(state: GameState, requirement: VillageRequirement): bool
   if (requirement.type === "resident-count") {
     return state.residents.length >= requirement.minimum;
   }
-  return countBuildings(state, requirement.targetId ?? "") >= requirement.minimum;
+  const count = (requirement.targetIds ?? []).reduce(
+    (total, buildingId) => total + countBuildings(state, buildingId),
+    0,
+  );
+  return count >= requirement.minimum;
 }
 
 function levelRequirementsMet(state: GameState, definition: VillageLevelDefinition): boolean {
@@ -76,5 +80,5 @@ export function evaluateVillageProgress(state: GameState): VillageProgressResult
 export function describeProgressEvent(event: VillageProgressEvent): string {
   if (event.type === "level-up") return `村がレベル${event.level}になりました！`;
   const country = event.countryId ? getCountryDefinition(event.countryId) : undefined;
-  return `新しい旅人、${country?.name ?? "新しい住民"}がやってきました！`;
+  return `新しい住民、${country?.name ?? "新しい仲間"}がやってきました！`;
 }

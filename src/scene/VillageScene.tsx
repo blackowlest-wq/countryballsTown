@@ -6,6 +6,7 @@ import { CameraController } from "./CameraController";
 import { Ground } from "./Ground";
 import { PlacementGrid } from "./PlacementGrid";
 import { ResidentRenderer } from "./residents/ResidentRenderer";
+import { ShopVisitorRenderer } from "./visitors/ShopVisitorRenderer";
 
 function SceneContents(): JSX.Element {
   return (
@@ -30,6 +31,7 @@ function SceneContents(): JSX.Element {
       <PlacementGrid />
       <BuildingRenderer />
       <ResidentRenderer />
+      <ShopVisitorRenderer />
     </>
   );
 }

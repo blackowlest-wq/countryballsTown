@@ -55,7 +55,7 @@ function getBuildingFocus(target: { gridX: number; gridY: number; buildingId: st
 }
 
 function getBuildingMotion(buildingId: string): ResidentMotion | undefined {
-  if (buildingId === "tree") return "look-tree";
+  if (buildingId === "tree" || buildingId === "cherry-tree") return "look-tree";
   if (buildingId === "fountain") return "look-fountain";
   if (buildingId === "house") return "use-building";
   if (getBuildingDefinition(buildingId)?.interactionType) return "use-building";
@@ -185,7 +185,12 @@ export function chooseResidentDestination(
     return { position: resident.position, motion: "happy" };
   }
   if (activityRoll < 0.46) {
-    const treeDestination = getBuildingDestination(state, "tree", random);
+    const treeBuildingId = state.buildings.some(
+      (building) => building.buildingId === "tree",
+    )
+      ? "tree"
+      : "cherry-tree";
+    const treeDestination = getBuildingDestination(state, treeBuildingId, random);
     if (treeDestination) return treeDestination;
   }
   if (activityRoll < 0.64) {

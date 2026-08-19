@@ -1,6 +1,6 @@
 export type ResidentRequestGoal =
   | {
-      type: "place-building";
+      type: "building-count";
       buildingIds: string[];
       target: number;
       progressLabel: string;

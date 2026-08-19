@@ -31,4 +31,25 @@ describe("BuildingSystem", () => {
     expect(removed.success).toBe(true);
     expect(removed.state.buildings.some((building) => building.id === "flower-test")).toBe(false);
   });
+
+  it("重複IDを持つ建物を配置・移動・撤去で一括変更しない", () => {
+    const initial = createInitialGameState(0);
+    const duplicated = {
+      ...initial,
+      unlockedBuildings: [...initial.unlockedBuildings, "onsen"],
+      coins: 1_000,
+      buildings: [
+        ...initial.buildings,
+        { id: "duplicate", buildingId: "flower", gridX: 2, gridY: 10 },
+        { id: "duplicate", buildingId: "onsen", gridX: 12, gridY: 12 },
+      ],
+    };
+
+    expect(placeBuilding(duplicated, "tree", 2, 12, "duplicate"))
+      .toMatchObject({ success: false, reason: "duplicate-id", state: duplicated });
+    expect(moveBuilding(duplicated, "duplicate", 12, 16))
+      .toMatchObject({ success: false, reason: "duplicate-id", state: duplicated });
+    expect(removeBuilding(duplicated, "duplicate"))
+      .toMatchObject({ success: false, reason: "duplicate-id", state: duplicated });
+  });
 });

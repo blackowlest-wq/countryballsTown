@@ -98,10 +98,20 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .icon-button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; color: #8b857c; background: #f5ecdc; border: 0; border-radius: 50%; cursor: pointer; font-size: 20px; }
 .panel-hint { margin: 9px 0 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 
-.building-list { display: grid; gap: 8px; }
+.building-category-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 5px; background: #f2eadc; border-radius: 15px; }
+.building-category-tab { display: flex; gap: 5px; align-items: center; justify-content: center; min-width: 0; padding: 8px 6px; color: #847c70; background: transparent; border: 0; border-radius: 11px; cursor: pointer; font-size: 11px; font-weight: 900; transition: color .18s ease, background .18s ease, transform .18s ease; }
+.building-category-tab:hover { color: #557b47; transform: translateY(-1px); }
+.building-category-tab[aria-selected="true"] { color: #557b47; background: #fffdf6; box-shadow: 0 2px 8px rgba(88, 106, 78, .12); }
+.building-category-tab span { font-size: 15px; line-height: 1; }
+.building-list { display: grid; gap: 8px; margin-top: 10px; }
+.building-category-empty { margin: 6px 0 2px; padding: 16px 12px; color: var(--muted); text-align: center; background: rgba(255,255,255,.38); border: 1px dashed #dfd2be; border-radius: 14px; font-size: 11px; font-weight: 800; }
 .building-option { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 10px; color: var(--ink); text-align: left; background: rgba(255,255,255,.55); border: 1px solid #efe3ce; border-radius: 15px; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
 .building-option:hover { background: #fffdf6; border-color: #b3d28f; transform: translateY(-2px); }
 .building-icon { display: grid; width: 40px; height: 40px; place-items: center; color: #fff; background: #82b66a; border-radius: 13px; font-size: 23px; }
+.building-icon-building { background: #d97263; }
+.building-icon-nature { background: #82b66a; }
+.building-icon-food { background: #e7a148; }
+.building-icon-cherry-tree,
 .building-icon-flower { background: #ed9aa8; }
 .building-icon-onsen, .building-icon-torii { background: #d97263; }
 .building-icon-pizza-shop { background: #e7a148; }

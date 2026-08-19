@@ -19,7 +19,11 @@ describe("VillageProgressSystem", () => {
 
   it("木3本と花3輪で日本とレベル2を一度だけ解放する", () => {
     let state = createInitialGameState(0);
-    state = place(state, "tree", 8, 2, "tree-3");
+    state = {
+      ...state,
+      unlockedBuildings: [...state.unlockedBuildings, "cherry-tree"],
+    };
+    state = place(state, "cherry-tree", 8, 2, "cherry-tree-1");
     state = place(state, "flower", 8, 4, "flower-1");
     state = place(state, "flower", 9, 4, "flower-2");
     state = place(state, "flower", 10, 4, "flower-3");
@@ -27,7 +31,8 @@ describe("VillageProgressSystem", () => {
     const second = evaluateVillageProgress(first.state);
     expect(first.state.villageLevel).toBe(2);
     expect(first.state.unlockedCountries).toContain("japan");
-    expect(first.state.unlockedBuildings).toEqual(expect.arrayContaining(["onsen", "torii"]));
+    expect(first.state.unlockedBuildings)
+      .toEqual(expect.arrayContaining(["onsen", "torii", "cherry-tree"]));
     expect(first.events.filter((event) => event.type === "country-unlocked")).toHaveLength(1);
     expect(second.events).toHaveLength(0);
   });

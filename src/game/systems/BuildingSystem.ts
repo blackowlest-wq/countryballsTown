@@ -1,4 +1,5 @@
 import { GRID_SIZE } from "../constants/gameConstants";
+import { createBuildingCollection } from "../core/BuildingCollection";
 import { getBuildingDefinition } from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type { GameState } from "../types/Village";
@@ -10,6 +11,7 @@ export type BuildingOperationReason =
   | "out-of-bounds"
   | "occupied"
   | "not-found"
+  | "duplicate-id"
   | "not-movable"
   | "not-removable";
 
@@ -46,14 +48,14 @@ function isWithinGrid(definition: BuildingDefinition, gridX: number, gridY: numb
 }
 
 function overlapsExisting(
-  state: GameState,
+  buildings: readonly BuildingInstance[],
   buildingId: string,
   gridX: number,
   gridY: number,
   excludeId?: string,
 ): boolean {
   const candidateCells = getOccupiedCells(buildingId, gridX, gridY);
-  return state.buildings.some((existing) => {
+  return buildings.some((existing) => {
     if (existing.id === excludeId) return false;
     const existingCells = getOccupiedCells(existing.buildingId, existing.gridX, existing.gridY);
     return candidateCells.some((candidate) =>
@@ -62,8 +64,9 @@ function overlapsExisting(
   });
 }
 
-export function canPlaceBuilding(
+function checkPlacement(
   state: GameState,
+  buildings: readonly BuildingInstance[],
   buildingId: string,
   gridX: number,
   gridY: number,
@@ -77,7 +80,7 @@ export function canPlaceBuilding(
   if (!isWithinGrid(definition, gridX, gridY)) {
     return { ok: false, reason: "out-of-bounds" };
   }
-  if (overlapsExisting(state, buildingId, gridX, gridY, excludeId)) {
+  if (overlapsExisting(buildings, buildingId, gridX, gridY, excludeId)) {
     return { ok: false, reason: "occupied" };
   }
   if (!excludeId && state.coins < definition.cost) {
@@ -86,26 +89,42 @@ export function canPlaceBuilding(
   return { ok: true };
 }
 
+export function canPlaceBuilding(
+  state: GameState,
+  buildingId: string,
+  gridX: number,
+  gridY: number,
+  excludeId?: string,
+): { ok: boolean; reason?: BuildingOperationReason } {
+  const collection = createBuildingCollection(state.buildings);
+  return checkPlacement(state, collection.buildings, buildingId, gridX, gridY, excludeId);
+}
+
 export function placeBuilding(
   state: GameState,
   buildingId: string,
   gridX: number,
   gridY: number,
-  instanceId = `building-${state.buildings.length + 1}`,
+  instanceId?: string,
 ): BuildingOperationResult {
-  const check = canPlaceBuilding(state, buildingId, gridX, gridY);
+  const collection = createBuildingCollection(state.buildings);
+  const resolvedInstanceId = instanceId ?? collection.nextId();
+  const check = checkPlacement(state, collection.buildings, buildingId, gridX, gridY);
   if (!check.ok) return { success: false, state, reason: check.reason };
+  if (collection.findUnique(resolvedInstanceId).status !== "not-found") {
+    return { success: false, state, reason: "duplicate-id" };
+  }
 
   const definition = getBuildingDefinition(buildingId);
   if (!definition) return { success: false, state, reason: "unknown-building" };
-  const building: BuildingInstance = { id: instanceId, buildingId, gridX, gridY };
+  const building: BuildingInstance = { id: resolvedInstanceId, buildingId, gridX, gridY };
   return {
     success: true,
     building,
     state: {
       ...state,
       coins: state.coins - definition.cost,
-      buildings: [...state.buildings, building],
+      buildings: [...collection.buildings, building],
     },
   };
 }
@@ -116,12 +135,21 @@ export function moveBuilding(
   gridX: number,
   gridY: number,
 ): BuildingOperationResult {
-  const existing = state.buildings.find((building) => building.id === instanceId);
-  if (!existing) return { success: false, state, reason: "not-found" };
+  const collection = createBuildingCollection(state.buildings);
+  const lookup = collection.findUnique(instanceId);
+  if (lookup.status !== "found") return { success: false, state, reason: lookup.status };
+  const existing = lookup.building;
   const definition = getBuildingDefinition(existing.buildingId);
   if (!definition) return { success: false, state, reason: "unknown-building" };
   if (definition.movable === false) return { success: false, state, reason: "not-movable" };
-  const check = canPlaceBuilding(state, existing.buildingId, gridX, gridY, instanceId);
+  const check = checkPlacement(
+    state,
+    collection.buildings,
+    existing.buildingId,
+    gridX,
+    gridY,
+    existing.id,
+  );
   if (!check.ok) return { success: false, state, reason: check.reason };
   const moved = { ...existing, gridX, gridY };
   return {
@@ -129,16 +157,18 @@ export function moveBuilding(
     building: moved,
     state: {
       ...state,
-      buildings: state.buildings.map((building) =>
-        building.id === instanceId ? moved : building,
+      buildings: collection.buildings.map((building, index) =>
+        index === lookup.index ? moved : building,
       ),
     },
   };
 }
 
 export function removeBuilding(state: GameState, instanceId: string): BuildingOperationResult {
-  const existing = state.buildings.find((building) => building.id === instanceId);
-  if (!existing) return { success: false, state, reason: "not-found" };
+  const collection = createBuildingCollection(state.buildings);
+  const lookup = collection.findUnique(instanceId);
+  if (lookup.status !== "found") return { success: false, state, reason: lookup.status };
+  const existing = lookup.building;
   const definition = getBuildingDefinition(existing.buildingId);
   if (!definition) return { success: false, state, reason: "unknown-building" };
   if (definition.removable === false) return { success: false, state, reason: "not-removable" };
@@ -146,7 +176,7 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
     success: true,
     state: {
       ...state,
-      buildings: state.buildings.filter((building) => building.id !== instanceId),
+      buildings: collection.buildings.filter((_, index) => index !== lookup.index),
     },
   };
 }
@@ -171,6 +201,8 @@ export function getBuildingOperationMessage(reason?: BuildingOperationReason): s
       return "この建物は撤去できません。";
     case "not-found":
       return "建物が見つかりません。";
+    case "duplicate-id":
+      return "建物情報に重複があります。建物を選び直してください。";
     default:
       return "建物を操作できませんでした。";
   }

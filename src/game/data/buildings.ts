@@ -1,4 +1,13 @@
-import type { BuildingDefinition } from "../types/Building";
+import type {
+  BuildingCategoryDefinition,
+  BuildingDefinition,
+} from "../types/Building";
+
+export const buildingCategoryDefinitions: BuildingCategoryDefinition[] = [
+  { id: "building", name: "建物", icon: "🏠" },
+  { id: "nature", name: "自然", icon: "🌿" },
+  { id: "food", name: "食べ物", icon: "🍽" },
+];
 
 export const buildingDefinitions: BuildingDefinition[] = [
   {
@@ -8,6 +17,7 @@ export const buildingDefinitions: BuildingDefinition[] = [
     height: 2,
     cost: 0,
     category: "building",
+    menuIcon: "⌂",
     residentCollision: "blocking",
     residentCollisionPadding: { x: 0.9, z: 0.75 },
     description: "ポーランドの小さな住まい。",
@@ -20,7 +30,8 @@ export const buildingDefinitions: BuildingDefinition[] = [
     width: 2,
     height: 2,
     cost: 0,
-    category: "decoration",
+    category: "building",
+    menuIcon: "⛲",
     residentCollision: "blocking",
     residentCollisionPadding: { x: 0.95, z: 0.95 },
     description: "村の中央で水音を奏でる噴水。",
@@ -33,10 +44,25 @@ export const buildingDefinitions: BuildingDefinition[] = [
     width: 1,
     height: 1,
     cost: 20,
-    category: "decoration",
+    category: "nature",
+    menuIcon: "♣",
     residentCollision: "blocking",
     residentCollisionPadding: { x: 1.1, z: 1.1 },
     description: "村に緑を増やす木。",
+    removable: true,
+  },
+  {
+    id: "cherry-tree",
+    name: "桜の木",
+    width: 1,
+    height: 1,
+    cost: 30,
+    category: "nature",
+    menuIcon: "🌸",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 1.1, z: 1.1 },
+    countryId: "japan",
+    description: "淡い桜色の花を咲かせる木。",
     removable: true,
   },
   {
@@ -45,7 +71,8 @@ export const buildingDefinitions: BuildingDefinition[] = [
     width: 1,
     height: 1,
     cost: 10,
-    category: "decoration",
+    category: "nature",
+    menuIcon: "✿",
     residentCollision: "passable",
     description: "カラフルな小さな花。",
     removable: true,
@@ -57,10 +84,11 @@ export const buildingDefinitions: BuildingDefinition[] = [
     height: 2,
     cost: 100,
     category: "building",
+    menuIcon: "♨",
     residentCollision: "passable",
     countryId: "japan",
     interactionType: "onsen",
-    description: "日本の旅人がひと休みできる温泉。",
+    description: "日本の住民がひと休みできる温泉。",
     removable: true,
   },
   {
@@ -69,7 +97,8 @@ export const buildingDefinitions: BuildingDefinition[] = [
     width: 1,
     height: 1,
     cost: 50,
-    category: "decoration",
+    category: "building",
+    menuIcon: "⛩",
     residentCollision: "passable",
     countryId: "japan",
     description: "日本エリアの入口を彩る鳥居。",
@@ -82,11 +111,17 @@ export const buildingDefinitions: BuildingDefinition[] = [
     height: 2,
     cost: 150,
     category: "building",
+    menuIcon: "🍕",
     residentCollision: "blocking",
     residentCollisionPadding: { x: 0.7, z: 0.7 },
     countryId: "italy",
     interactionType: "pizza-shop",
-    description: "イタリアの旅人が働く小さなピザ屋。",
+    visitorService: {
+      queueCapacity: 3,
+      saleCoins: 3,
+      doorOffset: 0.45,
+    },
+    description: "イタリアの住民が働く小さなピザ屋。",
     removable: true,
   },
 ];
@@ -99,4 +134,11 @@ export function getBuildingDefinition(buildingId: string): BuildingDefinition | 
   return buildingsById[buildingId];
 }
 
-export const playerBuildingIds = ["tree", "flower", "onsen", "torii", "pizza-shop"];
+export const playerBuildingIds = [
+  "tree",
+  "cherry-tree",
+  "flower",
+  "onsen",
+  "torii",
+  "pizza-shop",
+];

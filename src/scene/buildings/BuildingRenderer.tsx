@@ -1,5 +1,6 @@
-import type { ComponentType } from "react";
+import { useMemo, type ComponentType } from "react";
 import { useGameStore } from "../../store/gameStore";
+import { createBuildingCollection } from "../../game/core/BuildingCollection";
 import { getBuildingDefinition } from "../../game/data/buildings";
 import type { BuildingInstance } from "../../game/types/Building";
 import { buildingToWorldPosition } from "../../utils/grid";
@@ -7,6 +8,7 @@ import { House } from "./House";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
 import { Torii } from "./Torii";
+import { CherryTree } from "../environment/CherryTree";
 import { Flower } from "../environment/Flower";
 import { Fountain } from "../environment/Fountain";
 import { Tree } from "../environment/Tree";
@@ -15,6 +17,7 @@ const buildingRenderers: Record<string, ComponentType> = {
   house: House,
   fountain: Fountain,
   tree: Tree,
+  "cherry-tree": CherryTree,
   flower: Flower,
   onsen: Onsen,
   torii: Torii,
@@ -23,9 +26,13 @@ const buildingRenderers: Record<string, ComponentType> = {
 
 interface BuildingInstanceRendererProps {
   instance: BuildingInstance;
+  selectionSource: BuildingInstance;
 }
 
-function BuildingInstanceRenderer({ instance }: BuildingInstanceRendererProps): JSX.Element | null {
+function BuildingInstanceRenderer({
+  instance,
+  selectionSource,
+}: BuildingInstanceRendererProps): JSX.Element | null {
   const definition = getBuildingDefinition(instance.buildingId);
   const Renderer = definition ? buildingRenderers[instance.buildingId] : undefined;
   const selectedBuildingId = useGameStore((store) => store.selectedBuildingId);
@@ -41,7 +48,7 @@ function BuildingInstanceRenderer({ instance }: BuildingInstanceRendererProps): 
       onClick={(event) => {
         event.stopPropagation();
         if (interactionMode === "build") return;
-        selectBuilding(instance.id);
+        selectBuilding(selectionSource);
       }}
       onPointerOver={(event) => {
         event.stopPropagation();
@@ -63,11 +70,19 @@ function BuildingInstanceRenderer({ instance }: BuildingInstanceRendererProps): 
 }
 
 export function BuildingRenderer(): JSX.Element {
-  const buildings = useGameStore((store) => store.game.buildings);
+  const sourceBuildings = useGameStore((store) => store.game.buildings);
+  const collection = useMemo(
+    () => createBuildingCollection(sourceBuildings),
+    [sourceBuildings],
+  );
   return (
     <group>
-      {buildings.map((instance) => (
-        <BuildingInstanceRenderer key={instance.id} instance={instance} />
+      {collection.entries.map(({ building, source }) => (
+        <BuildingInstanceRenderer
+          key={building.id}
+          instance={building}
+          selectionSource={source}
+        />
       ))}
     </group>
   );

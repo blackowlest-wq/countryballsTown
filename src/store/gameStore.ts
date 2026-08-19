@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createBuildingCollection } from "../game/core/BuildingCollection";
 import { createInitialGameState } from "../game/core/GameState";
 import {
   getBuildingOperationMessage,
@@ -9,12 +10,18 @@ import {
 import { advanceEconomy } from "../game/systems/EconomySystem";
 import { advanceResidents } from "../game/systems/ResidentSystem";
 import {
+  advanceShopVisitors,
+  createShopVisitorSimulation,
+} from "../game/systems/ShopVisitorSystem";
+import {
   advanceResidentRequest,
   describeResidentRequestEvent,
   maybeStartResidentRequest,
 } from "../game/systems/ResidentRequestSystem";
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
+import type { BuildingInstance } from "../game/types/Building";
+import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
 import type { GameState } from "../game/types/Village";
 
 export type InteractionMode = "inspect" | "build" | "move";
@@ -22,6 +29,7 @@ export type InteractionMode = "inspect" | "build" | "move";
 interface GameStore {
   game: GameState;
   economyRemainderMs: number;
+  visitorSimulation: ShopVisitorSimulation;
   interactionMode: InteractionMode;
   selectedBuildingId: string | null;
   selectedResidentId: string | null;
@@ -37,15 +45,21 @@ interface GameStore {
   placeSelectedBuilding: (gridX: number, gridY: number) => boolean;
   moveSelectedBuilding: (gridX: number, gridY: number) => boolean;
   removeSelectedBuilding: () => boolean;
-  selectBuilding: (buildingId: string | null) => void;
+  selectBuilding: (building: BuildingInstance | null) => void;
   selectResident: (residentId: string | null) => void;
   save: () => void;
   dismissNotice: () => void;
   resetForDevelopment: () => void;
 }
 
+function normalizeGameState(state: GameState): GameState {
+  const buildings = createBuildingCollection(state.buildings).buildings;
+  return buildings === state.buildings ? state : { ...state, buildings };
+}
+
 function persist(state: GameState): GameState {
-  const saved = { ...state, lastSavedAt: Date.now() };
+  const normalized = normalizeGameState(state);
+  const saved = { ...normalized, lastSavedAt: Date.now() };
   saveGameState(saved);
   return saved;
 }
@@ -60,9 +74,15 @@ function combineNotices(...notices: Array<string | null>): string | null {
   return notices.filter((notice): notice is string => Boolean(notice)).join(" ") || null;
 }
 
-export const useGameStore = create<GameStore>((set, get) => ({
+export const useGameStore = create<GameStore>((setState, get) => {
+  const set = (update: Partial<GameStore>): void => {
+    setState(update.game ? { ...update, game: normalizeGameState(update.game) } : update);
+  };
+
+  return {
   game: loadGameState(),
   economyRemainderMs: 0,
+  visitorSimulation: createShopVisitorSimulation(),
   interactionMode: "inspect",
   selectedBuildingId: null,
   selectedResidentId: null,
@@ -73,11 +93,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   tick: (deltaMs, now) => {
     const current = get();
     const economy = advanceEconomy(current.game, deltaMs, current.economyRemainderMs);
-    const withResidents = advanceResidents(economy.state, deltaMs, now);
+    const visitorResult = advanceShopVisitors(
+      economy.state,
+      current.visitorSimulation,
+      deltaMs,
+      now,
+    );
+    const withVisitorSales = visitorResult.coinsEarned === 0
+      ? economy.state
+      : { ...economy.state, coins: economy.state.coins + visitorResult.coinsEarned };
+    const withResidents = advanceResidents(withVisitorSales, deltaMs, now);
     const progress = withProgress(withResidents);
     const requestProgress = advanceResidentRequest(
       progress.game,
-      { type: "coins-earned", amount: economy.coinsEarned },
+      { type: "coins-earned", amount: economy.coinsEarned + visitorResult.coinsEarned },
       now,
     );
     const requestStart = maybeStartResidentRequest(requestProgress.state, now);
@@ -88,6 +117,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       game: nextGame,
       economyRemainderMs: economy.remainderMs,
+      visitorSimulation: visitorResult.simulation,
       notice: nextNotice ?? current.notice,
     });
   },
@@ -174,8 +204,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return true;
   },
 
-  selectBuilding: (buildingId) =>
-    set({ selectedBuildingId: buildingId, selectedResidentId: null, isResidentPanelOpen: false }),
+  selectBuilding: (building) => {
+    if (!building) {
+      set({ selectedBuildingId: null, selectedResidentId: null, isResidentPanelOpen: false });
+      return;
+    }
+
+    const current = get();
+    const collection = createBuildingCollection(current.game.buildings);
+    const selectedBuildingId = collection.idFor(building);
+    if (!selectedBuildingId) {
+      set({ selectedBuildingId: null, selectedResidentId: null, isResidentPanelOpen: false });
+      return;
+    }
+
+    const game = collection.buildings === current.game.buildings
+      ? current.game
+      : persist({ ...current.game, buildings: collection.buildings });
+    set({
+      game,
+      selectedBuildingId,
+      selectedResidentId: null,
+      isResidentPanelOpen: false,
+    });
+  },
 
   selectResident: (residentId) =>
     set({
@@ -190,9 +242,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       game: createInitialGameState(),
       economyRemainderMs: 0,
+      visitorSimulation: createShopVisitorSimulation(),
       interactionMode: "inspect",
       selectedBuildingId: null,
       selectedResidentId: null,
       notice: "新しい村を始めました。",
     }),
-}));
+  };
+});

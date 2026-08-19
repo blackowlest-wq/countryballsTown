@@ -1,5 +1,7 @@
 import { Shape } from "three";
 
+export const PIZZA_Z_DIAGONAL_ROTATION = -0.72;
+
 const pizzaSliceShape = new Shape();
 pizzaSliceShape.moveTo(0, 0.36);
 pizzaSliceShape.lineTo(-0.3, -0.28);
@@ -46,7 +48,11 @@ function LetterZ(): JSX.Element {
   return (
     <group>
       <LetterStroke position={[0, 0.1, 0]} size={[0.19, 0.05, 0.035]} />
-      <LetterStroke position={[0, 0, 0]} size={[0.05, 0.25, 0.035]} rotation={0.72} />
+      <LetterStroke
+        position={[0, 0, 0]}
+        size={[0.05, 0.25, 0.035]}
+        rotation={PIZZA_Z_DIAGONAL_ROTATION}
+      />
       <LetterStroke position={[0, -0.1, 0]} size={[0.19, 0.05, 0.035]} />
     </group>
   );

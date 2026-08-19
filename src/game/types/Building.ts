@@ -1,9 +1,21 @@
-export type BuildingCategory = "building" | "decoration";
+export type BuildingCategory = "building" | "nature" | "food";
 export type ResidentCollision = "blocking" | "passable";
+
+export interface BuildingCategoryDefinition {
+  id: BuildingCategory;
+  name: string;
+  icon: string;
+}
 
 export interface ResidentCollisionPadding {
   x: number;
   z: number;
+}
+
+export interface VisitorServiceDefinition {
+  queueCapacity: number;
+  saleCoins: number;
+  doorOffset?: number;
 }
 
 export interface BuildingDefinition {
@@ -13,10 +25,12 @@ export interface BuildingDefinition {
   height: number;
   cost: number;
   category: BuildingCategory;
+  menuIcon: string;
   residentCollision: ResidentCollision;
   residentCollisionPadding?: ResidentCollisionPadding;
   countryId?: string;
   interactionType?: string;
+  visitorService?: VisitorServiceDefinition;
   description: string;
   movable?: boolean;
   removable?: boolean;

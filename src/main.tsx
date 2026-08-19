@@ -4,6 +4,7 @@ import { App } from "./app/App";
 import { CharacterShowcase } from "./dev/CharacterShowcase";
 import { MotionShowcase } from "./dev/MotionShowcase";
 import { PizzaShopShowcase } from "./dev/PizzaShopShowcase";
+import { ShopVisitorShowcase } from "./dev/ShopVisitorShowcase";
 import "./styles/global.css";
 
 const root = document.getElementById("root");
@@ -19,6 +20,8 @@ createRoot(root).render(
       <MotionShowcase />
     ) : showcase === "pizza-shop" ? (
       <PizzaShopShowcase />
+    ) : showcase === "shop-visitors" ? (
+      <ShopVisitorShowcase />
     ) : (
       <App />
     )}

@@ -1,10 +1,14 @@
 import {
+  RESIDENT_REQUEST_DAILY_LIMIT,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
   SAVE_KEY,
 } from "../constants/gameConstants";
+import { createBuildingCollection } from "../core/BuildingCollection";
 import { createInitialGameState } from "../core/GameState";
+import { getUnlockedBuildingIdsForLevel } from "../data/villageLevels";
 import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
+import { getLocalDateKey } from "../../utils/date";
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -46,7 +50,8 @@ export function saveGameState(
 ): void {
   if (!storage) return;
   try {
-    storage.setItem(SAVE_KEY, JSON.stringify({ ...state, lastSavedAt: Date.now() }));
+    const buildings = createBuildingCollection(state.buildings).buildings;
+    storage.setItem(SAVE_KEY, JSON.stringify({ ...state, buildings, lastSavedAt: Date.now() }));
   } catch {
     // Saving is best-effort: a private browsing quota error should not stop the game.
   }
@@ -62,11 +67,30 @@ export function loadGameState(
     if (!raw) return createInitialGameState(now);
     const parsed: unknown = JSON.parse(raw);
     if (!isGameState(parsed)) return createInitialGameState(now);
+    const activeResidentRequest = isActiveResidentRequest(parsed.activeResidentRequest)
+      ? parsed.activeResidentRequest
+      : null;
+    const residentRequestDayKey = getLocalDateKey(now);
+    const hasCurrentStoredQuota =
+      parsed.residentRequestDayKey === residentRequestDayKey &&
+      Number.isInteger(parsed.residentRequestsStartedToday) &&
+      parsed.residentRequestsStartedToday >= 0;
+    const migratedActiveRequestCount =
+      typeof parsed.residentRequestDayKey !== "string" &&
+      activeResidentRequest &&
+      getLocalDateKey(activeResidentRequest.startedAt) === residentRequestDayKey
+        ? 1
+        : 0;
     return {
       ...parsed,
-      activeResidentRequest: isActiveResidentRequest(parsed.activeResidentRequest)
-        ? parsed.activeResidentRequest
-        : null,
+      buildings: createBuildingCollection(parsed.buildings).buildings,
+      unlockedBuildings: [
+        ...new Set([
+          ...parsed.unlockedBuildings,
+          ...getUnlockedBuildingIdsForLevel(parsed.villageLevel),
+        ]),
+      ],
+      activeResidentRequest,
       nextResidentRequestAt:
         typeof parsed.nextResidentRequestAt === "number"
           ? parsed.nextResidentRequestAt
@@ -75,6 +99,10 @@ export function loadGameState(
         typeof parsed.lastResidentRequestDefinitionId === "string"
           ? parsed.lastResidentRequestDefinitionId
           : undefined,
+      residentRequestDayKey,
+      residentRequestsStartedToday: hasCurrentStoredQuota
+        ? Math.min(parsed.residentRequestsStartedToday, RESIDENT_REQUEST_DAILY_LIMIT)
+        : migratedActiveRequestCount,
       lastSavedAt: parsed.lastSavedAt || now,
     };
   } catch {

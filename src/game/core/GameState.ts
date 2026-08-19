@@ -1,6 +1,7 @@
 import { createInitialResident } from "../systems/ResidentSystem";
 import { RESIDENT_REQUEST_INITIAL_DELAY_MS } from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
+import { getLocalDateKey } from "../../utils/date";
 
 export function createInitialGameState(now = Date.now()): GameState {
   return {
@@ -17,6 +18,8 @@ export function createInitialGameState(now = Date.now()): GameState {
     unlockedBuildings: ["tree", "flower"],
     activeResidentRequest: null,
     nextResidentRequestAt: now + RESIDENT_REQUEST_INITIAL_DELAY_MS,
+    residentRequestDayKey: getLocalDateKey(now),
+    residentRequestsStartedToday: 0,
     lastSavedAt: now,
   };
 }

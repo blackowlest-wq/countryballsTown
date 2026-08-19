@@ -8,5 +8,7 @@ export interface GameState {
   activeResidentRequest: import("./ResidentRequest").ActiveResidentRequest | null;
   nextResidentRequestAt: number;
   lastResidentRequestDefinitionId?: string;
+  residentRequestDayKey: string;
+  residentRequestsStartedToday: number;
   lastSavedAt: number;
 }

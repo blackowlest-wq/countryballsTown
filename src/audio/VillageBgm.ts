@@ -93,7 +93,7 @@ export class VillageBgm {
     const now = context.currentTime;
     this.masterGain.gain.cancelScheduledValues(now);
     this.masterGain.gain.setValueAtTime(0.0001, now);
-    this.masterGain.gain.exponentialRampToValueAtTime(0.18, now + 0.35);
+    this.masterGain.gain.exponentialRampToValueAtTime(0.36, now + 0.35);
     this.nextNoteTime = now + 0.08;
     this.sequenceIndex = 0;
     this.playing = true;

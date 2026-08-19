@@ -1,6 +1,7 @@
 import {
   RESIDENT_REQUEST_COOLDOWN_MAX_MS,
   RESIDENT_REQUEST_COOLDOWN_MIN_MS,
+  RESIDENT_REQUEST_DAILY_LIMIT,
   RESIDENT_REQUEST_RETRY_DELAY_MS,
 } from "../constants/gameConstants";
 import {
@@ -10,6 +11,7 @@ import {
 import { getCountryDefinition } from "../data/countries";
 import type { ResidentRequestDefinition } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
+import { getLocalDateKey } from "../../utils/date";
 import { celebrateResident } from "./ResidentSystem";
 
 export type ResidentRequestProgressSource =
@@ -47,8 +49,21 @@ function isDefinitionEligible(
     return false;
   }
   if (definition.goal.type === "earn-coins") return true;
-  return definition.goal.buildingIds.some((buildingId) =>
+  const hasUnlockedBuilding = definition.goal.buildingIds.some((buildingId) =>
     state.unlockedBuildings.includes(buildingId),
+  );
+  return hasUnlockedBuilding && buildingGoalProgress(state, definition) < definition.goal.target;
+}
+
+function buildingGoalProgress(
+  state: GameState,
+  definition: ResidentRequestDefinition,
+): number {
+  const goal = definition.goal;
+  if (goal.type !== "building-count") return 0;
+  return Math.min(
+    goal.target,
+    state.buildings.filter((building) => goal.buildingIds.includes(building.buildingId)).length,
   );
 }
 
@@ -80,13 +95,27 @@ function withoutInvalidRequest(state: GameState, now: number): GameState {
   };
 }
 
+function withCurrentRequestDay(state: GameState, now: number): GameState {
+  const dayKey = getLocalDateKey(now);
+  if (state.residentRequestDayKey === dayKey) return state;
+  return {
+    ...state,
+    residentRequestDayKey: dayKey,
+    residentRequestsStartedToday: 0,
+  };
+}
+
 export function maybeStartResidentRequest(
   originalState: GameState,
   now: number,
   random: RequestRandomSource = Math.random,
 ): ResidentRequestResult {
-  const state = withoutInvalidRequest(originalState, now);
-  if (state.activeResidentRequest || now < state.nextResidentRequestAt) {
+  const state = withCurrentRequestDay(withoutInvalidRequest(originalState, now), now);
+  if (
+    state.activeResidentRequest ||
+    now < state.nextResidentRequestAt ||
+    state.residentRequestsStartedToday >= RESIDENT_REQUEST_DAILY_LIMIT
+  ) {
     return { state };
   }
 
@@ -117,9 +146,10 @@ export function maybeStartResidentRequest(
       activeResidentRequest: {
         definitionId: definition.id,
         residentId: resident.id,
-        progress: 0,
+        progress: buildingGoalProgress(state, definition),
         startedAt: now,
       },
+      residentRequestsStartedToday: state.residentRequestsStartedToday + 1,
     },
     event: {
       type: "started",
@@ -129,17 +159,17 @@ export function maybeStartResidentRequest(
   };
 }
 
-function progressIncrement(
+function updatedProgress(
+  state: GameState,
   definition: ResidentRequestDefinition,
+  currentProgress: number,
   source: ResidentRequestProgressSource,
 ): number {
-  if (definition.goal.type === "earn-coins") {
-    return source.type === "coins-earned" ? Math.max(0, source.amount) : 0;
+  if (definition.goal.type === "building-count") {
+    return buildingGoalProgress(state, definition);
   }
-  return source.type === "building-placed" &&
-    definition.goal.buildingIds.includes(source.buildingId)
-    ? 1
-    : 0;
+  const increment = source.type === "coins-earned" ? Math.max(0, source.amount) : 0;
+  return Math.min(definition.goal.target, currentProgress + increment);
 }
 
 export function advanceResidentRequest(
@@ -148,16 +178,14 @@ export function advanceResidentRequest(
   now: number,
   random: RequestRandomSource = Math.random,
 ): ResidentRequestResult {
-  const state = withoutInvalidRequest(originalState, now);
+  const state = withCurrentRequestDay(withoutInvalidRequest(originalState, now), now);
   const active = state.activeResidentRequest;
   if (!active) return { state };
 
   const definition = getResidentRequestDefinition(active.definitionId);
   if (!definition) return { state };
-  const increment = progressIncrement(definition, source);
-  if (increment <= 0) return { state };
-
-  const progress = Math.min(definition.goal.target, active.progress + increment);
+  const progress = updatedProgress(state, definition, active.progress, source);
+  if (progress === active.progress && progress < definition.goal.target) return { state };
   if (progress < definition.goal.target) {
     return {
       state: {
