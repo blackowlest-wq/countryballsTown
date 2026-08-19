@@ -1,22 +1,23 @@
 import type { FlagPattern } from "../../game/types/Country";
 
-export const CIRCLE_FLAG_CENTER_U = 0.25;
-export type FlagTexturePattern = "solid" | "horizontal" | "vertical" | "circle";
+export const FRONT_CIRCLE_Z = 0.43;
+export type FlagTexturePattern = "solid" | "horizontal" | "vertical";
 
 export interface FlagPresentation {
   texturePattern: FlagTexturePattern;
-  circleCenterU?: number;
+  frontCircle: boolean;
 }
 
 export function getFlagPresentation(flagPattern: FlagPattern): FlagPresentation {
   if (flagPattern === "circle") {
     return {
-      texturePattern: "circle",
-      circleCenterU: CIRCLE_FLAG_CENTER_U,
+      texturePattern: "solid",
+      frontCircle: true,
     };
   }
 
   return {
     texturePattern: flagPattern,
+    frontCircle: false,
   };
 }

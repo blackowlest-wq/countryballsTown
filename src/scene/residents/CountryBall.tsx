@@ -6,7 +6,7 @@ import { getCountryDefinition } from "../../game/data/countries";
 import type { Resident } from "../../game/types/Resident";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
-import { getFlagPresentation } from "./flagPresentation";
+import { FRONT_CIRCLE_Z, getFlagPresentation } from "./flagPresentation";
 
 const DEFAULT_FLAG_COLORS = ["#fffaf2", "#9fb7d8"];
 
@@ -44,17 +44,6 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
         context.fillStyle = color;
         context.fillRect(index * stripeWidth, 0, stripeWidth + 1, canvas.height);
       });
-    } else if (flagPresentation.texturePattern === "circle") {
-      context.fillStyle = second;
-      context.beginPath();
-      context.arc(
-        canvas.width * (flagPresentation.circleCenterU ?? 0.5),
-        canvas.height / 2,
-        122,
-        0,
-        Math.PI * 2,
-      );
-      context.fill();
     } else if (flagPresentation.texturePattern === "horizontal") {
       context.fillStyle = second;
       context.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
@@ -65,7 +54,30 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     return texture;
   }, [country?.id, flagPresentation.texturePattern, colors]);
 
-  useEffect(() => () => flagTexture?.dispose(), [flagTexture]);
+  const frontCircleTexture = useMemo(() => {
+    if (!flagPresentation.frontCircle || typeof document === "undefined") return undefined;
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext("2d");
+    if (!context) return undefined;
+
+    context.fillStyle = colors[1] ?? "#ed5a67";
+    context.beginPath();
+    context.arc(canvas.width / 2, canvas.height / 2, 108, 0, Math.PI * 2);
+    context.fill();
+
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }, [country?.id, flagPresentation.frontCircle, colors]);
+
+  useEffect(() => {
+    return () => {
+      flagTexture?.dispose();
+      frontCircleTexture?.dispose();
+    };
+  }, [flagTexture, frontCircleTexture]);
   const bouncePhase = Array.from(resident.id).reduce(
     (total, character) => total + character.charCodeAt(0),
     0,
@@ -124,7 +136,21 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
           <sphereGeometry args={[0.48, 18, 14]} />
           <meshStandardMaterial map={flagTexture} color="#ffffff" roughness={0.8} />
         </mesh>
-        <group position={[0, 0.1, 0.43]}>
+        {flagPresentation.frontCircle && frontCircleTexture && (
+          <sprite
+            position={[0, 0.1, FRONT_CIRCLE_Z]}
+            scale={[0.36, 0.36, 1]}
+            renderOrder={1}
+          >
+            <spriteMaterial
+              map={frontCircleTexture}
+              alphaTest={0.5}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </sprite>
+        )}
+        <group position={[0, 0.1, 0.43]} renderOrder={2}>
           <mesh position={[-0.15, 0, 0.02]}>
             <sphereGeometry args={[0.065, 10, 8]} />
             <meshStandardMaterial color="#28323c" />
