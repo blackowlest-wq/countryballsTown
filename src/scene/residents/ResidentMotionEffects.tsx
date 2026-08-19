@@ -6,6 +6,8 @@ interface ResidentMotionEffectsProps {
   motion: ResidentMotion;
 }
 
+const NON_HEART_MARK_SCALE = 2;
+
 function HeartMarker({ scale = 1 }: { scale?: number }): JSX.Element {
   const heartShape = useMemo(() => {
     const shape = new Shape();
@@ -29,7 +31,7 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
   switch (motion) {
     case "look-tree":
       return (
-        <group position={[0.2, 0.62, 0.08]}>
+        <group position={[0.2, 0.72, 0.08]} scale={NON_HEART_MARK_SCALE}>
           <mesh rotation-z={-0.35}>
             <coneGeometry args={[0.08, 0.18, 5]} />
             <meshBasicMaterial color="#72b957" />
@@ -38,7 +40,7 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
       );
     case "look-fountain":
       return (
-        <group position={[0.2, 0.65, 0.08]}>
+        <group position={[0.2, 0.72, 0.08]} scale={NON_HEART_MARK_SCALE}>
           <mesh>
             <sphereGeometry args={[0.07, 8, 6]} />
             <meshBasicMaterial color="#79cde0" transparent opacity={0.9} />
@@ -51,7 +53,7 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
       );
     case "use-building":
       return (
-        <group position={[0.42, 0.54, 0.04]}>
+        <group position={[0.42, 0.65, 0.04]} scale={NON_HEART_MARK_SCALE}>
           <mesh>
             <sphereGeometry args={[0.075, 8, 6]} />
             <meshBasicMaterial color="#f5c66d" transparent opacity={0.85} />
@@ -64,7 +66,7 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
       );
     case "happy":
       return (
-        <group position={[0, 0.72, 0.08]}>
+        <group position={[0, 0.8, 0.08]} scale={NON_HEART_MARK_SCALE}>
           <mesh>
             <octahedronGeometry args={[0.11, 0]} />
             <meshBasicMaterial color="#ffd36a" />
@@ -81,7 +83,7 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
       );
     case "sleeping":
       return (
-        <group position={[0.28, 0.66, 0.08]}>
+        <group position={[0.28, 0.74, 0.08]} scale={NON_HEART_MARK_SCALE}>
           <mesh>
             <sphereGeometry args={[0.045, 8, 6]} />
             <meshBasicMaterial color="#b5cde8" transparent opacity={0.7} />
@@ -98,7 +100,7 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
       );
     case "talking":
       return (
-        <group position={[0.32, 0.64, 0.08]}>
+        <group position={[0.32, 0.72, 0.08]} scale={NON_HEART_MARK_SCALE}>
           <mesh>
             <sphereGeometry args={[0.11, 10, 8]} />
             <meshBasicMaterial color="#fffaf0" transparent opacity={0.9} />
