@@ -1,24 +1,27 @@
 import { describe, expect, it } from "vitest";
 import {
-  FRONT_FLAG_Z,
   getFlagPresentation,
+  getSphereFlagColorIndex,
 } from "../src/scene/residents/flagPresentation";
 
 describe("Flag presentation", () => {
   it("places a circle-pattern flag on the ball's front", () => {
     expect(getFlagPresentation("circle")).toEqual({
-      texturePattern: "solid",
-      frontPattern: "circle",
-      frontScale: 0.36,
+      texturePattern: "circle",
+      sphereSurface: true,
     });
-    expect(FRONT_FLAG_Z).toBeCloseTo(0.43, 5);
   });
 
-  it("places a vertical tricolor flag on the ball's front", () => {
+  it("keeps a vertical tricolor flag on the sphere surface", () => {
     expect(getFlagPresentation("vertical")).toEqual({
-      texturePattern: "solid",
-      frontPattern: "vertical",
-      frontScale: 1.12,
+      texturePattern: "vertical",
+      sphereSurface: true,
     });
+  });
+
+  it("maps Italy's local left, center, and right thirds to green, white, and red", () => {
+    expect(getSphereFlagColorIndex("vertical", { x: -0.3, y: 0, z: 0.4 })).toBe(0);
+    expect(getSphereFlagColorIndex("vertical", { x: 0, y: 0, z: 0.48 })).toBe(1);
+    expect(getSphereFlagColorIndex("vertical", { x: 0.3, y: 0, z: 0.4 })).toBe(2);
   });
 });

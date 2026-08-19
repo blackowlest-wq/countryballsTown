@@ -1,27 +1,40 @@
 import type { FlagPattern } from "../../game/types/Country";
 
-export const FRONT_FLAG_Z = 0.43;
-export const FRONT_CIRCLE_SCALE = 0.36;
-export const FRONT_VERTICAL_SCALE = 1.12;
-export type FlagTexturePattern = "solid" | "horizontal" | "vertical";
-export type FrontFlagPattern = "circle" | "vertical";
+export const BALL_RADIUS = 0.48;
+export const VERTICAL_STRIPE_BOUNDARY = BALL_RADIUS / 3;
+export const CIRCLE_CENTER_Y = 0.1;
+export const CIRCLE_RADIUS = 0.28;
+export const CIRCLE_FRONT_Z = 0.2;
 
 export interface FlagPresentation {
-  texturePattern: FlagTexturePattern;
-  frontPattern?: FrontFlagPattern;
-  frontScale?: number;
+  texturePattern: FlagPattern;
+  sphereSurface: true;
+}
+
+export interface SphereFlagPoint {
+  x: number;
+  y: number;
+  z: number;
 }
 
 export function getFlagPresentation(flagPattern: FlagPattern): FlagPresentation {
-  if (flagPattern === "circle" || flagPattern === "vertical") {
-    return {
-      texturePattern: "solid",
-      frontPattern: flagPattern,
-      frontScale: flagPattern === "vertical" ? FRONT_VERTICAL_SCALE : FRONT_CIRCLE_SCALE,
-    };
-  }
-
   return {
     texturePattern: flagPattern,
+    sphereSurface: true,
   };
+}
+
+export function getSphereFlagColorIndex(
+  flagPattern: FlagPattern,
+  point: SphereFlagPoint,
+): 0 | 1 | 2 {
+  if (flagPattern === "horizontal") return point.y > 0 ? 0 : 1;
+  if (flagPattern === "circle") {
+    const isFront = point.z > CIRCLE_FRONT_Z;
+    const circleDistance = Math.hypot(point.x, point.y - CIRCLE_CENTER_Y);
+    return isFront && circleDistance < CIRCLE_RADIUS ? 1 : 0;
+  }
+  if (point.x < -VERTICAL_STRIPE_BOUNDARY) return 0;
+  if (point.x > VERTICAL_STRIPE_BOUNDARY) return 2;
+  return 1;
 }

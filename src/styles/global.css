@@ -30,6 +30,19 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .scene-layer:active { cursor: grabbing; }
 .scene-layer canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
+.showcase-shell { position: relative; width: 100%; height: 100%; overflow: hidden; background: #9bd2ed; }
+.showcase-shell canvas { display: block; width: 100%; height: 100%; }
+.showcase-heading { position: absolute; top: 22px; left: 24px; z-index: 2; padding: 14px 18px; color: var(--ink); background: rgba(255, 250, 238, .94); border: 1px solid rgba(255,255,255,.84); border-radius: 18px; box-shadow: var(--shadow); }
+.showcase-heading p { margin: 0 0 3px; color: #a0988a; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+.showcase-heading h1 { margin: 0; font-size: 20px; }
+.showcase-heading span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.showcase-legend { position: absolute; bottom: 24px; left: 50%; z-index: 2; display: flex; gap: 16px; padding: 10px 15px; color: var(--ink); background: rgba(255, 250, 238, .94); border: 1px solid rgba(255,255,255,.84); border-radius: 16px; box-shadow: var(--shadow); transform: translateX(-50%); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.showcase-legend span { display: inline-flex; gap: 5px; align-items: center; }
+.showcase-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.showcase-dot.poland { background: linear-gradient(#fffaf2 50%, #e94f64 50%); }
+.showcase-dot.japan { background: radial-gradient(circle at center, #ed5a67 0 38%, #fffaf2 40%); }
+.showcase-dot.italy { background: linear-gradient(90deg, #61a978 0 33%, #fffaf2 33% 66%, #e56a62 66%); }
+
 .top-hud { position: absolute; inset: 18px 24px auto; z-index: 5; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
 .top-hud > * { pointer-events: auto; }
 .hud-right { display: flex; align-items: center; gap: 10px; flex-direction: column; align-items: flex-end; }
@@ -109,6 +122,11 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .hint-hand { color: #e49d4d; font-size: 14px; }
 
 @media (max-width: 680px) {
+  .showcase-heading { top: 10px; left: 10px; padding: 10px 13px; border-radius: 15px; }
+  .showcase-heading h1 { font-size: 16px; }
+  .showcase-heading span { font-size: 9px; }
+  .showcase-legend { bottom: 10px; gap: 8px; padding: 8px 10px; font-size: 10px; }
+  .showcase-dot { width: 10px; height: 10px; }
   .top-hud { top: 10px; inset-inline: 10px; }
   .level-card { min-width: auto; padding: 8px 12px 8px 8px; border-radius: 18px; }
   .level-badge { width: 47px; height: 47px; border-radius: 15px; font-size: 24px; }

@@ -1,12 +1,12 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { CanvasTexture, SRGBColorSpace } from "three";
 import type { Group, Mesh } from "three";
 import { getCountryDefinition } from "../../game/data/countries";
 import type { Resident } from "../../game/types/Resident";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
-import { FRONT_CIRCLE_SCALE, FRONT_FLAG_Z, getFlagPresentation } from "./flagPresentation";
+import { BALL_RADIUS, getFlagPresentation } from "./flagPresentation";
+import { createSphereFlagMaterial } from "./sphereFlagMaterial";
 
 const DEFAULT_FLAG_COLORS = ["#fffaf2", "#9fb7d8"];
 
@@ -24,73 +24,17 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
   const colors = country?.flagColors ?? DEFAULT_FLAG_COLORS;
   const flagPattern = country?.flagPattern ?? "horizontal";
   const flagPresentation = getFlagPresentation(flagPattern);
-  const frontFlagScale = flagPresentation.frontScale ?? FRONT_CIRCLE_SCALE;
+  const flagMaterial = useMemo(
+    () => createSphereFlagMaterial(flagPresentation.texturePattern, colors),
+    [country?.id, flagPresentation.texturePattern, colors],
+  );
   const world = gridToWorld(resident.position);
-  const flagTexture = useMemo(() => {
-    if (typeof document === "undefined") return undefined;
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 512;
-    const context = canvas.getContext("2d");
-    if (!context) return undefined;
-
-    const first = colors[0] ?? "#fffaf2";
-    const second = colors[1] ?? first;
-    context.fillStyle = flagPresentation.frontPattern ? "#fffaf2" : first;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    if (flagPresentation.texturePattern === "vertical") {
-      const stripeWidth = canvas.width / 3;
-      colors.slice(0, 3).forEach((color, index) => {
-        context.fillStyle = color;
-        context.fillRect(index * stripeWidth, 0, stripeWidth + 1, canvas.height);
-      });
-    } else if (flagPresentation.texturePattern === "horizontal") {
-      context.fillStyle = second;
-      context.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
-    }
-
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    return texture;
-  }, [country?.id, flagPresentation.texturePattern, colors]);
-
-  const frontFlagTexture = useMemo(() => {
-    const frontPattern = flagPresentation.frontPattern;
-    if (!frontPattern || typeof document === "undefined") return undefined;
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-    const context = canvas.getContext("2d");
-    if (!context) return undefined;
-
-    context.save();
-    context.beginPath();
-    context.arc(canvas.width / 2, canvas.height / 2, 108, 0, Math.PI * 2);
-    context.clip();
-    if (frontPattern === "circle") {
-      context.fillStyle = colors[1] ?? "#ed5a67";
-      context.fill();
-    } else {
-      const stripeWidth = canvas.width / 3;
-      colors.slice(0, 3).forEach((color, index) => {
-        context.fillStyle = color;
-        context.fillRect(index * stripeWidth, 0, stripeWidth + 1, canvas.height);
-      });
-    }
-    context.restore();
-
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    return texture;
-  }, [country?.id, flagPresentation.frontPattern, colors]);
 
   useEffect(() => {
     return () => {
-      flagTexture?.dispose();
-      frontFlagTexture?.dispose();
+      flagMaterial.dispose();
     };
-  }, [flagTexture, frontFlagTexture]);
+  }, [flagMaterial]);
   const bouncePhase = Array.from(resident.id).reduce(
     (total, character) => total + character.charCodeAt(0),
     0,
@@ -146,24 +90,9 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
     >
       <group ref={ballGroup}>
         <mesh castShadow>
-          <sphereGeometry args={[0.48, 18, 14]} />
-          <meshStandardMaterial map={flagTexture} color="#ffffff" roughness={0.8} />
+          <sphereGeometry args={[BALL_RADIUS, 18, 14]} />
+          <primitive object={flagMaterial} attach="material" />
         </mesh>
-        {flagPresentation.frontPattern && frontFlagTexture && (
-          <sprite
-            position={[0, 0.1, FRONT_FLAG_Z]}
-            scale={[frontFlagScale, frontFlagScale, 1]}
-            renderOrder={1}
-          >
-            <spriteMaterial
-              map={frontFlagTexture}
-              alphaTest={0.5}
-              transparent={false}
-              depthTest={false}
-              depthWrite={false}
-            />
-          </sprite>
-        )}
         <group position={[0, 0.1, 0.43]} renderOrder={2}>
           <mesh position={[-0.15, 0, 0.02]}>
             <sphereGeometry args={[0.065, 10, 8]} />
