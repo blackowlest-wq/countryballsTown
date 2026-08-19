@@ -1,5 +1,5 @@
 export const GRID_SIZE = 20;
-export const COIN_INTERVAL_MS = 10_000;
+export const COIN_INTERVAL_MS = 1_000;
 export const COINS_PER_INTERVAL = 1;
 export const RESIDENT_WALK_SPEED = 1.55;
 export const RESIDENT_DECISION_MIN_MS = 2_200;
