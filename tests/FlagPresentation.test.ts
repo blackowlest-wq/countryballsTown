@@ -9,6 +9,7 @@ describe("Flag presentation", () => {
     expect(getFlagPresentation("circle")).toEqual({
       texturePattern: "solid",
       frontPattern: "circle",
+      frontScale: 0.36,
     });
     expect(FRONT_FLAG_Z).toBeCloseTo(0.43, 5);
   });
@@ -17,6 +18,7 @@ describe("Flag presentation", () => {
     expect(getFlagPresentation("vertical")).toEqual({
       texturePattern: "solid",
       frontPattern: "vertical",
+      frontScale: 1.12,
     });
   });
 });

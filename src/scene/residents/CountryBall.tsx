@@ -6,7 +6,7 @@ import { getCountryDefinition } from "../../game/data/countries";
 import type { Resident } from "../../game/types/Resident";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
-import { FRONT_FLAG_Z, getFlagPresentation } from "./flagPresentation";
+import { FRONT_CIRCLE_SCALE, FRONT_FLAG_Z, getFlagPresentation } from "./flagPresentation";
 
 const DEFAULT_FLAG_COLORS = ["#fffaf2", "#9fb7d8"];
 
@@ -24,6 +24,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
   const colors = country?.flagColors ?? DEFAULT_FLAG_COLORS;
   const flagPattern = country?.flagPattern ?? "horizontal";
   const flagPresentation = getFlagPresentation(flagPattern);
+  const frontFlagScale = flagPresentation.frontScale ?? FRONT_CIRCLE_SCALE;
   const world = gridToWorld(resident.position);
   const flagTexture = useMemo(() => {
     if (typeof document === "undefined") return undefined;
@@ -151,12 +152,13 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
         {flagPresentation.frontPattern && frontFlagTexture && (
           <sprite
             position={[0, 0.1, FRONT_FLAG_Z]}
-            scale={[0.36, 0.36, 1]}
+            scale={[frontFlagScale, frontFlagScale, 1]}
             renderOrder={1}
           >
             <spriteMaterial
               map={frontFlagTexture}
               alphaTest={0.5}
+              transparent={false}
               depthTest={false}
               depthWrite={false}
             />
