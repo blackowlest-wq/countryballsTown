@@ -1,5 +1,6 @@
 import { countBuildings } from "../game/systems/BuildingSystem";
 import { useGameStore } from "../store/gameStore";
+import { BgmToggle } from "./BgmToggle";
 import { CoinDisplay } from "./CoinDisplay";
 import { VillageLevelDisplay } from "./VillageLevelDisplay";
 
@@ -23,6 +24,7 @@ export function GameHud(): JSX.Element {
         <div className="hud-right">
           <CoinDisplay coins={game.coins} />
           <div className="mood-pill"><span>●</span> のんびり暮らし中</div>
+          <BgmToggle />
         </div>
       </header>
       <div className="goal-card">

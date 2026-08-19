@@ -61,6 +61,10 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .resource-value { color: var(--ink); font-size: 22px; font-weight: 900; letter-spacing: .03em; }
 .mood-pill { padding: 8px 13px; border-radius: 18px; color: #6b7e62; font-size: 11px; font-weight: 800; }
 .mood-pill span { color: #78b956; margin-right: 4px; }
+.bgm-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; color: #6b7e62; background: rgba(255, 250, 238, 0.94); border: 1px solid rgba(255, 255, 255, 0.84); border-radius: 16px; box-shadow: var(--shadow); cursor: pointer; font-size: 11px; font-weight: 900; transition: background .18s ease, color .18s ease, transform .18s ease; }
+.bgm-toggle:hover, .bgm-toggle[aria-pressed="true"] { color: #557b47; background: #eef6de; transform: translateY(-1px); }
+.bgm-toggle:disabled { color: #aaa39a; background: rgba(245, 239, 228, .82); cursor: not-allowed; opacity: .8; }
+.bgm-toggle-icon { min-width: 16px; color: #e49d4d; font-size: 16px; line-height: 1; }
 
 .goal-card { position: absolute; top: 126px; left: 24px; z-index: 5; display: flex; gap: 10px; align-items: center; padding: 10px 15px; border-radius: 18px; }
 .goal-sparkle { display: grid; width: 27px; height: 27px; place-items: center; color: #fff; background: #84b960; border-radius: 50%; font-size: 15px; }
