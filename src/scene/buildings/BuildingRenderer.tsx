@@ -96,9 +96,9 @@ function BuildingInstanceRenderer({
       }}
     >
       {isCow
-        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} />
+        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} wanderSeed={instance.id} />
         : isPig
-          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} />
+          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} wanderSeed={instance.id} />
         : isMilkFactory
           ? <MilkFactory productType={milkFactoryProduction?.productType} />
           : isPorkFactory

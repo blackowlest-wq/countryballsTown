@@ -1,9 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
+import { useAnimalWander } from "./animalWander";
 
 interface CowProps {
   milkReadyAt?: number;
+  wanderSeed?: string;
 }
 
 function useMilkReady(milkReadyAt?: number): boolean {
@@ -59,10 +61,12 @@ function MilkReadyMark(): JSX.Element {
   );
 }
 
-export function Cow({ milkReadyAt }: CowProps): JSX.Element {
+export function Cow({ milkReadyAt, wanderSeed }: CowProps): JSX.Element {
+  const animal = useRef<Group>(null);
   const body = useRef<Group>(null);
   const milkMark = useRef<Group>(null);
   const milkReady = useMilkReady(milkReadyAt);
+  useAnimalWander(animal, wanderSeed);
 
   useFrame(({ clock }) => {
     if (body.current) {
@@ -77,7 +81,7 @@ export function Cow({ milkReadyAt }: CowProps): JSX.Element {
   });
 
   return (
-    <group>
+    <group ref={animal}>
       <group ref={body}>
         <mesh position={[0, 0.58, 0]} scale={[1.15, 0.72, 0.68]} castShadow>
           <sphereGeometry args={[0.43, 16, 12]} />

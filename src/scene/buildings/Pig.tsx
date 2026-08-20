@@ -1,9 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
+import { useAnimalWander } from "./animalWander";
 
 interface PigProps {
   porkReadyAt?: number;
+  wanderSeed?: string;
 }
 
 function usePorkReady(porkReadyAt?: number): boolean {
@@ -59,10 +61,12 @@ function PorkReadyMark(): JSX.Element {
   );
 }
 
-export function Pig({ porkReadyAt }: PigProps): JSX.Element {
+export function Pig({ porkReadyAt, wanderSeed }: PigProps): JSX.Element {
+  const animal = useRef<Group>(null);
   const body = useRef<Group>(null);
   const porkMark = useRef<Group>(null);
   const porkReady = usePorkReady(porkReadyAt);
+  useAnimalWander(animal, wanderSeed);
 
   useFrame(({ clock }) => {
     if (body.current) {
@@ -77,7 +81,7 @@ export function Pig({ porkReadyAt }: PigProps): JSX.Element {
   });
 
   return (
-    <group>
+    <group ref={animal}>
       <group ref={body}>
         <mesh position={[0, 0.58, 0]} scale={[1.12, 0.72, 0.7]} castShadow>
           <sphereGeometry args={[0.43, 16, 12]} />
