@@ -15,10 +15,11 @@ const pizzaShop: BuildingInstance = {
   gridY: 8,
 };
 
-function stateWithPizzaShop(building = pizzaShop): GameState {
+function stateWithPizzaShop(building = pizzaShop, pizzas = 3): GameState {
   return {
     ...createInitialGameState(0),
     buildings: [building],
+    pizzas,
   };
 }
 
@@ -41,6 +42,17 @@ describe("ShopVisitorSystem", () => {
       color: "#6fa8dc",
       phase: "arriving",
     });
+  });
+
+  it("ピザがないピザ屋には来訪客を生成しない", () => {
+    const result = advanceShopVisitors(
+      stateWithPizzaShop(pizzaShop, 0),
+      dueSimulation(),
+      0,
+      0,
+      () => 0,
+    );
+    expect(result.simulation.visitors).toHaveLength(0);
   });
 
   it("店舗ごとの定員を超えて来訪客を生成しない", () => {
@@ -108,6 +120,7 @@ describe("ShopVisitorSystem", () => {
     );
 
     expect(purchased.coinsEarned).toBe(3);
+    expect(purchased.pizzasSold).toBe(1);
     expect(purchased.simulation.visitors[0].phase).toBe("leaving");
 
     const exited = advanceShopVisitors(

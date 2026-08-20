@@ -34,6 +34,7 @@ describe("SaveSystem", () => {
       ham: 2,
       sausage: 4,
       bacon: 1,
+      pizzas: 2,
       crops: [
         { type: "wheat" as const, gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato" as const, gridX: 10, gridY: 10, plantedAt: 60 },
@@ -76,6 +77,7 @@ describe("SaveSystem", () => {
       ham: 2,
       sausage: 4,
       bacon: 1,
+      pizzas: 2,
       crops: [
         { type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato", gridX: 10, gridY: 10, plantedAt: 60 },
@@ -208,6 +210,7 @@ describe("SaveSystem", () => {
       ham: _ham,
       sausage: _sausage,
       bacon: _bacon,
+      pizzas: _pizzas,
       milkFactoryProductions: _milkFactoryProductions,
       pigProductions: _pigProductions,
       porkFactoryProductions: _porkFactoryProductions,
@@ -223,6 +226,7 @@ describe("SaveSystem", () => {
       ham: 0,
       sausage: 0,
       bacon: 0,
+      pizzas: 0,
       milkFactoryProductions: [],
       pigProductions: [],
       porkFactoryProductions: [],

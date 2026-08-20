@@ -181,6 +181,10 @@ export function loadGameState(
         typeof parsed.bacon === "number" && Number.isFinite(parsed.bacon)
           ? Math.max(0, Math.floor(parsed.bacon))
           : 0,
+      pizzas:
+        typeof parsed.pizzas === "number" && Number.isFinite(parsed.pizzas)
+          ? Math.max(0, Math.floor(parsed.pizzas))
+          : 0,
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
       milkFactoryProductions: normalizeMilkFactoryProductions(
         parsed.milkFactoryProductions,

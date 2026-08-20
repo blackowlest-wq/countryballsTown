@@ -16,6 +16,7 @@ export interface VisitorServiceDefinition {
   queueCapacity: number;
   saleCoins: number;
   doorOffset?: number;
+  product?: "pizza";
 }
 
 export interface BuildingDefinition {

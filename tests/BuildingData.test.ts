@@ -26,6 +26,7 @@ describe("building definitions", () => {
       visitorService: {
         queueCapacity: 3,
         saleCoins: 3,
+        product: "pizza",
       },
     });
   });

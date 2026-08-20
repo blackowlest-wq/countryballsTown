@@ -12,6 +12,7 @@ export interface GameState {
   ham: number;
   sausage: number;
   bacon: number;
+  pizzas: number;
   cowProductions: import("./Cow").CowProduction[];
   pigProductions: import("./Pig").PigProduction[];
   milkFactoryProductions: import("./MilkFactory").MilkFactoryProduction[];

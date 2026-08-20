@@ -184,6 +184,7 @@ export const buildingDefinitions: BuildingDefinition[] = [
       queueCapacity: 3,
       saleCoins: 3,
       doorOffset: 0.45,
+      product: "pizza",
     },
     description: "イタリアの住民が働く小さなピザ屋。",
     removable: true,

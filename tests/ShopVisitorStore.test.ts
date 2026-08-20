@@ -28,6 +28,7 @@ describe("gameStore shop visitors", () => {
     const game = {
       ...createInitialGameState(0),
       buildings: [pizzaShop],
+      pizzas: 1,
       nextResidentRequestAt: Number.POSITIVE_INFINITY,
     };
     const spawned = advanceShopVisitors(
@@ -49,6 +50,7 @@ describe("gameStore shop visitors", () => {
     useGameStore.getState().tick(0, 20_000 + SHOP_VISITOR_SERVICE_MS);
 
     expect(useGameStore.getState().game.coins).toBe(game.coins + 3);
+    expect(useGameStore.getState().game.pizzas).toBe(0);
     expect(useGameStore.getState().visitorSimulation.visitors[0].phase).toBe("leaving");
   });
 });

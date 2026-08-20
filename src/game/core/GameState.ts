@@ -22,6 +22,7 @@ export function createInitialGameState(now = Date.now()): GameState {
     ham: 0,
     sausage: 0,
     bacon: 0,
+    pizzas: 0,
     cowProductions: [],
     pigProductions: [],
     milkFactoryProductions: [],

@@ -32,6 +32,7 @@ interface QueueLayout {
 export interface ShopVisitorAdvanceResult {
   simulation: ShopVisitorSimulation;
   coinsEarned: number;
+  pizzasSold: number;
 }
 
 const VISITOR_COLORS = [
@@ -64,6 +65,15 @@ function getActiveShops(state: Pick<GameState, "buildings">): ActiveShop[] {
     const definition = getBuildingDefinition(building.buildingId);
     return definition?.visitorService ? [{ building, definition }] : [];
   });
+}
+
+function getShopProductStock(
+  shop: ActiveShop,
+  state: Pick<GameState, "pizzas">,
+  pizzasSold: number,
+): number | null {
+  if (shop.definition.visitorService?.product !== "pizza") return null;
+  return Math.max(0, state.pizzas - pizzasSold);
 }
 
 function getShopFocus(shop: ActiveShop): GridPosition {
@@ -236,7 +246,7 @@ export function createShopVisitorSimulation(now = Date.now()): ShopVisitorSimula
 }
 
 export function advanceShopVisitors(
-  state: Pick<GameState, "buildings">,
+  state: Pick<GameState, "buildings" | "pizzas">,
   simulation: ShopVisitorSimulation,
   deltaMs: number,
   now: number,
@@ -245,11 +255,17 @@ export function advanceShopVisitors(
   const shops = getActiveShops(state);
   const shopsById = new Map(shops.map((shop) => [shop.building.id, shop]));
   let coinsEarned = 0;
+  let pizzasSold = 0;
   let visitors = simulation.visitors.map((visitor) => {
     if (visitor.phase === "leaving") return visitor;
     const shop = shopsById.get(visitor.shopBuildingId);
     if (!shop) return beginLeaving(visitor);
     if (visitor.phase === "buying" && (visitor.serviceUntil ?? Number.POSITIVE_INFINITY) <= now) {
+      const productStock = getShopProductStock(shop, state, pizzasSold);
+      if (productStock !== null && productStock <= 0) {
+        return beginLeaving(visitor);
+      }
+      if (productStock !== null) pizzasSold += 1;
       coinsEarned += shop.definition.visitorService?.saleCoins ?? 0;
       const layout = getQueueLayout(shop, shop.definition.visitorService?.queueCapacity ?? 1);
       return beginLeaving(visitor, getMapEdgePosition(layout, 1.25));
@@ -258,9 +274,21 @@ export function advanceShopVisitors(
   });
 
   for (const shop of shops) {
-    const queue = visitors
+    let queue = visitors
       .filter((visitor) => visitor.shopBuildingId === shop.building.id && visitor.phase !== "leaving")
       .sort((left, right) => left.joinedAt - right.joinedAt || left.id.localeCompare(right.id));
+    const productStock = getShopProductStock(shop, state, pizzasSold);
+    const queueCapacity = shop.definition.visitorService?.queueCapacity ?? 0;
+    const availableQueueCapacity = productStock === null
+      ? queueCapacity
+      : Math.min(queueCapacity, productStock);
+    if (queue.length > availableQueueCapacity) {
+      for (const queuedVisitor of queue.slice(availableQueueCapacity)) {
+        const visitorIndex = visitors.findIndex((visitor) => visitor.id === queuedVisitor.id);
+        if (visitorIndex >= 0) visitors[visitorIndex] = beginLeaving(visitors[visitorIndex]);
+      }
+      queue = queue.slice(0, availableQueueCapacity);
+    }
     if (queue.length === 0) continue;
     const layout = getQueueLayout(shop, queue.length);
     let buyerAssigned = false;
@@ -320,7 +348,12 @@ export function advanceShopVisitors(
       const occupancy = visitors.filter(
         (visitor) => visitor.shopBuildingId === shop.building.id && visitor.phase !== "leaving",
       ).length;
-      return occupancy < (shop.definition.visitorService?.queueCapacity ?? 0);
+      const productStock = getShopProductStock(shop, state, pizzasSold);
+      const queueCapacity = shop.definition.visitorService?.queueCapacity ?? 0;
+      const availableQueueCapacity = productStock === null
+        ? queueCapacity
+        : Math.min(queueCapacity, productStock);
+      return occupancy < availableQueueCapacity;
     });
     if (availableShops.length > 0 && visitors.length < SHOP_VISITOR_MAX_TOTAL) {
       const shop = availableShops[Math.min(
@@ -342,5 +375,6 @@ export function advanceShopVisitors(
   return {
     simulation: { visitors, nextArrivalAt, nextSequence },
     coinsEarned,
+    pizzasSold,
   };
 }

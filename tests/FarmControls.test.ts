@@ -51,6 +51,7 @@ describe("FarmControls", () => {
         ham: 3,
         sausage: 5,
         bacon: 1,
+        pizzas: 2,
       },
       interactionMode: "farm",
       cropAction: "harvest",
@@ -76,6 +77,7 @@ describe("FarmControls", () => {
     expect(container.querySelector('[aria-label="ハム 3"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ソーセージ 5"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ベーコン 1"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
     expect(harvestButton?.getAttribute("aria-pressed")).toBe("true");
 
     await act(async () => {
