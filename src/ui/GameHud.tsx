@@ -4,6 +4,7 @@ import { BgmToggle } from "./BgmToggle";
 import { CoinDisplay } from "./CoinDisplay";
 import { VillageLevelDisplay } from "./VillageLevelDisplay";
 import { ResidentRequestCard } from "./ResidentRequestCard";
+import { WheatDisplay } from "./WheatDisplay";
 
 export function GameHud(): JSX.Element {
   const game = useGameStore((store) => store.game);
@@ -24,6 +25,7 @@ export function GameHud(): JSX.Element {
         <VillageLevelDisplay level={game.villageLevel} />
         <div className="hud-right">
           <CoinDisplay coins={game.coins} />
+          <WheatDisplay wheat={game.wheat} />
           <div className="mood-pill"><span>●</span> のんびり暮らし中</div>
           <BgmToggle />
         </div>

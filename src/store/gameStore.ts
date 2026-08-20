@@ -20,11 +20,15 @@ import {
 } from "../game/systems/ResidentRequestSystem";
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
+import {
+  interactWithWheat,
+  type WheatInteractionOutcome,
+} from "../game/systems/WheatSystem";
 import type { BuildingInstance } from "../game/types/Building";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
 import type { GameState } from "../game/types/Village";
 
-export type InteractionMode = "inspect" | "build" | "move";
+export type InteractionMode = "inspect" | "build" | "move" | "farm";
 
 interface GameStore {
   game: GameState;
@@ -41,7 +45,13 @@ interface GameStore {
   setResidentPanelOpen: (open: boolean) => void;
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
+  beginFarming: () => void;
   cancelInteraction: () => void;
+  interactWheat: (
+    gridX: number,
+    gridY: number,
+    now?: number,
+  ) => WheatInteractionOutcome | null;
   placeSelectedBuilding: (gridX: number, gridY: number) => boolean;
   moveSelectedBuilding: (gridX: number, gridY: number) => boolean;
   removeSelectedBuilding: () => boolean;
@@ -143,8 +153,32 @@ export const useGameStore = create<GameStore>((setState, get) => {
       notice: "移動先のセルをクリックしてください。",
     }),
 
+  beginFarming: () =>
+    set({
+      interactionMode: "farm",
+      selectedBuildingId: null,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      notice: "空き地をタップ・スワイプして小麦を蒔こう。実った小麦も同じ操作で収穫できます。",
+    }),
+
   cancelInteraction: () =>
     set({ interactionMode: "inspect", selectedBuildingId: null, notice: null }),
+
+  interactWheat: (gridX, gridY, now = Date.now()) => {
+    const current = get();
+    if (current.interactionMode !== "farm") return null;
+    const result = interactWithWheat(current.game, gridX, gridY, now);
+    if (result.state === current.game) return result.outcome;
+    set({
+      game: result.state,
+      notice: result.outcome === "harvested"
+        ? "小麦を収穫しました。小麦が1増えました！"
+        : current.notice,
+    });
+    return result.outcome;
+  },
 
   placeSelectedBuilding: (gridX, gridY) => {
     const current = get();

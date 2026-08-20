@@ -46,11 +46,12 @@ function BuildingInstanceRenderer({
     <group
       position={[position.x, 0, position.z]}
       onClick={(event) => {
+        if (interactionMode !== "inspect") return;
         event.stopPropagation();
-        if (interactionMode === "build") return;
         selectBuilding(selectionSource);
       }}
       onPointerOver={(event) => {
+        if (interactionMode !== "inspect") return;
         event.stopPropagation();
         document.body.style.cursor = "pointer";
       }}

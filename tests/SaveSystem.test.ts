@@ -19,13 +19,32 @@ describe("SaveSystem", () => {
       ...createInitialGameState(0),
       coins: 321,
       villageLevel: 2,
+      wheat: 4,
+      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
       residentRequestsStartedToday: 2,
     };
     saveGameState(original, storage);
     expect(loadGameState(storage, 100)).toMatchObject({
       coins: 321,
       villageLevel: 2,
+      wheat: 4,
+      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
       residentRequestsStartedToday: 2,
+    });
+  });
+
+  it("作物情報がない旧セーブデータを移行する", () => {
+    const storage = memoryStorage();
+    const {
+      wheat: _wheat,
+      wheatCrops: _wheatCrops,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      wheat: 0,
+      wheatCrops: [],
     });
   });
 

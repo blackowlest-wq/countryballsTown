@@ -21,6 +21,14 @@ describe("BuildingSystem", () => {
     expect(placeBuilding({ ...initial, coins: 0 }, "flower", 8, 8).reason).toBe("not-enough-coins");
   });
 
+  it("小麦が育っているセルには建物を配置できない", () => {
+    const initial = {
+      ...createInitialGameState(0),
+      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 0 }],
+    };
+    expect(placeBuilding(initial, "flower", 8, 8).reason).toBe("occupied");
+  });
+
   it("配置した建物を移動・撤去できる", () => {
     const placed = placeBuilding(createInitialGameState(0), "flower", 8, 8, "flower-test");
     expect(placed.success).toBe(true);

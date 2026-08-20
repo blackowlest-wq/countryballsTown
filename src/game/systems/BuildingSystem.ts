@@ -83,6 +83,16 @@ function checkPlacement(
   if (overlapsExisting(buildings, buildingId, gridX, gridY, excludeId)) {
     return { ok: false, reason: "occupied" };
   }
+  const candidateCells = getOccupiedCells(buildingId, gridX, gridY);
+  if (
+    candidateCells.some((candidate) =>
+      state.wheatCrops.some(
+        (crop) => crop.gridX === candidate.x && crop.gridY === candidate.y,
+      ),
+    )
+  ) {
+    return { ok: false, reason: "occupied" };
+  }
   if (!excludeId && state.coins < definition.cost) {
     return { ok: false, reason: "not-enough-coins" };
   }

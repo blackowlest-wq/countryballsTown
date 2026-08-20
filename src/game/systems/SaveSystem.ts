@@ -9,6 +9,7 @@ import { getUnlockedBuildingIdsForLevel } from "../data/villageLevels";
 import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
+import { normalizeWheatCrops } from "./WheatSystem";
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -83,6 +84,11 @@ export function loadGameState(
         : 0;
     return {
       ...parsed,
+      wheat:
+        typeof parsed.wheat === "number" && Number.isFinite(parsed.wheat)
+          ? Math.max(0, Math.floor(parsed.wheat))
+          : 0,
+      wheatCrops: normalizeWheatCrops(parsed.wheatCrops),
       buildings: createBuildingCollection(parsed.buildings).buildings,
       unlockedBuildings: [
         ...new Set([

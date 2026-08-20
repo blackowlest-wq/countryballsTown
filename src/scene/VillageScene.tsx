@@ -7,6 +7,8 @@ import { Ground } from "./Ground";
 import { PlacementGrid } from "./PlacementGrid";
 import { ResidentRenderer } from "./residents/ResidentRenderer";
 import { ShopVisitorRenderer } from "./visitors/ShopVisitorRenderer";
+import { WheatCropRenderer } from "./crops/WheatCropRenderer";
+import { useGameStore } from "../store/gameStore";
 
 function SceneContents(): JSX.Element {
   return (
@@ -29,6 +31,7 @@ function SceneContents(): JSX.Element {
       <CameraController />
       <Ground />
       <PlacementGrid />
+      <WheatCropRenderer />
       <BuildingRenderer />
       <ResidentRenderer />
       <ShopVisitorRenderer />
@@ -37,8 +40,12 @@ function SceneContents(): JSX.Element {
 }
 
 export function VillageScene(): JSX.Element {
+  const interactionMode = useGameStore((store) => store.interactionMode);
   return (
-    <div className="scene-layer" aria-label="村の3D画面">
+    <div
+      className={`scene-layer ${interactionMode === "farm" ? "is-farming" : ""}`}
+      aria-label="村の3D画面"
+    >
       <Canvas
         orthographic
         shadows

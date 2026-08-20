@@ -6,6 +6,8 @@ import { getLocalDateKey } from "../../utils/date";
 export function createInitialGameState(now = Date.now()): GameState {
   return {
     coins: 100,
+    wheat: 0,
+    wheatCrops: [],
     villageLevel: 1,
     residents: [createInitialResident("poland", { x: 6.5, z: 5.5 })],
     buildings: [

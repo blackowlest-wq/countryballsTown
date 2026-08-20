@@ -7,6 +7,7 @@ export function BottomMenu(): JSX.Element {
   const setBuildOpen = useGameStore((store) => store.setBuildMenuOpen);
   const setResidentOpen = useGameStore((store) => store.setResidentPanelOpen);
   const cancel = useGameStore((store) => store.cancelInteraction);
+  const beginFarming = useGameStore((store) => store.beginFarming);
 
   const toggleBuild = (): void => {
     setResidentOpen(false);
@@ -20,6 +21,16 @@ export function BottomMenu(): JSX.Element {
     setResidentOpen(!residentOpen);
   };
 
+  const toggleFarming = (): void => {
+    setBuildOpen(false);
+    setResidentOpen(false);
+    if (mode === "farm") {
+      cancel();
+      return;
+    }
+    beginFarming();
+  };
+
   return (
     <nav className="bottom-menu" aria-label="村のメニュー">
       <button type="button" className={`bottom-menu-button ${buildOpen ? "is-active" : ""}`} onClick={toggleBuild}>
@@ -29,6 +40,15 @@ export function BottomMenu(): JSX.Element {
       <button type="button" className={`bottom-menu-button ${residentOpen ? "is-active" : ""}`} onClick={toggleResidents}>
         <span className="menu-icon">●●</span>
         <span>住民</span>
+      </button>
+      <button
+        type="button"
+        className={`bottom-menu-button ${mode === "farm" ? "is-active" : ""}`}
+        aria-pressed={mode === "farm"}
+        onClick={toggleFarming}
+      >
+        <span className="menu-icon wheat-menu-icon">🌾</span>
+        <span>小麦</span>
       </button>
     </nav>
   );

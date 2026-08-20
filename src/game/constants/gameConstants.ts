@@ -1,6 +1,8 @@
 export const GRID_SIZE = 20;
 export const COIN_INTERVAL_MS = 1_000;
 export const COINS_PER_INTERVAL = 1;
+export const WHEAT_GROWTH_MS = 15_000;
+export const WHEAT_HARVEST_AMOUNT = 1;
 export const RESIDENT_REQUEST_INITIAL_DELAY_MS = 60_000;
 export const RESIDENT_REQUEST_COOLDOWN_MIN_MS = 120_000;
 export const RESIDENT_REQUEST_COOLDOWN_MAX_MS = 240_000;

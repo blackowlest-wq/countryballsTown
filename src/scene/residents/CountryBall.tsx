@@ -23,6 +23,7 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
   const shadow = useRef<Mesh>(null);
   const heading = useRef(0);
   const selectResident = useGameStore((store) => store.selectResident);
+  const interactionMode = useGameStore((store) => store.interactionMode);
   const hasActiveRequest = useGameStore(
     (store) => store.game.activeResidentRequest?.residentId === resident.id,
   );
@@ -128,10 +129,12 @@ export function CountryBall({ resident }: CountryBallProps): JSX.Element {
       ref={group}
       position={[world.x, 0.72, world.z]}
       onClick={(event) => {
+        if (interactionMode !== "inspect") return;
         event.stopPropagation();
         selectResident(resident.id);
       }}
       onPointerOver={(event) => {
+        if (interactionMode !== "inspect") return;
         event.stopPropagation();
         document.body.style.cursor = "pointer";
       }}

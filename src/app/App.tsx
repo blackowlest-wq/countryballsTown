@@ -12,6 +12,7 @@ import { VillageScene } from "../scene/VillageScene";
 export function App(): JSX.Element {
   const notice = useGameStore((store) => store.notice);
   const dismissNotice = useGameStore((store) => store.dismissNotice);
+  const interactionMode = useGameStore((store) => store.interactionMode);
   useGameLoop();
   useSaveGame();
 
@@ -28,9 +29,13 @@ export function App(): JSX.Element {
       <BuildMenu />
       <ResidentPanel />
       <BuildingPanel />
-      <div className="interaction-hint">
-        <span className="hint-hand">✦</span>
-        <span>ドラッグで村を見渡せます</span>
+      <div className={`interaction-hint ${interactionMode === "farm" ? "farm-hint" : ""}`}>
+        <span className="hint-hand">{interactionMode === "farm" ? "🌾" : "✦"}</span>
+        <span>
+          {interactionMode === "farm"
+            ? "空き地をなぞって種まき・実った小麦を収穫"
+            : "ドラッグで村を見渡せます"}
+        </span>
       </div>
       <BottomMenu />
     </main>
