@@ -21,8 +21,9 @@ import {
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
-  interactWithWheat,
-  type WheatInteractionOutcome,
+  performWheatAction,
+  type WheatAction,
+  type WheatActionOutcome,
 } from "../game/systems/WheatSystem";
 import type { BuildingInstance } from "../game/types/Building";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
@@ -35,6 +36,7 @@ interface GameStore {
   economyRemainderMs: number;
   visitorSimulation: ShopVisitorSimulation;
   interactionMode: InteractionMode;
+  wheatAction: WheatAction;
   selectedBuildingId: string | null;
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
@@ -46,12 +48,13 @@ interface GameStore {
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
   beginFarming: () => void;
+  setWheatAction: (action: WheatAction) => void;
   cancelInteraction: () => void;
   interactWheat: (
     gridX: number,
     gridY: number,
     now?: number,
-  ) => WheatInteractionOutcome | null;
+  ) => WheatActionOutcome | null;
   placeSelectedBuilding: (gridX: number, gridY: number) => boolean;
   moveSelectedBuilding: (gridX: number, gridY: number) => boolean;
   removeSelectedBuilding: () => boolean;
@@ -94,6 +97,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   economyRemainderMs: 0,
   visitorSimulation: createShopVisitorSimulation(),
   interactionMode: "inspect",
+  wheatAction: "harvest",
   selectedBuildingId: null,
   selectedResidentId: null,
   isBuildMenuOpen: false,
@@ -156,12 +160,15 @@ export const useGameStore = create<GameStore>((setState, get) => {
   beginFarming: () =>
     set({
       interactionMode: "farm",
+      wheatAction: "harvest",
       selectedBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
-      notice: "空き地をタップ・スワイプして小麦を蒔こう。実った小麦も同じ操作で収穫できます。",
+      notice: "安全のため「収穫」で始まります。植えるときは「種まき」を選んでください。",
     }),
+
+  setWheatAction: (action) => set({ wheatAction: action, notice: null }),
 
   cancelInteraction: () =>
     set({ interactionMode: "inspect", selectedBuildingId: null, notice: null }),
@@ -169,7 +176,13 @@ export const useGameStore = create<GameStore>((setState, get) => {
   interactWheat: (gridX, gridY, now = Date.now()) => {
     const current = get();
     if (current.interactionMode !== "farm") return null;
-    const result = interactWithWheat(current.game, gridX, gridY, now);
+    const result = performWheatAction(
+      current.game,
+      current.wheatAction,
+      gridX,
+      gridY,
+      now,
+    );
     if (result.state === current.game) return result.outcome;
     set({
       game: result.state,
@@ -278,6 +291,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       economyRemainderMs: 0,
       visitorSimulation: createShopVisitorSimulation(),
       interactionMode: "inspect",
+      wheatAction: "harvest",
       selectedBuildingId: null,
       selectedResidentId: null,
       notice: "新しい村を始めました。",

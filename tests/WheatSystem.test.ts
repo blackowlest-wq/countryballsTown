@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { WHEAT_GROWTH_MS } from "../src/game/constants/gameConstants";
+import {
+  WHEAT_GREEN_STAGE_MS,
+  WHEAT_MATURE_STAGE_MS,
+} from "../src/game/constants/gameConstants";
 import { createInitialGameState } from "../src/game/core/GameState";
 import {
-  getWheatGrowthProgress,
-  interactWithWheat,
+  getWheatGrowthStage,
   normalizeWheatCrops,
+  performWheatAction,
 } from "../src/game/systems/WheatSystem";
 
 describe("WheatSystem", () => {
   it("空きセルに小麦を蒔く", () => {
     const initial = createInitialGameState(0);
-    const result = interactWithWheat(initial, 8, 8, 1_000);
+    const result = performWheatAction(initial, "plant", 8, 8, 1_000);
 
     expect(result.outcome).toBe("planted");
     expect(result.state.wheatCrops).toEqual([
@@ -19,40 +22,81 @@ describe("WheatSystem", () => {
     expect(result.state.wheat).toBe(0);
   });
 
-  it("成長中は収穫できず、成熟後の収穫で小麦が増える", () => {
-    const planted = interactWithWheat(createInitialGameState(0), 8, 8, 1_000);
+  it("10秒で緑、さらに10秒で茶色の成熟段階になる", () => {
+    const planted = performWheatAction(
+      createInitialGameState(0),
+      "plant",
+      8,
+      8,
+      1_000,
+    );
     const crop = planted.state.wheatCrops[0];
 
-    expect(getWheatGrowthProgress(crop, 1_000)).toBe(0);
-    expect(getWheatGrowthProgress(crop, 1_000 + WHEAT_GROWTH_MS / 2)).toBe(0.5);
+    expect(getWheatGrowthStage(crop, 1_000)).toBe("seed");
+    expect(getWheatGrowthStage(crop, 1_000 + WHEAT_GREEN_STAGE_MS - 1)).toBe("seed");
+    expect(getWheatGrowthStage(crop, 1_000 + WHEAT_GREEN_STAGE_MS)).toBe("green");
+    expect(getWheatGrowthStage(crop, 1_000 + WHEAT_MATURE_STAGE_MS - 1)).toBe("green");
+    expect(getWheatGrowthStage(crop, 1_000 + WHEAT_MATURE_STAGE_MS)).toBe("mature");
+  });
 
-    const growing = interactWithWheat(
+  it("成長中は収穫できず、成熟後の収穫で小麦が増える", () => {
+    const planted = performWheatAction(
+      createInitialGameState(0),
+      "plant",
+      8,
+      8,
+      1_000,
+    );
+
+    const growing = performWheatAction(
       planted.state,
+      "harvest",
       8,
       8,
-      1_000 + WHEAT_GROWTH_MS - 1,
+      1_000 + WHEAT_MATURE_STAGE_MS - 1,
     );
     expect(growing.outcome).toBe("growing");
     expect(growing.state).toBe(planted.state);
 
-    const harvested = interactWithWheat(
+    const harvested = performWheatAction(
       planted.state,
+      "harvest",
       8,
       8,
-      1_000 + WHEAT_GROWTH_MS,
+      1_000 + WHEAT_MATURE_STAGE_MS,
     );
     expect(harvested.outcome).toBe("harvested");
     expect(harvested.state.wheat).toBe(1);
     expect(harvested.state.wheatCrops).toEqual([]);
   });
 
+  it("種まきでは成熟した小麦を収穫せず、収穫では空き地に植えない", () => {
+    const initial = createInitialGameState(0);
+    const planted = performWheatAction(initial, "plant", 8, 8, 1_000);
+    const plantAgain = performWheatAction(
+      planted.state,
+      "plant",
+      8,
+      8,
+      1_000 + WHEAT_MATURE_STAGE_MS,
+    );
+    expect(plantAgain.outcome).toBe("already-planted");
+    expect(plantAgain.state).toBe(planted.state);
+    expect(plantAgain.state.wheat).toBe(0);
+
+    const harvestEmpty = performWheatAction(initial, "harvest", 8, 8, 30_000);
+    expect(harvestEmpty.outcome).toBe("empty");
+    expect(harvestEmpty.state).toBe(initial);
+    expect(harvestEmpty.state.wheatCrops).toEqual([]);
+  });
+
   it("建物のセルや村の外には蒔けない", () => {
     const initial = createInitialGameState(0);
-    expect(interactWithWheat(initial, 5, 5, 1_000)).toMatchObject({
+    expect(performWheatAction(initial, "plant", 5, 5, 1_000)).toMatchObject({
       outcome: "occupied",
       state: initial,
     });
-    expect(interactWithWheat(initial, -1, 8, 1_000)).toMatchObject({
+    expect(performWheatAction(initial, "plant", -1, 8, 1_000)).toMatchObject({
       outcome: "out-of-bounds",
       state: initial,
     });

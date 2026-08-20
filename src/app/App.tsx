@@ -6,6 +6,7 @@ import { BuildingPanel } from "../ui/BuildingPanel";
 import { BottomMenu } from "../ui/BottomMenu";
 import { BuildMenu } from "../ui/BuildMenu";
 import { GameHud } from "../ui/GameHud";
+import { FarmControls } from "../ui/FarmControls";
 import { ResidentPanel } from "../ui/ResidentPanel";
 import { VillageScene } from "../scene/VillageScene";
 
@@ -29,14 +30,13 @@ export function App(): JSX.Element {
       <BuildMenu />
       <ResidentPanel />
       <BuildingPanel />
-      <div className={`interaction-hint ${interactionMode === "farm" ? "farm-hint" : ""}`}>
-        <span className="hint-hand">{interactionMode === "farm" ? "🌾" : "✦"}</span>
-        <span>
-          {interactionMode === "farm"
-            ? "空き地をなぞって種まき・実った小麦を収穫"
-            : "ドラッグで村を見渡せます"}
-        </span>
-      </div>
+      <FarmControls />
+      {interactionMode !== "farm" && (
+        <div className="interaction-hint">
+          <span className="hint-hand">✦</span>
+          <span>ドラッグで村を見渡せます</span>
+        </div>
+      )}
       <BottomMenu />
     </main>
   );

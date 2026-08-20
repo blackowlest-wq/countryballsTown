@@ -1,21 +1,27 @@
 import {
-  WHEAT_GROWTH_MS,
+  WHEAT_GREEN_STAGE_MS,
   WHEAT_HARVEST_AMOUNT,
+  WHEAT_MATURE_STAGE_MS,
 } from "../constants/gameConstants";
 import { getBuildingDefinition } from "../data/buildings";
 import type { WheatCrop } from "../types/Crop";
 import type { GameState } from "../types/Village";
 import { isGridPositionInside } from "../../utils/grid";
 
-export type WheatInteractionOutcome =
+export type WheatAction = "plant" | "harvest";
+export type WheatGrowthStage = "seed" | "green" | "mature";
+
+export type WheatActionOutcome =
   | "planted"
   | "harvested"
   | "growing"
+  | "already-planted"
+  | "empty"
   | "occupied"
   | "out-of-bounds";
 
-export interface WheatInteractionResult {
-  outcome: WheatInteractionOutcome;
+export interface WheatActionResult {
+  outcome: WheatActionOutcome;
   state: GameState;
 }
 
@@ -36,12 +42,15 @@ function buildingOccupiesCell(
   });
 }
 
-export function getWheatGrowthProgress(crop: WheatCrop, now: number): number {
-  return Math.min(1, Math.max(0, (now - crop.plantedAt) / WHEAT_GROWTH_MS));
+export function getWheatGrowthStage(crop: WheatCrop, now: number): WheatGrowthStage {
+  const age = Math.max(0, now - crop.plantedAt);
+  if (age < WHEAT_GREEN_STAGE_MS) return "seed";
+  if (age < WHEAT_MATURE_STAGE_MS) return "green";
+  return "mature";
 }
 
 export function isWheatMature(crop: WheatCrop, now: number): boolean {
-  return getWheatGrowthProgress(crop, now) >= 1;
+  return getWheatGrowthStage(crop, now) === "mature";
 }
 
 export function normalizeWheatCrops(value: unknown): WheatCrop[] {
@@ -68,12 +77,13 @@ export function normalizeWheatCrops(value: unknown): WheatCrop[] {
   return crops;
 }
 
-export function interactWithWheat(
+export function performWheatAction(
   state: GameState,
+  action: WheatAction,
   gridX: number,
   gridY: number,
   now: number,
-): WheatInteractionResult {
+): WheatActionResult {
   if (
     !Number.isInteger(gridX) ||
     !Number.isInteger(gridY) ||
@@ -85,7 +95,9 @@ export function interactWithWheat(
   const crop = state.wheatCrops.find(
     (candidate) => candidate.gridX === gridX && candidate.gridY === gridY,
   );
-  if (crop) {
+
+  if (action === "harvest") {
+    if (!crop) return { outcome: "empty", state };
     if (!isWheatMature(crop, now)) return { outcome: "growing", state };
     return {
       outcome: "harvested",
@@ -97,6 +109,7 @@ export function interactWithWheat(
     };
   }
 
+  if (crop) return { outcome: "already-planted", state };
   if (buildingOccupiesCell(state, gridX, gridY)) {
     return { outcome: "occupied", state };
   }
