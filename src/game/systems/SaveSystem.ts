@@ -10,6 +10,7 @@ import { getUnlockedBuildingIdsForLevel } from "../data/villageLevels";
 import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
+import { normalizeCowProductions } from "./CowSystem";
 import { isCellInField, normalizeWheatCrops } from "./WheatSystem";
 
 export interface StorageLike {
@@ -52,8 +53,15 @@ export function saveGameState(
 ): void {
   if (!storage) return;
   try {
+    const now = Date.now();
     const buildings = createBuildingCollection(state.buildings).buildings;
-    storage.setItem(SAVE_KEY, JSON.stringify({ ...state, buildings, lastSavedAt: Date.now() }));
+    const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
+    storage.setItem(SAVE_KEY, JSON.stringify({
+      ...state,
+      buildings,
+      cowProductions,
+      lastSavedAt: now,
+    }));
   } catch {
     // Saving is best-effort: a private browsing quota error should not stop the game.
   }
@@ -101,6 +109,11 @@ export function loadGameState(
           ? Math.max(0, Math.floor(parsed.wheat))
           : 0,
       wheatCrops,
+      milk:
+        typeof parsed.milk === "number" && Number.isFinite(parsed.milk)
+          ? Math.max(0, Math.floor(parsed.milk))
+          : 0,
+      cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
       buildings,
       unlockedBuildings: [
         ...new Set([

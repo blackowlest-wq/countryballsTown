@@ -12,6 +12,8 @@ export function createInitialGameState(now = Date.now()): GameState {
     wheatSeeds: INITIAL_WHEAT_SEEDS,
     wheat: 0,
     wheatCrops: [],
+    milk: 0,
+    cowProductions: [],
     villageLevel: 1,
     residents: [createInitialResident("poland", { x: 6.5, z: 5.5 })],
     buildings: [
@@ -21,7 +23,7 @@ export function createInitialGameState(now = Date.now()): GameState {
       { id: "tree-2", buildingId: "tree", gridX: 16, gridY: 4 },
     ],
     unlockedCountries: ["poland"],
-    unlockedBuildings: ["field", "tree", "flower"],
+    unlockedBuildings: ["field", "cow", "tree", "flower"],
     activeResidentRequest: null,
     nextResidentRequestAt: now + RESIDENT_REQUEST_INITIAL_DELAY_MS,
     residentRequestDayKey: getLocalDateKey(now),

@@ -46,6 +46,7 @@ describe("BuildMenu", () => {
       natureTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(container.textContent).toContain("桜の木");
+    expect(container.textContent).toContain("牛");
     expect(container.textContent).not.toContain("ピザ屋");
 
     const foodTab = [...container.querySelectorAll('[role="tab"]')]

@@ -3,6 +3,7 @@ import { createBuildingCollection } from "../core/BuildingCollection";
 import { getBuildingDefinition } from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type { GameState } from "../types/Village";
+import { registerCowProduction, removeCowProduction } from "./CowSystem";
 
 export type BuildingOperationReason =
   | "unknown-building"
@@ -125,6 +126,7 @@ export function placeBuilding(
   gridX: number,
   gridY: number,
   instanceId?: string,
+  now = Date.now(),
 ): BuildingOperationResult {
   const collection = createBuildingCollection(state.buildings);
   const resolvedInstanceId = instanceId ?? collection.nextId();
@@ -137,14 +139,17 @@ export function placeBuilding(
   const definition = getBuildingDefinition(buildingId);
   if (!definition) return { success: false, state, reason: "unknown-building" };
   const building: BuildingInstance = { id: resolvedInstanceId, buildingId, gridX, gridY };
+  const placedState: GameState = {
+    ...state,
+    coins: state.coins - definition.cost,
+    buildings: [...collection.buildings, building],
+  };
   return {
     success: true,
     building,
-    state: {
-      ...state,
-      coins: state.coins - definition.cost,
-      buildings: [...collection.buildings, building],
-    },
+    state: buildingId === "cow"
+      ? registerCowProduction(placedState, building.id, now)
+      : placedState,
   };
 }
 
@@ -197,12 +202,15 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
   if (fieldHasCrop(state, existing)) {
     return { success: false, state, reason: "field-not-empty" };
   }
+  const removedState: GameState = {
+    ...state,
+    buildings: collection.buildings.filter((_, index) => index !== lookup.index),
+  };
   return {
     success: true,
-    state: {
-      ...state,
-      buildings: collection.buildings.filter((_, index) => index !== lookup.index),
-    },
+    state: existing.buildingId === "cow"
+      ? removeCowProduction(removedState, existing.id)
+      : removedState,
   };
 }
 

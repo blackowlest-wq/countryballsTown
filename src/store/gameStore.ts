@@ -8,6 +8,11 @@ import {
   removeBuilding,
 } from "../game/systems/BuildingSystem";
 import { advanceEconomy } from "../game/systems/EconomySystem";
+import {
+  collectCowMilk as collectMilkFromCow,
+  normalizeCowProductions,
+  type CowMilkOutcome,
+} from "../game/systems/CowSystem";
 import { advanceResidents } from "../game/systems/ResidentSystem";
 import {
   advanceShopVisitors,
@@ -58,6 +63,7 @@ interface GameStore {
   placeSelectedBuilding: (gridX: number, gridY: number) => boolean;
   moveSelectedBuilding: (gridX: number, gridY: number) => boolean;
   removeSelectedBuilding: () => boolean;
+  collectCowMilk: (buildingInstanceId: string, now?: number) => CowMilkOutcome | null;
   selectBuilding: (building: BuildingInstance | null) => void;
   selectResident: (residentId: string | null) => void;
   save: () => void;
@@ -67,7 +73,14 @@ interface GameStore {
 
 function normalizeGameState(state: GameState): GameState {
   const buildings = createBuildingCollection(state.buildings).buildings;
-  return buildings === state.buildings ? state : { ...state, buildings };
+  const cowProductions = normalizeCowProductions(
+    state.cowProductions,
+    buildings,
+    Date.now(),
+  );
+  return buildings === state.buildings && cowProductions === state.cowProductions
+    ? state
+    : { ...state, buildings, cowProductions };
 }
 
 function persist(state: GameState): GameState {
@@ -256,6 +269,19 @@ export const useGameStore = create<GameStore>((setState, get) => {
       notice: "建物を撤去しました。",
     });
     return true;
+  },
+
+  collectCowMilk: (buildingInstanceId, now = Date.now()) => {
+    const current = get();
+    if (current.interactionMode !== "inspect") return null;
+    const result = collectMilkFromCow(current.game, buildingInstanceId, now);
+    if (result.state === current.game) return result.outcome;
+    set({
+      game: persist(result.state),
+      selectedBuildingId: null,
+      notice: "牛乳を2個しぼりました！",
+    });
+    return result.outcome;
   },
 
   selectBuilding: (building) => {

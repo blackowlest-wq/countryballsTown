@@ -38,4 +38,15 @@ describe("building definitions", () => {
       category: "building",
     });
   });
+
+  it("牛を1マスの初期建築物として定義する", () => {
+    expect(playerBuildingIds).toContain("cow");
+    expect(getBuildingDefinition("cow")).toMatchObject({
+      name: "牛",
+      width: 1,
+      height: 1,
+      cost: 50,
+      category: "nature",
+    });
+  });
 });

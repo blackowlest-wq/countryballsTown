@@ -24,11 +24,14 @@ describe("SaveSystem", () => {
       villageLevel: 2,
       wheatSeeds: 4,
       wheat: 4,
+      milk: 6,
       wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
       buildings: [
         ...createInitialGameState(0).buildings,
         { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
+        { id: "cow-test", buildingId: "cow", gridX: 12, gridY: 12 },
       ],
+      cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
       residentRequestsStartedToday: 2,
     };
     saveGameState(original, storage);
@@ -37,7 +40,9 @@ describe("SaveSystem", () => {
       villageLevel: 2,
       wheatSeeds: 4,
       wheat: 4,
+      milk: 6,
       wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
+      cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
       residentRequestsStartedToday: 2,
     });
   });
@@ -73,6 +78,21 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000)).toMatchObject({
       wheatSeeds: INITIAL_WHEAT_SEEDS + 2,
       wheatCrops: [],
+    });
+  });
+
+  it("牛乳情報がない旧セーブデータを移行する", () => {
+    const storage = memoryStorage();
+    const {
+      milk: _milk,
+      cowProductions: _cowProductions,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      milk: 0,
+      cowProductions: [],
     });
   });
 
@@ -161,5 +181,16 @@ describe("SaveSystem", () => {
     }));
 
     expect(loadGameState(storage, 1_000).unlockedBuildings).toContain("field");
+  });
+
+  it("既存のセーブへ牛を解放する", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify({
+      ...state,
+      unlockedBuildings: ["field", "tree", "flower"],
+    }));
+
+    expect(loadGameState(storage, 1_000).unlockedBuildings).toContain("cow");
   });
 });

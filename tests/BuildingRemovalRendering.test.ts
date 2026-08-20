@@ -40,6 +40,38 @@ afterEach(() => {
 });
 
 describe("BuildingRenderer", () => {
+  it("採乳可能な牛へマークを出し、タップで牛乳を受け取る", async () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "cow",
+      8,
+      8,
+      "cow-test",
+      0,
+    );
+    const game = {
+      ...placed.state,
+      cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 0 }],
+    };
+    useGameStore.setState({ game });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    expect(container.querySelector('[name="牛乳を収穫できます"]')).not.toBeNull();
+    const cowGroup = container.firstElementChild?.lastElementChild;
+
+    await act(async () => {
+      cowGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().game.milk).toBe(2);
+    expect(container.querySelector('[name="牛乳を収穫できます"]')).toBeNull();
+    await act(async () => root.unmount());
+  });
+
   it("重複IDを含む旧データから木を撤去しても表示を残さない", async () => {
     const tree = {
       id: "legacy-duplicate",
@@ -120,7 +152,7 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
-  it.each(["field", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
+  it.each(["field", "cow", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
     "重複IDを含む旧データでも%sを別の建物へ変えずに移動する",
     async (targetBuildingId) => {
       const conflictingBuildingId = targetBuildingId === "flower" ? "tree" : "flower";
@@ -142,6 +174,7 @@ describe("BuildingRenderer", () => {
         villageLevel: 3,
         unlockedBuildings: [
           "field",
+          "cow",
           "tree",
           "cherry-tree",
           "flower",

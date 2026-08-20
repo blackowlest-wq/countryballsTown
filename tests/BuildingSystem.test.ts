@@ -38,6 +38,28 @@ describe("BuildingSystem", () => {
     });
   });
 
+  it("牛を配置すると採乳待ちが始まり、撤去すると生産情報も消える", () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "cow",
+      8,
+      8,
+      "cow-test",
+      1_000,
+    );
+    expect(placed).toMatchObject({
+      success: true,
+      state: {
+        coins: 50,
+        cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 31_000 }],
+      },
+    });
+
+    const removed = removeBuilding(placed.state, "cow-test");
+    expect(removed.success).toBe(true);
+    expect(removed.state.cowProductions).toEqual([]);
+  });
+
   it("作物がある畑は移動・撤去できず、空なら操作できる", () => {
     const placed = placeBuilding(createInitialGameState(0), "field", 8, 8, "field-test");
     const growing = {
