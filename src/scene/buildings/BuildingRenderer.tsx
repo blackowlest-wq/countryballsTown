@@ -6,6 +6,7 @@ import type { BuildingInstance } from "../../game/types/Building";
 import { buildingToWorldPosition } from "../../utils/grid";
 import { House } from "./House";
 import { Cow } from "./Cow";
+import { MilkFactory } from "./MilkFactory";
 import { Field } from "./Field";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
@@ -41,12 +42,17 @@ function BuildingInstanceRenderer({
   const selectedBuildingId = useGameStore((store) => store.selectedBuildingId);
   const interactionMode = useGameStore((store) => store.interactionMode);
   const selectBuilding = useGameStore((store) => store.selectBuilding);
+  const openMilkFactoryPanel = useGameStore((store) => store.openMilkFactoryPanel);
   const collectCowMilk = useGameStore((store) => store.collectCowMilk);
   const cowProduction = useGameStore((store) => store.game.cowProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
   const isCow = instance.buildingId === "cow";
-  if (!definition || (!Renderer && !isCow)) return null;
+  const isMilkFactory = instance.buildingId === "milk-factory";
+  const milkFactoryProduction = useGameStore((store) => store.game.milkFactoryProductions.find(
+    (production) => production.buildingInstanceId === instance.id,
+  ));
+  if (!definition || (!Renderer && !isCow && !isMilkFactory)) return null;
   const position = buildingToWorldPosition(instance, definition.width, definition.height);
   const selected = selectedBuildingId === instance.id && interactionMode !== "build";
 
@@ -57,6 +63,10 @@ function BuildingInstanceRenderer({
         if (interactionMode !== "inspect") return;
         event.stopPropagation();
         if (isCow && collectCowMilk(instance.id) === "collected") return;
+        if (isMilkFactory && !milkFactoryProduction?.productType) {
+          openMilkFactoryPanel(instance.id);
+          return;
+        }
         selectBuilding(selectionSource);
       }}
       onPointerOver={(event) => {
@@ -68,7 +78,11 @@ function BuildingInstanceRenderer({
         document.body.style.cursor = "default";
       }}
     >
-      {isCow ? <Cow milkReadyAt={cowProduction?.milkReadyAt} /> : Renderer && <Renderer />}
+      {isCow
+        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} />
+        : isMilkFactory
+          ? <MilkFactory productType={milkFactoryProduction?.productType} />
+          : Renderer && <Renderer />}
       {selected && (
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.025, 0]}>
           <ringGeometry args={[Math.max(definition.width, definition.height) * 0.47, Math.max(definition.width, definition.height) * 0.55, 32]} />

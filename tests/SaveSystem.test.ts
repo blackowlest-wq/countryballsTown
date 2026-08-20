@@ -28,6 +28,8 @@ describe("SaveSystem", () => {
       tomatoSeeds: 3,
       tomatoes: 2,
       milk: 6,
+      butter: 4,
+      cheese: 3,
       crops: [
         { type: "wheat" as const, gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato" as const, gridX: 10, gridY: 10, plantedAt: 60 },
@@ -37,8 +39,14 @@ describe("SaveSystem", () => {
         { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
         { id: "field-tomato", buildingId: "field", gridX: 10, gridY: 10 },
         { id: "cow-test", buildingId: "cow", gridX: 12, gridY: 12 },
+        { id: "factory-test", buildingId: "milk-factory", gridX: 14, gridY: 12 },
       ],
       cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
+      milkFactoryProductions: [{
+        buildingInstanceId: "factory-test",
+        productType: "cheese" as const,
+        nextProductionAt: 20_000,
+      }],
       residentRequestsStartedToday: 2,
     };
     saveGameState(original, storage);
@@ -50,11 +58,18 @@ describe("SaveSystem", () => {
       tomatoSeeds: 3,
       tomatoes: 2,
       milk: 6,
+      butter: 4,
+      cheese: 3,
       crops: [
         { type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato", gridX: 10, gridY: 10, plantedAt: 60 },
       ],
       cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
+      milkFactoryProductions: [{
+        buildingInstanceId: "factory-test",
+        productType: "cheese",
+        nextProductionAt: 20_000,
+      }],
       residentRequestsStartedToday: 2,
     });
   });
@@ -158,6 +173,25 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000)).toMatchObject({
       milk: 0,
       cowProductions: [],
+    });
+  });
+
+  it("加工物情報がない旧セーブデータを0個へ移行する", () => {
+    const storage = memoryStorage();
+    const {
+      milk: _milk,
+      butter: _butter,
+      cheese: _cheese,
+      milkFactoryProductions: _milkFactoryProductions,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      milk: 0,
+      butter: 0,
+      cheese: 0,
+      milkFactoryProductions: [],
     });
   });
 

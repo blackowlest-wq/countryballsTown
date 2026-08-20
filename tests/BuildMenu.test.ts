@@ -38,7 +38,10 @@ describe("BuildMenu", () => {
     await act(async () => root.render(createElement(BuildMenu)));
     expect(container.textContent).toContain("畑");
     expect(container.textContent).toContain("ピザ屋");
+    expect(container.textContent).toContain("牛乳工場");
     expect(container.textContent).not.toContain("桜の木");
+    expect([...container.querySelectorAll('[role="tab"]')]
+      .some((tab) => tab.textContent?.includes("食べ物"))).toBe(false);
 
     const natureTab = [...container.querySelectorAll('[role="tab"]')]
       .find((tab) => tab.textContent?.includes("自然"));
@@ -49,13 +52,13 @@ describe("BuildMenu", () => {
     expect(container.textContent).toContain("牛");
     expect(container.textContent).not.toContain("ピザ屋");
 
-    const foodTab = [...container.querySelectorAll('[role="tab"]')]
-      .find((tab) => tab.textContent?.includes("食べ物"));
+    const buildingTab = [...container.querySelectorAll('[role="tab"]')]
+      .find((tab) => tab.textContent?.includes("建物"));
     await act(async () => {
-      foodTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      buildingTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(container.textContent).toContain("食べ物はまだありません");
-    expect(container.textContent).not.toContain("ピザ屋");
+    expect(container.textContent).toContain("牛乳工場");
+    expect(container.textContent).toContain("ピザ屋");
 
     await act(async () => root.unmount());
   });

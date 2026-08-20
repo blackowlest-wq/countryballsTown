@@ -44,6 +44,31 @@ export function FarmControls(): JSX.Element | null {
           );
         })}
       </div>
+      <div className="processing-stock" aria-label="素材と加工物">
+        <div className="processing-stock-group">
+          <span className="processing-stock-heading">素材</span>
+          <span className="processing-stock-item" aria-label={`牛乳 ${game.milk}`}>
+            <span className="processing-stock-icon milk-stock-icon" aria-hidden="true">🥛</span>
+            <span>牛乳</span>
+            <strong>{game.milk.toLocaleString("ja-JP")}</strong>
+          </span>
+        </div>
+        <div className="processing-stock-group">
+          <span className="processing-stock-heading">加工物</span>
+          <div className="processing-stock-items">
+            <span className="processing-stock-item" aria-label={`バター ${game.butter}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🧈</span>
+              <span>バター</span>
+              <strong>{game.butter.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`チーズ ${game.cheese}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🧀</span>
+              <span>チーズ</span>
+              <strong>{game.cheese.toLocaleString("ja-JP")}</strong>
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="farm-control-row">
         <div className="farm-action-buttons" role="group" aria-label="栽培操作を選ぶ">
           <button

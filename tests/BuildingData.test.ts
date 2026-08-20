@@ -6,9 +6,11 @@ import {
 } from "../src/game/data/buildings";
 
 describe("building definitions", () => {
-  it("建築カテゴリを建物・自然・食べ物に統一する", () => {
+  it("建築カテゴリを建物・自然に統一し、食べ物タブを持たない", () => {
     expect(buildingCategoryDefinitions.map((category) => category.name))
-      .toEqual(["建物", "自然", "食べ物"]);
+      .toEqual(["建物", "自然"]);
+    expect(buildingCategoryDefinitions.some((category) => category.name === "食べ物"))
+      .toBe(false);
     expect(playerBuildingIds.map((id) => getBuildingDefinition(id)?.category))
       .toEqual(expect.arrayContaining(["building", "nature"]));
   });
@@ -47,6 +49,17 @@ describe("building definitions", () => {
       height: 1,
       cost: 50,
       category: "nature",
+    });
+  });
+
+  it("牛乳工場を1マスの建物として定義する", () => {
+    expect(playerBuildingIds).toContain("milk-factory");
+    expect(getBuildingDefinition("milk-factory")).toMatchObject({
+      name: "牛乳工場",
+      width: 1,
+      height: 1,
+      cost: 80,
+      category: "building",
     });
   });
 });

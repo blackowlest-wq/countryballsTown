@@ -7,6 +7,7 @@ import { BottomMenu } from "../ui/BottomMenu";
 import { BuildMenu } from "../ui/BuildMenu";
 import { GameHud } from "../ui/GameHud";
 import { FarmControls } from "../ui/FarmControls";
+import { MilkFactoryPanel } from "../ui/MilkFactoryPanel";
 import { ResidentPanel } from "../ui/ResidentPanel";
 import { VillageScene } from "../scene/VillageScene";
 
@@ -30,6 +31,7 @@ export function App(): JSX.Element {
       <BuildMenu />
       <ResidentPanel />
       <BuildingPanel />
+      <MilkFactoryPanel />
       <FarmControls />
       {interactionMode !== "farm" && (
         <div className="interaction-hint">

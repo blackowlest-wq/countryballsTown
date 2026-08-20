@@ -60,6 +60,31 @@ describe("BuildingSystem", () => {
     expect(removed.state.cowProductions).toEqual([]);
   });
 
+  it("牛乳工場を配置すると未設定の生産情報が登録され、撤去すると消える", () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "milk-factory",
+      8,
+      8,
+      "factory-test",
+    );
+    expect(placed).toMatchObject({
+      success: true,
+      state: {
+        coins: 20,
+        milkFactoryProductions: [{
+          buildingInstanceId: "factory-test",
+          productType: null,
+          nextProductionAt: null,
+        }],
+      },
+    });
+
+    const removed = removeBuilding(placed.state, "factory-test");
+    expect(removed.success).toBe(true);
+    expect(removed.state.milkFactoryProductions).toEqual([]);
+  });
+
   it("作物がある畑は移動・撤去できず、空なら操作できる", () => {
     const placed = placeBuilding(createInitialGameState(0), "field", 8, 8, "field-test");
     const growing = {

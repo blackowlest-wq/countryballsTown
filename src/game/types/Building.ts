@@ -1,4 +1,4 @@
-export type BuildingCategory = "building" | "nature" | "food";
+export type BuildingCategory = "building" | "nature";
 export type ResidentCollision = "blocking" | "passable";
 
 export interface BuildingCategoryDefinition {

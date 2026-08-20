@@ -13,6 +13,7 @@ import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 import { normalizeCowProductions } from "./CowSystem";
 import { isCellInField, normalizeCrops } from "./CropSystem";
+import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
 
 interface LegacyCropState {
   wheatCrops?: unknown;
@@ -62,6 +63,11 @@ export function saveGameState(
     const buildings = createBuildingCollection(state.buildings).buildings;
     const crops = normalizeCrops(state.crops);
     const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
+    const milkFactoryProductions = normalizeMilkFactoryProductions(
+      state.milkFactoryProductions,
+      buildings,
+      now,
+    );
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
       state as GameState & LegacyCropState
     );
@@ -70,6 +76,7 @@ export function saveGameState(
       buildings,
       crops,
       cowProductions,
+      milkFactoryProductions,
       lastSavedAt: now,
     }));
   } catch {
@@ -140,7 +147,20 @@ export function loadGameState(
         typeof parsed.milk === "number" && Number.isFinite(parsed.milk)
           ? Math.max(0, Math.floor(parsed.milk))
           : 0,
+      butter:
+        typeof parsed.butter === "number" && Number.isFinite(parsed.butter)
+          ? Math.max(0, Math.floor(parsed.butter))
+          : 0,
+      cheese:
+        typeof parsed.cheese === "number" && Number.isFinite(parsed.cheese)
+          ? Math.max(0, Math.floor(parsed.cheese))
+          : 0,
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
+      milkFactoryProductions: normalizeMilkFactoryProductions(
+        parsed.milkFactoryProductions,
+        buildings,
+        now,
+      ),
       buildings,
       unlockedBuildings: [
         ...new Set([

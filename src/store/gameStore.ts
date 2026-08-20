@@ -13,6 +13,12 @@ import {
   normalizeCowProductions,
   type CowMilkOutcome,
 } from "../game/systems/CowSystem";
+import {
+  configureMilkFactory as configureFactory,
+  advanceMilkFactoryProductions,
+  getMilkFactoryProductName,
+  normalizeMilkFactoryProductions,
+} from "../game/systems/MilkFactorySystem";
 import { advanceResidents } from "../game/systems/ResidentSystem";
 import {
   advanceShopVisitors,
@@ -33,6 +39,7 @@ import {
 } from "../game/systems/CropSystem";
 import type { BuildingInstance } from "../game/types/Building";
 import type { CropType } from "../game/types/Crop";
+import type { MilkFactoryProductType } from "../game/types/MilkFactory";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
 import type { GameState } from "../game/types/Village";
 
@@ -46,6 +53,7 @@ interface GameStore {
   cropAction: CropAction;
   selectedCropType: CropType;
   selectedBuildingId: string | null;
+  milkFactoryPanelBuildingId: string | null;
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
   isResidentPanelOpen: boolean;
@@ -68,6 +76,13 @@ interface GameStore {
   moveSelectedBuilding: (gridX: number, gridY: number) => boolean;
   removeSelectedBuilding: () => boolean;
   collectCowMilk: (buildingInstanceId: string, now?: number) => CowMilkOutcome | null;
+  openMilkFactoryPanel: (buildingInstanceId: string) => void;
+  closeMilkFactoryPanel: () => void;
+  configureMilkFactory: (
+    buildingInstanceId: string,
+    productType: MilkFactoryProductType,
+    now?: number,
+  ) => boolean;
   selectBuilding: (building: BuildingInstance | null) => void;
   selectResident: (residentId: string | null) => void;
   save: () => void;
@@ -82,9 +97,16 @@ function normalizeGameState(state: GameState): GameState {
     buildings,
     Date.now(),
   );
-  return buildings === state.buildings && cowProductions === state.cowProductions
+  const milkFactoryProductions = normalizeMilkFactoryProductions(
+    state.milkFactoryProductions,
+    buildings,
+    Date.now(),
+  );
+  return buildings === state.buildings &&
+    cowProductions === state.cowProductions &&
+    milkFactoryProductions === state.milkFactoryProductions
     ? state
-    : { ...state, buildings, cowProductions };
+    : { ...state, buildings, cowProductions, milkFactoryProductions };
 }
 
 function persist(state: GameState): GameState {
@@ -117,6 +139,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   cropAction: "harvest",
   selectedCropType: "wheat",
   selectedBuildingId: null,
+  milkFactoryPanelBuildingId: null,
   selectedResidentId: null,
   isBuildMenuOpen: false,
   isResidentPanelOpen: false,
@@ -124,7 +147,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   tick: (deltaMs, now) => {
     const current = get();
-    const economy = advanceEconomy(current.game, deltaMs, current.economyRemainderMs);
+    const factory = advanceMilkFactoryProductions(current.game, now);
+    const economy = advanceEconomy(factory, deltaMs, current.economyRemainderMs);
     const visitorResult = advanceShopVisitors(
       economy.state,
       current.visitorSimulation,
@@ -145,7 +169,9 @@ export const useGameStore = create<GameStore>((setState, get) => {
     const requestEvent = requestProgress.event ?? requestStart.event;
     const requestNotice = requestEvent ? describeResidentRequestEvent(requestEvent) : null;
     const nextNotice = combineNotices(progress.notice, requestNotice);
-    const nextGame = nextNotice ? persist(requestStart.state) : requestStart.state;
+    const nextGame = nextNotice || factory !== current.game
+      ? persist(requestStart.state)
+      : requestStart.state;
     set({
       game: nextGame,
       economyRemainderMs: economy.remainderMs,
@@ -161,6 +187,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     set({
       interactionMode: "build",
       selectedBuildingId: buildingId,
+      milkFactoryPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -171,6 +198,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     set({
       interactionMode: "move",
       selectedBuildingId: buildingId,
+      milkFactoryPanelBuildingId: null,
       isBuildMenuOpen: false,
       notice: "移動先のセルをクリックしてください。",
     }),
@@ -180,6 +208,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       interactionMode: "farm",
       cropAction: "harvest",
       selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -195,7 +224,12 @@ export const useGameStore = create<GameStore>((setState, get) => {
   }),
 
   cancelInteraction: () =>
-    set({ interactionMode: "inspect", selectedBuildingId: null, notice: null }),
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      notice: null,
+    }),
 
   interactCrop: (gridX, gridY, now = Date.now()) => {
     const current = get();
@@ -299,9 +333,47 @@ export const useGameStore = create<GameStore>((setState, get) => {
     return result.outcome;
   },
 
+  openMilkFactoryPanel: (buildingInstanceId) => {
+    const current = get();
+    if (!current.game.buildings.some(
+      (building) => building.id === buildingInstanceId && building.buildingId === "milk-factory",
+    )) return;
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: buildingInstanceId,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      notice: null,
+    });
+  },
+
+  closeMilkFactoryPanel: () => set({ milkFactoryPanelBuildingId: null }),
+
+  configureMilkFactory: (buildingInstanceId, productType, now = Date.now()) => {
+    const current = get();
+    const result = configureFactory(current.game, buildingInstanceId, productType, now);
+    if (result.outcome !== "configured") {
+      set({ notice: "牛乳工場を設定できませんでした。" });
+      return false;
+    }
+    set({
+      game: persist(result.state),
+      milkFactoryPanelBuildingId: null,
+      notice: `${getMilkFactoryProductName(productType)}の生産を始めました！`,
+    });
+    return true;
+  },
+
   selectBuilding: (building) => {
     if (!building) {
-      set({ selectedBuildingId: null, selectedResidentId: null, isResidentPanelOpen: false });
+      set({
+        selectedBuildingId: null,
+        milkFactoryPanelBuildingId: null,
+        selectedResidentId: null,
+        isResidentPanelOpen: false,
+      });
       return;
     }
 
@@ -309,7 +381,12 @@ export const useGameStore = create<GameStore>((setState, get) => {
     const collection = createBuildingCollection(current.game.buildings);
     const selectedBuildingId = collection.idFor(building);
     if (!selectedBuildingId) {
-      set({ selectedBuildingId: null, selectedResidentId: null, isResidentPanelOpen: false });
+      set({
+        selectedBuildingId: null,
+        milkFactoryPanelBuildingId: null,
+        selectedResidentId: null,
+        isResidentPanelOpen: false,
+      });
       return;
     }
 
@@ -319,6 +396,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     set({
       game,
       selectedBuildingId,
+      milkFactoryPanelBuildingId: null,
       selectedResidentId: null,
       isResidentPanelOpen: false,
     });
@@ -328,6 +406,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     set({
       selectedResidentId: residentId,
       selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
       isResidentPanelOpen: residentId !== null,
     }),
 
@@ -342,6 +421,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       cropAction: "harvest",
       selectedCropType: "wheat",
       selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
       selectedResidentId: null,
       notice: "新しい村を始めました。",
     }),

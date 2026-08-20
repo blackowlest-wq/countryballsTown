@@ -6,7 +6,10 @@ export interface GameState {
   tomatoes: number;
   crops: import("./Crop").Crop[];
   milk: number;
+  butter: number;
+  cheese: number;
   cowProductions: import("./Cow").CowProduction[];
+  milkFactoryProductions: import("./MilkFactory").MilkFactoryProduction[];
   villageLevel: number;
   residents: import("./Resident").Resident[];
   buildings: import("./Building").BuildingInstance[];

@@ -6,7 +6,6 @@ import type {
 export const buildingCategoryDefinitions: BuildingCategoryDefinition[] = [
   { id: "building", name: "建物", icon: "🏠" },
   { id: "nature", name: "自然", icon: "🌿" },
-  { id: "food", name: "食べ物", icon: "🍽" },
 ];
 
 export const buildingDefinitions: BuildingDefinition[] = [
@@ -49,6 +48,19 @@ export const buildingDefinitions: BuildingDefinition[] = [
     residentCollision: "blocking",
     residentCollisionPadding: { x: 0.05, z: 0.05 },
     description: "作物を1株育てられる1マスの畑。",
+    removable: true,
+  },
+  {
+    id: "milk-factory",
+    name: "牛乳工場",
+    width: 1,
+    height: 1,
+    cost: 80,
+    category: "building",
+    menuIcon: "🏭",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.25, z: 0.25 },
+    description: "牛乳からバターやチーズを自動で作る工場。",
     removable: true,
   },
   {
@@ -162,6 +174,7 @@ export function getBuildingDefinition(buildingId: string): BuildingDefinition | 
 
 export const playerBuildingIds = [
   "field",
+  "milk-factory",
   "cow",
   "tree",
   "cherry-tree",
