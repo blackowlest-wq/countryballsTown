@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGameState } from "../src/game/core/GameState";
 import {
+  INITIAL_TOMATO_SEEDS,
   INITIAL_WHEAT_SEEDS,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
 } from "../src/game/constants/gameConstants";
@@ -24,11 +25,17 @@ describe("SaveSystem", () => {
       villageLevel: 2,
       wheatSeeds: 4,
       wheat: 4,
+      tomatoSeeds: 3,
+      tomatoes: 2,
       milk: 6,
-      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
+      crops: [
+        { type: "wheat" as const, gridX: 8, gridY: 8, plantedAt: 50 },
+        { type: "tomato" as const, gridX: 10, gridY: 10, plantedAt: 60 },
+      ],
       buildings: [
         ...createInitialGameState(0).buildings,
         { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
+        { id: "field-tomato", buildingId: "field", gridX: 10, gridY: 10 },
         { id: "cow-test", buildingId: "cow", gridX: 12, gridY: 12 },
       ],
       cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
@@ -40,8 +47,13 @@ describe("SaveSystem", () => {
       villageLevel: 2,
       wheatSeeds: 4,
       wheat: 4,
+      tomatoSeeds: 3,
+      tomatoes: 2,
       milk: 6,
-      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
+      crops: [
+        { type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 },
+        { type: "tomato", gridX: 10, gridY: 10, plantedAt: 60 },
+      ],
       cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
       residentRequestsStartedToday: 2,
     });
@@ -52,7 +64,9 @@ describe("SaveSystem", () => {
     const {
       wheatSeeds: _wheatSeeds,
       wheat: _wheat,
-      wheatCrops: _wheatCrops,
+      tomatoSeeds: _tomatoSeeds,
+      tomatoes: _tomatoes,
+      crops: _crops,
       ...legacyState
     } = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
@@ -60,13 +74,49 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000)).toMatchObject({
       wheatSeeds: INITIAL_WHEAT_SEEDS,
       wheat: 0,
-      wheatCrops: [],
+      tomatoSeeds: INITIAL_TOMATO_SEEDS,
+      tomatoes: 0,
+      crops: [],
+    });
+  });
+
+  it("小麦専用の旧セーブを共通作物へ移行し、トマトの種を5個追加する", () => {
+    const storage = memoryStorage();
+    const {
+      tomatoSeeds: _tomatoSeeds,
+      tomatoes: _tomatoes,
+      crops: _crops,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify({
+      ...legacyState,
+      wheatSeeds: 4,
+      wheat: 3,
+      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
+      buildings: [
+        ...legacyState.buildings,
+        { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
+      ],
+    }));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      wheatSeeds: 4,
+      wheat: 3,
+      tomatoSeeds: INITIAL_TOMATO_SEEDS,
+      tomatoes: 0,
+      crops: [{ type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 }],
     });
   });
 
   it("旧仕様の畑外作物を除き、失わないよう種として返す", () => {
     const storage = memoryStorage();
-    const { wheatSeeds: _wheatSeeds, ...legacyState } = createInitialGameState(0);
+    const {
+      wheatSeeds: _wheatSeeds,
+      tomatoSeeds: _tomatoSeeds,
+      tomatoes: _tomatoes,
+      crops: _crops,
+      ...legacyState
+    } = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify({
       ...legacyState,
       wheatCrops: [
@@ -77,7 +127,22 @@ describe("SaveSystem", () => {
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
       wheatSeeds: INITIAL_WHEAT_SEEDS + 2,
-      wheatCrops: [],
+      tomatoSeeds: INITIAL_TOMATO_SEEDS,
+      crops: [],
+    });
+  });
+
+  it("畑外のトマトを除き、トマトの種として返す", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify({
+      ...state,
+      crops: [{ type: "tomato", gridX: 8, gridY: 8, plantedAt: 50 }],
+    }));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      tomatoSeeds: INITIAL_TOMATO_SEEDS + 1,
+      crops: [],
     });
   });
 

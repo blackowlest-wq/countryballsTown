@@ -1,5 +1,6 @@
 import { createInitialResident } from "../systems/ResidentSystem";
 import {
+  INITIAL_TOMATO_SEEDS,
   INITIAL_WHEAT_SEEDS,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
 } from "../constants/gameConstants";
@@ -11,7 +12,9 @@ export function createInitialGameState(now = Date.now()): GameState {
     coins: 100,
     wheatSeeds: INITIAL_WHEAT_SEEDS,
     wheat: 0,
-    wheatCrops: [],
+    tomatoSeeds: INITIAL_TOMATO_SEEDS,
+    tomatoes: 0,
+    crops: [],
     milk: 0,
     cowProductions: [],
     villageLevel: 1,

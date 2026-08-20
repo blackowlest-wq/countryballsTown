@@ -2,7 +2,9 @@ export interface GameState {
   coins: number;
   wheatSeeds: number;
   wheat: number;
-  wheatCrops: import("./Crop").WheatCrop[];
+  tomatoSeeds: number;
+  tomatoes: number;
+  crops: import("./Crop").Crop[];
   milk: number;
   cowProductions: import("./Cow").CowProduction[];
   villageLevel: number;

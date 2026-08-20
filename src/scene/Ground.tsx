@@ -7,7 +7,7 @@ export function Ground(): JSX.Element {
   const interactionMode = useGameStore((store) => store.interactionMode);
   const placeSelectedBuilding = useGameStore((store) => store.placeSelectedBuilding);
   const moveSelectedBuilding = useGameStore((store) => store.moveSelectedBuilding);
-  const interactWheat = useGameStore((store) => store.interactWheat);
+  const interactCrop = useGameStore((store) => store.interactCrop);
   const activePointers = useRef(new Set<number>());
   const visitedCells = useRef(new Map<number, Set<string>>());
 
@@ -32,7 +32,7 @@ export function Ground(): JSX.Element {
         const cell = worldToGrid(event.point.x, event.point.z);
         const key = `${cell.x}:${cell.z}`;
         visitedCells.current.get(event.pointerId)?.add(key);
-        interactWheat(cell.x, cell.z);
+        interactCrop(cell.x, cell.z);
       }}
       onPointerMove={(event) => {
         if (
@@ -48,7 +48,7 @@ export function Ground(): JSX.Element {
         const visited = visitedCells.current.get(event.pointerId);
         if (!visited || visited.has(key)) return;
         visited.add(key);
-        interactWheat(cell.x, cell.z);
+        interactCrop(cell.x, cell.z);
       }}
       onPointerUp={(event) => {
         if (interactionMode !== "farm") return;

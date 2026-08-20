@@ -44,7 +44,7 @@ function fieldHasCrop(state: GameState, field: BuildingInstance): boolean {
   if (field.buildingId !== "field") return false;
   const occupiedCells = getOccupiedCells(field.buildingId, field.gridX, field.gridY);
   return occupiedCells.some((cell) =>
-    state.wheatCrops.some((crop) => crop.gridX === cell.x && crop.gridY === cell.y)
+    state.crops.some((crop) => crop.gridX === cell.x && crop.gridY === cell.y)
   );
 }
 
@@ -96,7 +96,7 @@ function checkPlacement(
   const candidateCells = getOccupiedCells(buildingId, gridX, gridY);
   if (
     candidateCells.some((candidate) =>
-      state.wheatCrops.some(
+      state.crops.some(
         (crop) => crop.gridX === candidate.x && crop.gridY === candidate.y,
       ),
     )

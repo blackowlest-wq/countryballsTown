@@ -59,13 +59,9 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 
 .resource-pill { display: flex; align-items: center; gap: 9px; min-width: 132px; padding: 9px 15px 9px 9px; border-radius: 23px; }
 .resource-icon { display: grid; width: 34px; height: 34px; place-items: center; color: #fff; font-size: 22px; font-weight: 900; background: #f5ae36; border: 2px solid #ffd675; border-radius: 50%; text-shadow: 0 1px 0 rgba(137, 82, 17, .25); }
-.produce-inventory-pill { display: grid; grid-template-columns: 34px 1fr; min-width: 148px; gap: 6px 9px; padding-block: 8px; }
-.produce-resource-copy { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 8px; }
+.milk-resource-pill { min-width: 132px; }
+.resource-summary-copy { display: flex; min-width: 0; flex: 1; align-items: baseline; justify-content: space-between; gap: 8px; }
 .resource-label { color: #8b7552; font-size: 9px; font-weight: 900; white-space: nowrap; }
-.resource-label-prefix { display: inline; }
-.produce-resource-divider { grid-column: 1 / -1; height: 1px; background: #eadfc9; }
-.wheat-seed-icon { color: #805828; background: #dfbd68; border-color: #f5dda0; font-size: 15px; text-shadow: none; }
-.wheat-icon { color: #6d5420; background: #edc45c; border-color: #ffe49a; font-size: 19px; text-shadow: none; }
 .milk-icon { color: #4c8294; background: #dff5f7; border-color: #f5ffff; font-size: 18px; text-shadow: none; }
 .resource-value { color: var(--ink); font-size: 22px; font-weight: 900; letter-spacing: .03em; }
 .mood-pill { padding: 8px 13px; border-radius: 18px; color: #6b7e62; font-size: 11px; font-weight: 800; }
@@ -156,15 +152,26 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .bottom-menu-button { display: grid; min-width: 98px; gap: 3px; place-items: center; padding: 9px 17px 8px; color: #8d8374; background: transparent; border: 0; border-radius: 15px; cursor: pointer; font-size: 11px; font-weight: 900; transition: background .18s ease, color .18s ease, transform .18s ease; }
 .bottom-menu-button:hover, .bottom-menu-button.is-active { color: #557b47; background: #eef6de; transform: translateY(-2px); }
 .menu-icon { display: block; height: 21px; color: #7ba95e; font-size: 20px; line-height: 21px; letter-spacing: -6px; }
-.wheat-menu-icon { letter-spacing: 0; }
+.crop-menu-icon { letter-spacing: 0; }
 
-.farm-controls { position: absolute; bottom: 106px; left: 50%; z-index: 10; display: flex; max-width: calc(100vw - 40px); gap: 10px; align-items: center; padding: 7px 11px 7px 7px; border-radius: 18px; transform: translateX(-50%); }
+.farm-controls { position: absolute; bottom: 106px; left: 50%; z-index: 10; display: flex; width: min(470px, calc(100vw - 40px)); flex-direction: column; gap: 8px; padding: 9px; border-radius: 18px; transform: translateX(-50%); }
+.crop-inventory { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.crop-choice-button { display: grid; min-width: 0; grid-template-columns: 34px minmax(0, 1fr); gap: 7px; align-items: center; padding: 7px; color: #736b60; text-align: left; background: rgba(255,255,255,.55); border: 2px solid #e7dccb; border-radius: 13px; cursor: pointer; transition: color .16s ease, background .16s ease, border-color .16s ease, transform .16s ease; }
+.crop-choice-button:hover { color: #557b47; background: #fffdf6; transform: translateY(-1px); }
+.crop-choice-button[aria-pressed="true"] { color: #4f743f; background: #eef6de; border-color: #8abd68; }
+.crop-choice-button[data-crop="tomato"][aria-pressed="true"] { color: #9a493d; background: #fff0e7; border-color: #e88972; }
+.crop-choice-icon { display: grid; width: 34px; height: 34px; place-items: center; background: #f0e7d5; border-radius: 10px; font-size: 20px; }
+.crop-choice-copy { display: grid; min-width: 0; gap: 3px; }
+.crop-choice-copy > strong { font-size: 12px; font-weight: 900; }
+.crop-stock-row { display: flex; justify-content: space-between; gap: 6px; color: #8b806f; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.crop-stock-row b { color: var(--ink); font-size: 11px; }
+.farm-control-row { display: flex; width: 100%; gap: 8px; align-items: center; }
 .farm-action-buttons { display: flex; gap: 4px; padding: 3px; background: #eee5d5; border-radius: 13px; }
 .farm-action-button { display: inline-flex; gap: 5px; align-items: center; min-height: 36px; padding: 7px 11px; color: #81786b; white-space: nowrap; background: transparent; border: 0; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: 900; transition: color .16s ease, background .16s ease, transform .16s ease; }
 .farm-action-button:hover { color: #557b47; transform: translateY(-1px); }
 .farm-action-button[aria-pressed="true"] { color: #fff; background: #78b557; box-shadow: 0 2px 0 #568c40; }
 .farm-action-button[data-action="harvest"][aria-pressed="true"] { color: #6f501f; background: #f2c45e; box-shadow: 0 2px 0 #c49237; }
-.farm-action-copy { max-width: 210px; color: #765f2c; font-size: 10px; font-weight: 800; line-height: 1.35; }
+.farm-action-copy { flex: 1; color: #765f2c; font-size: 10px; font-weight: 800; line-height: 1.35; }
 
 .interaction-hint { position: absolute; right: 24px; bottom: 26px; z-index: 4; display: flex; gap: 7px; align-items: center; padding: 8px 12px; color: #718274; border-radius: 15px; font-size: 10px; font-weight: 800; opacity: .9; }
 .hint-hand { color: #e49d4d; font-size: 14px; }
@@ -186,12 +193,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .resource-pill { min-width: 104px; padding: 6px 10px 6px 6px; }
   .resource-icon { width: 27px; height: 27px; font-size: 17px; }
   .resource-value { font-size: 17px; }
-  .produce-inventory-pill { grid-template-columns: 27px auto 1px 27px auto 1px 27px auto; min-width: 174px; gap: 3px; padding: 6px; }
-  .produce-resource-copy { display: grid; justify-content: start; gap: 0; line-height: 1; }
-  .produce-resource-divider { grid-column: auto; width: 1px; height: 27px; }
   .resource-label { font-size: 8px; }
-  .resource-label-prefix { display: none; }
-  .wheat-seed-icon { font-size: 12px; }
   .mood-pill { display: none; }
   .goal-card { top: 76px; left: 10px; padding: 8px 11px; border-radius: 15px; }
   .goal-text { font-size: 10px; }
@@ -204,9 +206,15 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .building-panel { left: 10px; right: 10px; width: auto; }
   .bottom-menu { bottom: 10px; padding: 6px; }
   .bottom-menu-button { min-width: 82px; padding: 7px 12px; }
-  .farm-controls { bottom: 91px; width: calc(100vw - 20px); gap: 7px; justify-content: center; padding: 6px; }
+  .farm-controls { bottom: 91px; width: calc(100vw - 20px); gap: 6px; padding: 7px; }
+  .crop-choice-button { grid-template-columns: 29px minmax(0, 1fr); gap: 5px; padding: 5px; }
+  .crop-choice-icon { width: 29px; height: 29px; font-size: 17px; }
+  .crop-choice-copy > strong { font-size: 10px; }
+  .crop-stock-row { gap: 4px; font-size: 8px; }
+  .crop-stock-row b { font-size: 10px; }
+  .farm-control-row { gap: 6px; }
   .farm-action-button { padding-inline: 8px; font-size: 10px; }
-  .farm-action-copy { max-width: 135px; font-size: 9px; }
+  .farm-action-copy { font-size: 9px; }
   .interaction-hint { display: none; }
   .notice-banner { top: 80px; }
 }
@@ -216,8 +224,10 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .level-badge { width: 40px; height: 40px; font-size: 21px; }
   .level-title { font-size: 12px; }
   .level-card .eyebrow, .level-card .level-subtitle { display: none; }
-  .produce-inventory-pill { grid-template-columns: 24px auto 1px 24px auto 1px 24px auto; min-width: 164px; }
-  .produce-inventory-pill .resource-icon { width: 24px; height: 24px; font-size: 15px; }
-  .produce-inventory-pill .resource-value { font-size: 15px; }
-  .produce-resource-divider { height: 24px; }
+  .milk-resource-pill { min-width: 96px; }
+  .farm-controls { padding: 6px; }
+  .crop-choice-button { grid-template-columns: 25px minmax(0, 1fr); gap: 4px; padding: 4px; }
+  .crop-choice-icon { width: 25px; height: 25px; font-size: 15px; }
+  .farm-action-button { padding-inline: 6px; }
+  .farm-action-copy { font-size: 8px; }
 }

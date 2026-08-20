@@ -48,7 +48,7 @@ export const buildingDefinitions: BuildingDefinition[] = [
     menuIcon: "▦",
     residentCollision: "blocking",
     residentCollisionPadding: { x: 0.05, z: 0.05 },
-    description: "小麦を1株育てられる1マスの畑。",
+    description: "作物を1株育てられる1マスの畑。",
     removable: true,
   },
   {

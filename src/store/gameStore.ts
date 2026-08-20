@@ -26,11 +26,13 @@ import {
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
-  performWheatAction,
-  type WheatAction,
-  type WheatActionOutcome,
-} from "../game/systems/WheatSystem";
+  getCropName,
+  performCropAction,
+  type CropAction,
+  type CropActionOutcome,
+} from "../game/systems/CropSystem";
 import type { BuildingInstance } from "../game/types/Building";
+import type { CropType } from "../game/types/Crop";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
 import type { GameState } from "../game/types/Village";
 
@@ -41,7 +43,8 @@ interface GameStore {
   economyRemainderMs: number;
   visitorSimulation: ShopVisitorSimulation;
   interactionMode: InteractionMode;
-  wheatAction: WheatAction;
+  cropAction: CropAction;
+  selectedCropType: CropType;
   selectedBuildingId: string | null;
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
@@ -53,13 +56,14 @@ interface GameStore {
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
   beginFarming: () => void;
-  setWheatAction: (action: WheatAction) => void;
+  setCropAction: (action: CropAction) => void;
+  selectCropType: (cropType: CropType) => void;
   cancelInteraction: () => void;
-  interactWheat: (
+  interactCrop: (
     gridX: number,
     gridY: number,
     now?: number,
-  ) => WheatActionOutcome | null;
+  ) => CropActionOutcome | null;
   placeSelectedBuilding: (gridX: number, gridY: number) => boolean;
   moveSelectedBuilding: (gridX: number, gridY: number) => boolean;
   removeSelectedBuilding: () => boolean;
@@ -110,7 +114,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
   economyRemainderMs: 0,
   visitorSimulation: createShopVisitorSimulation(),
   interactionMode: "inspect",
-  wheatAction: "harvest",
+  cropAction: "harvest",
+  selectedCropType: "wheat",
   selectedBuildingId: null,
   selectedResidentId: null,
   isBuildMenuOpen: false,
@@ -173,7 +178,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   beginFarming: () =>
     set({
       interactionMode: "farm",
-      wheatAction: "harvest",
+      cropAction: "harvest",
       selectedBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
@@ -181,33 +186,43 @@ export const useGameStore = create<GameStore>((setState, get) => {
       notice: "畑で操作してください。安全のため「収穫」から始まります。",
     }),
 
-  setWheatAction: (action) => set({ wheatAction: action, notice: null }),
+  setCropAction: (action) => set({ cropAction: action, notice: null }),
+
+  selectCropType: (cropType) => set({
+    selectedCropType: cropType,
+    cropAction: "plant",
+    notice: null,
+  }),
 
   cancelInteraction: () =>
     set({ interactionMode: "inspect", selectedBuildingId: null, notice: null }),
 
-  interactWheat: (gridX, gridY, now = Date.now()) => {
+  interactCrop: (gridX, gridY, now = Date.now()) => {
     const current = get();
     if (current.interactionMode !== "farm") return null;
-    const result = performWheatAction(
+    const result = performCropAction(
       current.game,
-      current.wheatAction,
+      current.cropAction,
+      current.selectedCropType,
       gridX,
       gridY,
       now,
     );
     if (result.state === current.game) {
       if (result.outcome === "not-field") {
-        set({ notice: "小麦は畑の中にだけ植えられます。" });
+        set({ notice: "作物は畑の中にだけ植えられます。" });
       } else if (result.outcome === "no-seeds") {
-        set({ notice: "小麦の種がありません。収穫して種を増やしましょう。" });
+        set({ notice: `${getCropName(current.selectedCropType)}の種がありません。収穫して種を増やしましょう。` });
+      } else if (result.outcome === "growing" && result.cropType) {
+        set({ notice: `${getCropName(result.cropType)}はまだ成長中です。` });
       }
       return result.outcome;
     }
+    const harvestedCropName = result.cropType ? getCropName(result.cropType) : "作物";
     set({
       game: result.state,
       notice: result.outcome === "harvested"
-        ? "小麦1個と、小麦の種2個を収穫しました！"
+        ? `${harvestedCropName}1個と、${harvestedCropName}の種2個を収穫しました！`
         : current.notice,
     });
     return result.outcome;
@@ -324,7 +339,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       economyRemainderMs: 0,
       visitorSimulation: createShopVisitorSimulation(),
       interactionMode: "inspect",
-      wheatAction: "harvest",
+      cropAction: "harvest",
+      selectedCropType: "wheat",
       selectedBuildingId: null,
       selectedResidentId: null,
       notice: "新しい村を始めました。",

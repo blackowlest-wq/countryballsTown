@@ -47,8 +47,8 @@ export function BottomMenu(): JSX.Element {
         aria-pressed={mode === "farm"}
         onClick={toggleFarming}
       >
-        <span className="menu-icon wheat-menu-icon">🌾</span>
-        <span>小麦</span>
+        <span className="menu-icon crop-menu-icon">🌱</span>
+        <span>作物</span>
       </button>
     </nav>
   );

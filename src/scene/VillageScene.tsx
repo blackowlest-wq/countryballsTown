@@ -7,7 +7,7 @@ import { Ground } from "./Ground";
 import { PlacementGrid } from "./PlacementGrid";
 import { ResidentRenderer } from "./residents/ResidentRenderer";
 import { ShopVisitorRenderer } from "./visitors/ShopVisitorRenderer";
-import { WheatCropRenderer } from "./crops/WheatCropRenderer";
+import { CropRenderer } from "./crops/CropRenderer";
 import { useGameStore } from "../store/gameStore";
 
 function SceneContents(): JSX.Element {
@@ -31,7 +31,7 @@ function SceneContents(): JSX.Element {
       <CameraController />
       <Ground />
       <PlacementGrid />
-      <WheatCropRenderer />
+      <CropRenderer />
       <BuildingRenderer />
       <ResidentRenderer />
       <ShopVisitorRenderer />

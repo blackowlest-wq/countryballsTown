@@ -1,4 +1,5 @@
 import {
+  INITIAL_TOMATO_SEEDS,
   INITIAL_WHEAT_SEEDS,
   RESIDENT_REQUEST_DAILY_LIMIT,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
@@ -11,7 +12,11 @@ import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 import { normalizeCowProductions } from "./CowSystem";
-import { isCellInField, normalizeWheatCrops } from "./WheatSystem";
+import { isCellInField, normalizeCrops } from "./CropSystem";
+
+interface LegacyCropState {
+  wheatCrops?: unknown;
+}
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -55,10 +60,15 @@ export function saveGameState(
   try {
     const now = Date.now();
     const buildings = createBuildingCollection(state.buildings).buildings;
+    const crops = normalizeCrops(state.crops);
     const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
+    const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
+      state as GameState & LegacyCropState
+    );
     storage.setItem(SAVE_KEY, JSON.stringify({
-      ...state,
+      ...stateWithoutLegacyCrops,
       buildings,
+      crops,
       cowProductions,
       lastSavedAt: now,
     }));
@@ -92,23 +102,40 @@ export function loadGameState(
         ? 1
         : 0;
     const buildings = createBuildingCollection(parsed.buildings).buildings;
-    const normalizedWheatCrops = normalizeWheatCrops(parsed.wheatCrops);
-    const wheatCrops = normalizedWheatCrops.filter((crop) =>
+    const legacyParsed = parsed as GameState & LegacyCropState;
+    const hasCurrentCrops = Array.isArray(parsed.crops);
+    const normalizedCrops = normalizeCrops(
+      hasCurrentCrops ? parsed.crops : legacyParsed.wheatCrops,
+      hasCurrentCrops ? undefined : "wheat",
+    );
+    const crops = normalizedCrops.filter((crop) =>
       isCellInField(buildings, crop.gridX, crop.gridY)
     );
-    const refundedSeeds = normalizedWheatCrops.length - wheatCrops.length;
+    const discardedCrops = normalizedCrops.filter((crop) => !crops.includes(crop));
+    const refundedWheatSeeds = discardedCrops.filter((crop) => crop.type === "wheat").length;
+    const refundedTomatoSeeds = discardedCrops.filter((crop) => crop.type === "tomato").length;
     const storedWheatSeeds =
       typeof parsed.wheatSeeds === "number" && Number.isFinite(parsed.wheatSeeds)
         ? Math.max(0, Math.floor(parsed.wheatSeeds))
         : INITIAL_WHEAT_SEEDS;
+    const storedTomatoSeeds =
+      typeof parsed.tomatoSeeds === "number" && Number.isFinite(parsed.tomatoSeeds)
+        ? Math.max(0, Math.floor(parsed.tomatoSeeds))
+        : INITIAL_TOMATO_SEEDS;
+    const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = legacyParsed;
     return {
-      ...parsed,
-      wheatSeeds: storedWheatSeeds + refundedSeeds,
+      ...stateWithoutLegacyCrops,
+      wheatSeeds: storedWheatSeeds + refundedWheatSeeds,
       wheat:
         typeof parsed.wheat === "number" && Number.isFinite(parsed.wheat)
           ? Math.max(0, Math.floor(parsed.wheat))
           : 0,
-      wheatCrops,
+      tomatoSeeds: storedTomatoSeeds + refundedTomatoSeeds,
+      tomatoes:
+        typeof parsed.tomatoes === "number" && Number.isFinite(parsed.tomatoes)
+          ? Math.max(0, Math.floor(parsed.tomatoes))
+          : 0,
+      crops,
       milk:
         typeof parsed.milk === "number" && Number.isFinite(parsed.milk)
           ? Math.max(0, Math.floor(parsed.milk))
