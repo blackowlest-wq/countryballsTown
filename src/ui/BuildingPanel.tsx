@@ -8,11 +8,13 @@ export function BuildingPanel(): JSX.Element | null {
   const beginMove = useGameStore((store) => store.beginMove);
   const remove = useGameStore((store) => store.removeSelectedBuilding);
   const openMilkFactoryPanel = useGameStore((store) => store.openMilkFactoryPanel);
+  const openPorkFactoryPanel = useGameStore((store) => store.openPorkFactoryPanel);
   const cancel = useGameStore((store) => store.cancelInteraction);
   if (!building || mode === "build") return null;
   const definition = getBuildingDefinition(building.buildingId);
   if (!definition) return null;
   const isMilkFactory = building.buildingId === "milk-factory";
+  const isPorkFactory = building.buildingId === "pork-factory";
 
   return (
     <section className="floating-panel building-panel" aria-label="建物の操作">
@@ -33,6 +35,15 @@ export function BuildingPanel(): JSX.Element | null {
               className="primary-button"
               type="button"
               onClick={() => openMilkFactoryPanel(building.id)}
+            >
+              作るものを変更
+            </button>
+          )}
+          {isPorkFactory && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => openPorkFactoryPanel(building.id)}
             >
               作るものを変更
             </button>

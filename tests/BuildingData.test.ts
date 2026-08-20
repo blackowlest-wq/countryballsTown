@@ -62,4 +62,22 @@ describe("building definitions", () => {
       category: "building",
     });
   });
+
+  it("豚と豚肉工場を1マスの建築物として定義する", () => {
+    expect(playerBuildingIds).toEqual(expect.arrayContaining(["pig", "pork-factory"]));
+    expect(getBuildingDefinition("pig")).toMatchObject({
+      name: "豚",
+      width: 1,
+      height: 1,
+      cost: 50,
+      category: "nature",
+    });
+    expect(getBuildingDefinition("pork-factory")).toMatchObject({
+      name: "豚肉工場",
+      width: 1,
+      height: 1,
+      cost: 80,
+      category: "building",
+    });
+  });
 });

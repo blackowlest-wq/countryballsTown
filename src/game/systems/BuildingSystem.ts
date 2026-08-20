@@ -4,10 +4,15 @@ import { getBuildingDefinition } from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type { GameState } from "../types/Village";
 import { registerCowProduction, removeCowProduction } from "./CowSystem";
+import { registerPigProduction, removePigProduction } from "./PigSystem";
 import {
   registerMilkFactoryProduction,
   removeMilkFactoryProduction,
 } from "./MilkFactorySystem";
+import {
+  registerPorkFactoryProduction,
+  removePorkFactoryProduction,
+} from "./PorkFactorySystem";
 
 export type BuildingOperationReason =
   | "unknown-building"
@@ -150,9 +155,13 @@ export function placeBuilding(
   };
   const productionState = buildingId === "cow"
     ? registerCowProduction(placedState, building.id, now)
-    : buildingId === "milk-factory"
-      ? registerMilkFactoryProduction(placedState, building.id)
-      : placedState;
+    : buildingId === "pig"
+      ? registerPigProduction(placedState, building.id, now)
+      : buildingId === "milk-factory"
+        ? registerMilkFactoryProduction(placedState, building.id)
+        : buildingId === "pork-factory"
+          ? registerPorkFactoryProduction(placedState, building.id)
+          : placedState;
   return {
     success: true,
     building,
@@ -217,9 +226,13 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
     success: true,
     state: existing.buildingId === "cow"
       ? removeCowProduction(removedState, existing.id)
-      : existing.buildingId === "milk-factory"
-        ? removeMilkFactoryProduction(removedState, existing.id)
-        : removedState,
+      : existing.buildingId === "pig"
+        ? removePigProduction(removedState, existing.id)
+        : existing.buildingId === "milk-factory"
+          ? removeMilkFactoryProduction(removedState, existing.id)
+          : existing.buildingId === "pork-factory"
+            ? removePorkFactoryProduction(removedState, existing.id)
+            : removedState,
   };
 }
 

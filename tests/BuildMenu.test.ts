@@ -39,6 +39,7 @@ describe("BuildMenu", () => {
     expect(container.textContent).toContain("畑");
     expect(container.textContent).toContain("ピザ屋");
     expect(container.textContent).toContain("牛乳工場");
+    expect(container.textContent).toContain("豚肉工場");
     expect(container.textContent).not.toContain("桜の木");
     expect([...container.querySelectorAll('[role="tab"]')]
       .some((tab) => tab.textContent?.includes("食べ物"))).toBe(false);
@@ -50,6 +51,7 @@ describe("BuildMenu", () => {
     });
     expect(container.textContent).toContain("桜の木");
     expect(container.textContent).toContain("牛");
+    expect(container.textContent).toContain("豚");
     expect(container.textContent).not.toContain("ピザ屋");
 
     const buildingTab = [...container.querySelectorAll('[role="tab"]')]

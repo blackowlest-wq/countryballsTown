@@ -6,7 +6,9 @@ import type { BuildingInstance } from "../../game/types/Building";
 import { buildingToWorldPosition } from "../../utils/grid";
 import { House } from "./House";
 import { Cow } from "./Cow";
+import { Pig } from "./Pig";
 import { MilkFactory } from "./MilkFactory";
+import { PorkFactory } from "./PorkFactory";
 import { Field } from "./Field";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
@@ -43,16 +45,26 @@ function BuildingInstanceRenderer({
   const interactionMode = useGameStore((store) => store.interactionMode);
   const selectBuilding = useGameStore((store) => store.selectBuilding);
   const openMilkFactoryPanel = useGameStore((store) => store.openMilkFactoryPanel);
+  const openPorkFactoryPanel = useGameStore((store) => store.openPorkFactoryPanel);
   const collectCowMilk = useGameStore((store) => store.collectCowMilk);
+  const collectPigPork = useGameStore((store) => store.collectPigPork);
   const cowProduction = useGameStore((store) => store.game.cowProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
   const isCow = instance.buildingId === "cow";
+  const isPig = instance.buildingId === "pig";
   const isMilkFactory = instance.buildingId === "milk-factory";
+  const isPorkFactory = instance.buildingId === "pork-factory";
   const milkFactoryProduction = useGameStore((store) => store.game.milkFactoryProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
-  if (!definition || (!Renderer && !isCow && !isMilkFactory)) return null;
+  const pigProduction = useGameStore((store) => store.game.pigProductions.find(
+    (production) => production.buildingInstanceId === instance.id,
+  ));
+  const porkFactoryProduction = useGameStore((store) => store.game.porkFactoryProductions.find(
+    (production) => production.buildingInstanceId === instance.id,
+  ));
+  if (!definition || (!Renderer && !isCow && !isPig && !isMilkFactory && !isPorkFactory)) return null;
   const position = buildingToWorldPosition(instance, definition.width, definition.height);
   const selected = selectedBuildingId === instance.id && interactionMode !== "build";
 
@@ -63,8 +75,13 @@ function BuildingInstanceRenderer({
         if (interactionMode !== "inspect") return;
         event.stopPropagation();
         if (isCow && collectCowMilk(instance.id) === "collected") return;
+        if (isPig && collectPigPork(instance.id) === "collected") return;
         if (isMilkFactory && !milkFactoryProduction?.productType) {
           openMilkFactoryPanel(instance.id);
+          return;
+        }
+        if (isPorkFactory && !porkFactoryProduction?.productType) {
+          openPorkFactoryPanel(instance.id);
           return;
         }
         selectBuilding(selectionSource);
@@ -80,8 +97,12 @@ function BuildingInstanceRenderer({
     >
       {isCow
         ? <Cow milkReadyAt={cowProduction?.milkReadyAt} />
+        : isPig
+          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} />
         : isMilkFactory
           ? <MilkFactory productType={milkFactoryProduction?.productType} />
+          : isPorkFactory
+            ? <PorkFactory productType={porkFactoryProduction?.productType} />
           : Renderer && <Renderer />}
       {selected && (
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.025, 0]}>

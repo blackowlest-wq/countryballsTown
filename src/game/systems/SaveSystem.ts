@@ -14,6 +14,8 @@ import { getLocalDateKey } from "../../utils/date";
 import { normalizeCowProductions } from "./CowSystem";
 import { isCellInField, normalizeCrops } from "./CropSystem";
 import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
+import { normalizePigProductions } from "./PigSystem";
+import { normalizePorkFactoryProductions } from "./PorkFactorySystem";
 
 interface LegacyCropState {
   wheatCrops?: unknown;
@@ -68,6 +70,12 @@ export function saveGameState(
       buildings,
       now,
     );
+    const pigProductions = normalizePigProductions(state.pigProductions, buildings, now);
+    const porkFactoryProductions = normalizePorkFactoryProductions(
+      state.porkFactoryProductions,
+      buildings,
+      now,
+    );
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
       state as GameState & LegacyCropState
     );
@@ -77,6 +85,8 @@ export function saveGameState(
       crops,
       cowProductions,
       milkFactoryProductions,
+      pigProductions,
+      porkFactoryProductions,
       lastSavedAt: now,
     }));
   } catch {
@@ -147,6 +157,10 @@ export function loadGameState(
         typeof parsed.milk === "number" && Number.isFinite(parsed.milk)
           ? Math.max(0, Math.floor(parsed.milk))
           : 0,
+      pork:
+        typeof parsed.pork === "number" && Number.isFinite(parsed.pork)
+          ? Math.max(0, Math.floor(parsed.pork))
+          : 0,
       butter:
         typeof parsed.butter === "number" && Number.isFinite(parsed.butter)
           ? Math.max(0, Math.floor(parsed.butter))
@@ -155,9 +169,27 @@ export function loadGameState(
         typeof parsed.cheese === "number" && Number.isFinite(parsed.cheese)
           ? Math.max(0, Math.floor(parsed.cheese))
           : 0,
+      ham:
+        typeof parsed.ham === "number" && Number.isFinite(parsed.ham)
+          ? Math.max(0, Math.floor(parsed.ham))
+          : 0,
+      sausage:
+        typeof parsed.sausage === "number" && Number.isFinite(parsed.sausage)
+          ? Math.max(0, Math.floor(parsed.sausage))
+          : 0,
+      bacon:
+        typeof parsed.bacon === "number" && Number.isFinite(parsed.bacon)
+          ? Math.max(0, Math.floor(parsed.bacon))
+          : 0,
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
       milkFactoryProductions: normalizeMilkFactoryProductions(
         parsed.milkFactoryProductions,
+        buildings,
+        now,
+      ),
+      pigProductions: normalizePigProductions(parsed.pigProductions, buildings, now),
+      porkFactoryProductions: normalizePorkFactoryProductions(
+        parsed.porkFactoryProductions,
         buildings,
         now,
       ),

@@ -85,6 +85,53 @@ describe("BuildingSystem", () => {
     expect(removed.state.milkFactoryProductions).toEqual([]);
   });
 
+  it("豚を配置すると豚肉の収穫待ちが始まり、撤去すると生産情報も消える", () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "pig",
+      8,
+      8,
+      "pig-test",
+      1_000,
+    );
+    expect(placed).toMatchObject({
+      success: true,
+      state: {
+        coins: 50,
+        pigProductions: [{ buildingInstanceId: "pig-test", porkReadyAt: 31_000 }],
+      },
+    });
+
+    const removed = removeBuilding(placed.state, "pig-test");
+    expect(removed.success).toBe(true);
+    expect(removed.state.pigProductions).toEqual([]);
+  });
+
+  it("豚肉工場を配置すると未設定の生産情報が登録され、撤去すると消える", () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "pork-factory",
+      8,
+      8,
+      "pork-factory-test",
+    );
+    expect(placed).toMatchObject({
+      success: true,
+      state: {
+        coins: 20,
+        porkFactoryProductions: [{
+          buildingInstanceId: "pork-factory-test",
+          productType: null,
+          nextProductionAt: null,
+        }],
+      },
+    });
+
+    const removed = removeBuilding(placed.state, "pork-factory-test");
+    expect(removed.success).toBe(true);
+    expect(removed.state.porkFactoryProductions).toEqual([]);
+  });
+
   it("作物がある畑は移動・撤去できず、空なら操作できる", () => {
     const placed = placeBuilding(createInitialGameState(0), "field", 8, 8, "field-test");
     const growing = {

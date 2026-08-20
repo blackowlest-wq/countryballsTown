@@ -47,11 +47,18 @@ export function FarmControls(): JSX.Element | null {
       <div className="processing-stock" aria-label="素材と加工物">
         <div className="processing-stock-group">
           <span className="processing-stock-heading">素材</span>
-          <span className="processing-stock-item" aria-label={`牛乳 ${game.milk}`}>
-            <span className="processing-stock-icon milk-stock-icon" aria-hidden="true">🥛</span>
-            <span>牛乳</span>
-            <strong>{game.milk.toLocaleString("ja-JP")}</strong>
-          </span>
+          <div className="processing-stock-items">
+            <span className="processing-stock-item" aria-label={`牛乳 ${game.milk}`}>
+              <span className="processing-stock-icon milk-stock-icon" aria-hidden="true">🥛</span>
+              <span>牛乳</span>
+              <strong>{game.milk.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`豚肉 ${game.pork}`}>
+              <span className="processing-stock-icon pork-stock-icon" aria-hidden="true">🍖</span>
+              <span>豚肉</span>
+              <strong>{game.pork.toLocaleString("ja-JP")}</strong>
+            </span>
+          </div>
         </div>
         <div className="processing-stock-group">
           <span className="processing-stock-heading">加工物</span>
@@ -65,6 +72,21 @@ export function FarmControls(): JSX.Element | null {
               <span className="processing-stock-icon" aria-hidden="true">🧀</span>
               <span>チーズ</span>
               <strong>{game.cheese.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`ハム ${game.ham}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🍖</span>
+              <span>ハム</span>
+              <strong>{game.ham.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`ソーセージ ${game.sausage}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🌭</span>
+              <span>ソーセージ</span>
+              <strong>{game.sausage.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`ベーコン ${game.bacon}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🥓</span>
+              <span>ベーコン</span>
+              <strong>{game.bacon.toLocaleString("ja-JP")}</strong>
             </span>
           </div>
         </div>

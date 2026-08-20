@@ -32,6 +32,8 @@ afterEach(() => {
     game: createInitialGameState(0),
     interactionMode: "inspect",
     selectedBuildingId: null,
+    milkFactoryPanelBuildingId: null,
+    porkFactoryPanelBuildingId: null,
     selectedResidentId: null,
     notice: null,
   });
@@ -69,6 +71,69 @@ describe("BuildingRenderer", () => {
 
     expect(useGameStore.getState().game.milk).toBe(2);
     expect(container.querySelector('[name="牛乳を収穫できます"]')).toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it("豚肉を収穫できる豚へマークを出し、タップしても豚を残す", async () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "pig",
+      8,
+      8,
+      "pig-test",
+      0,
+    );
+    const game = {
+      ...placed.state,
+      pigProductions: [{ buildingInstanceId: "pig-test", porkReadyAt: 0 }],
+    };
+    useGameStore.setState({ game });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    expect(container.querySelector('[name="豚肉を収穫できます"]')).not.toBeNull();
+    const pigGroup = container.firstElementChild?.lastElementChild;
+
+    await act(async () => {
+      pigGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().game.pork).toBe(2);
+    expect(useGameStore.getState().game.buildings).toContainEqual({
+      id: "pig-test",
+      buildingId: "pig",
+      gridX: 8,
+      gridY: 8,
+    });
+    expect(container.querySelector('[name="豚肉を収穫できます"]')).toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it("未設定の豚肉工場をタップすると設定パネルを開く", async () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "pork-factory",
+      8,
+      8,
+      "pork-factory-test",
+      0,
+    );
+    useGameStore.setState({ game: placed.state });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    const factoryGroup = container.firstElementChild?.lastElementChild;
+    await act(async () => {
+      factoryGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().porkFactoryPanelBuildingId).toBe("pork-factory-test");
     await act(async () => root.unmount());
   });
 
@@ -152,7 +217,7 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
-  it.each(["field", "cow", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
+  it.each(["field", "cow", "pig", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
     "重複IDを含む旧データでも%sを別の建物へ変えずに移動する",
     async (targetBuildingId) => {
       const conflictingBuildingId = targetBuildingId === "flower" ? "tree" : "flower";
@@ -175,6 +240,7 @@ describe("BuildingRenderer", () => {
         unlockedBuildings: [
           "field",
           "cow",
+          "pig",
           "tree",
           "cherry-tree",
           "flower",

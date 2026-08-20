@@ -45,8 +45,12 @@ describe("FarmControls", () => {
         tomatoSeeds: 5,
         tomatoes: 2,
         milk: 7,
+        pork: 6,
         butter: 4,
         cheese: 2,
+        ham: 3,
+        sausage: 5,
+        bacon: 1,
       },
       interactionMode: "farm",
       cropAction: "harvest",
@@ -66,8 +70,12 @@ describe("FarmControls", () => {
     expect(tomatoButton?.getAttribute("aria-label"))
       .toBe("トマトの種を選ぶ。種 5、収穫 2");
     expect(container.querySelector('[aria-label="牛乳 7"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="豚肉 6"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="バター 4"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="チーズ 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="ハム 3"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="ソーセージ 5"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="ベーコン 1"]')).not.toBeNull();
     expect(harvestButton?.getAttribute("aria-pressed")).toBe("true");
 
     await act(async () => {

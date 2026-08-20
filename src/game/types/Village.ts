@@ -6,10 +6,16 @@ export interface GameState {
   tomatoes: number;
   crops: import("./Crop").Crop[];
   milk: number;
+  pork: number;
   butter: number;
   cheese: number;
+  ham: number;
+  sausage: number;
+  bacon: number;
   cowProductions: import("./Cow").CowProduction[];
+  pigProductions: import("./Pig").PigProduction[];
   milkFactoryProductions: import("./MilkFactory").MilkFactoryProduction[];
+  porkFactoryProductions: import("./PorkFactory").PorkFactoryProduction[];
   villageLevel: number;
   residents: import("./Resident").Resident[];
   buildings: import("./Building").BuildingInstance[];
