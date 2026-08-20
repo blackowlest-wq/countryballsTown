@@ -9,10 +9,10 @@ export interface AnimalWanderTransform {
 }
 
 const WANDER_SPEED = 0.28;
-const X_AMPLITUDE = 0.2;
-const X_DETAIL_AMPLITUDE = 0.045;
-const Z_AMPLITUDE = 0.16;
-const Z_DETAIL_AMPLITUDE = 0.04;
+const X_AMPLITUDE = 0.3;
+const X_DETAIL_AMPLITUDE = 0.055;
+const Z_AMPLITUDE = 0.25;
+const Z_DETAIL_AMPLITUDE = 0.05;
 
 function seedToPhase(seed: string): number {
   let hash = 2166136261;

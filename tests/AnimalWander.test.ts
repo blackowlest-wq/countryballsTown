@@ -5,8 +5,8 @@ describe("animal wandering", () => {
   it("keeps animals within their building cell", () => {
     for (let elapsedTime = 0; elapsedTime <= 120; elapsedTime += 0.5) {
       const transform = getAnimalWanderTransform(elapsedTime, "cow-1");
-      expect(Math.abs(transform.x)).toBeLessThanOrEqual(0.25);
-      expect(Math.abs(transform.z)).toBeLessThanOrEqual(0.2);
+      expect(Math.abs(transform.x)).toBeLessThanOrEqual(0.36);
+      expect(Math.abs(transform.z)).toBeLessThanOrEqual(0.3);
     }
   });
 
@@ -17,5 +17,17 @@ describe("animal wandering", () => {
 
     expect(repeat).toEqual(first);
     expect(second).not.toEqual(first);
+  });
+
+  it("travels a visible distance instead of only pivoting", () => {
+    const start = getAnimalWanderTransform(0, "cow-1");
+    const furthestDistance = Array.from({ length: 10 }, (_, index) => index + 1)
+      .map((elapsedTime) => getAnimalWanderTransform(elapsedTime * 0.5, "cow-1"))
+      .reduce((furthest, transform) => Math.max(
+        furthest,
+        Math.hypot(transform.x - start.x, transform.z - start.z),
+      ), 0);
+
+    expect(furthestDistance).toBeGreaterThan(0.25);
   });
 });
