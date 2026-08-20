@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGameState } from "../src/game/core/GameState";
-import { RESIDENT_REQUEST_INITIAL_DELAY_MS } from "../src/game/constants/gameConstants";
+import {
+  INITIAL_WHEAT_SEEDS,
+  RESIDENT_REQUEST_INITIAL_DELAY_MS,
+} from "../src/game/constants/gameConstants";
 import { loadGameState, saveGameState, type StorageLike } from "../src/game/systems/SaveSystem";
 import { getLocalDateKey } from "../src/utils/date";
 
@@ -19,14 +22,20 @@ describe("SaveSystem", () => {
       ...createInitialGameState(0),
       coins: 321,
       villageLevel: 2,
+      wheatSeeds: 4,
       wheat: 4,
       wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
+      buildings: [
+        ...createInitialGameState(0).buildings,
+        { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
+      ],
       residentRequestsStartedToday: 2,
     };
     saveGameState(original, storage);
     expect(loadGameState(storage, 100)).toMatchObject({
       coins: 321,
       villageLevel: 2,
+      wheatSeeds: 4,
       wheat: 4,
       wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
       residentRequestsStartedToday: 2,
@@ -36,6 +45,7 @@ describe("SaveSystem", () => {
   it("作物情報がない旧セーブデータを移行する", () => {
     const storage = memoryStorage();
     const {
+      wheatSeeds: _wheatSeeds,
       wheat: _wheat,
       wheatCrops: _wheatCrops,
       ...legacyState
@@ -43,7 +53,25 @@ describe("SaveSystem", () => {
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
+      wheatSeeds: INITIAL_WHEAT_SEEDS,
       wheat: 0,
+      wheatCrops: [],
+    });
+  });
+
+  it("旧仕様の畑外作物を除き、失わないよう種として返す", () => {
+    const storage = memoryStorage();
+    const { wheatSeeds: _wheatSeeds, ...legacyState } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify({
+      ...legacyState,
+      wheatCrops: [
+        { gridX: 8, gridY: 8, plantedAt: 50 },
+        { gridX: 12, gridY: 12, plantedAt: 60 },
+      ],
+    }));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      wheatSeeds: INITIAL_WHEAT_SEEDS + 2,
       wheatCrops: [],
     });
   });
@@ -122,5 +150,16 @@ describe("SaveSystem", () => {
 
     const loaded = loadGameState(storage, 1_000);
     expect(loaded.unlockedBuildings).toContain("cherry-tree");
+  });
+
+  it("既存のセーブへ畑を解放する", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify({
+      ...state,
+      unlockedBuildings: ["tree", "flower"],
+    }));
+
+    expect(loadGameState(storage, 1_000).unlockedBuildings).toContain("field");
   });
 });

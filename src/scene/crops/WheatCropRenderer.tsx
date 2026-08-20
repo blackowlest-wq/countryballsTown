@@ -58,12 +58,8 @@ function WheatPlant({ crop }: { crop: WheatCrop }): JSX.Element {
 
   return (
     <group>
-      <mesh position={[0, 0.005, 0]} receiveShadow>
-        <boxGeometry args={[0.84, 0.07, 0.84]} />
-        <meshStandardMaterial color="#8f633c" roughness={1} />
-      </mesh>
       {stage === "seed" && (
-        <group position={[0, 0.065, 0]}>
+        <group position={[0, 0.095, 0]}>
           {[-0.2, 0, 0.2].map((offset) => (
             <mesh key={offset} position={[offset, 0.025, 0]} castShadow>
               <sphereGeometry args={[0.055, 8, 6]} />
@@ -73,7 +69,7 @@ function WheatPlant({ crop }: { crop: WheatCrop }): JSX.Element {
         </group>
       )}
       {stage !== "seed" && (
-        <group position={[0, 0.07, 0]}>
+        <group position={[0, 0.09, 0]}>
           {STALKS.map((stalk, index) => (
             <group
               key={`${stalk.x}:${stalk.z}`}
@@ -102,7 +98,7 @@ function WheatPlant({ crop }: { crop: WheatCrop }): JSX.Element {
         <mesh
           ref={readyRing}
           rotation-x={-Math.PI / 2}
-          position={[0, 0.055, 0]}
+          position={[0, 0.11, 0]}
         >
           <ringGeometry args={[0.42, 0.47, 24]} />
           <meshBasicMaterial color="#f2b85c" transparent opacity={0.85} depthWrite={false} />

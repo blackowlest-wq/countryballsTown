@@ -32,8 +32,8 @@ export function FarmControls(): JSX.Element | null {
       </div>
       <span className="farm-action-copy">
         {wheatAction === "plant"
-          ? "空き地をなぞる（10秒で緑・20秒で茶色）"
-          : "茶色になった小麦だけをなぞって収穫"}
+          ? "空の畑をなぞる（種を1個使用）"
+          : "茶色の小麦を収穫（種を2個獲得）"}
       </span>
     </section>
   );

@@ -18,7 +18,7 @@ export const villageLevels: VillageLevelDefinition[] = [
     level: 1,
     requirements: [],
     unlockCountries: ["poland"],
-    unlockBuildings: ["tree", "flower"],
+    unlockBuildings: ["field", "tree", "flower"],
   },
   {
     level: 2,

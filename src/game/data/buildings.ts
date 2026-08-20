@@ -39,6 +39,19 @@ export const buildingDefinitions: BuildingDefinition[] = [
     removable: false,
   },
   {
+    id: "field",
+    name: "畑",
+    width: 1,
+    height: 1,
+    cost: 10,
+    category: "building",
+    menuIcon: "▦",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.05, z: 0.05 },
+    description: "小麦を1株育てられる1マスの畑。",
+    removable: true,
+  },
+  {
     id: "tree",
     name: "木",
     width: 1,
@@ -135,6 +148,7 @@ export function getBuildingDefinition(buildingId: string): BuildingDefinition | 
 }
 
 export const playerBuildingIds = [
+  "field",
   "tree",
   "cherry-tree",
   "flower",

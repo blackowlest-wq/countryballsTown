@@ -1,5 +1,6 @@
 export interface GameState {
   coins: number;
+  wheatSeeds: number;
   wheat: number;
   wheatCrops: import("./Crop").WheatCrop[];
   villageLevel: number;

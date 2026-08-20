@@ -2,8 +2,10 @@ import {
   WHEAT_GREEN_STAGE_MS,
   WHEAT_HARVEST_AMOUNT,
   WHEAT_MATURE_STAGE_MS,
+  WHEAT_SEEDS_PER_HARVEST,
 } from "../constants/gameConstants";
 import { getBuildingDefinition } from "../data/buildings";
+import type { BuildingInstance } from "../types/Building";
 import type { WheatCrop } from "../types/Crop";
 import type { GameState } from "../types/Village";
 import { isGridPositionInside } from "../../utils/grid";
@@ -17,7 +19,8 @@ export type WheatActionOutcome =
   | "growing"
   | "already-planted"
   | "empty"
-  | "occupied"
+  | "not-field"
+  | "no-seeds"
   | "out-of-bounds";
 
 export interface WheatActionResult {
@@ -25,12 +28,13 @@ export interface WheatActionResult {
   state: GameState;
 }
 
-function buildingOccupiesCell(
-  state: Pick<GameState, "buildings">,
+export function isCellInField(
+  buildings: readonly BuildingInstance[],
   gridX: number,
   gridY: number,
 ): boolean {
-  return state.buildings.some((building) => {
+  return buildings.some((building) => {
+    if (building.buildingId !== "field") return false;
     const definition = getBuildingDefinition(building.buildingId);
     if (!definition) return false;
     return (
@@ -104,20 +108,23 @@ export function performWheatAction(
       state: {
         ...state,
         wheat: state.wheat + WHEAT_HARVEST_AMOUNT,
+        wheatSeeds: state.wheatSeeds + WHEAT_SEEDS_PER_HARVEST,
         wheatCrops: state.wheatCrops.filter((candidate) => candidate !== crop),
       },
     };
   }
 
   if (crop) return { outcome: "already-planted", state };
-  if (buildingOccupiesCell(state, gridX, gridY)) {
-    return { outcome: "occupied", state };
+  if (!isCellInField(state.buildings, gridX, gridY)) {
+    return { outcome: "not-field", state };
   }
+  if (state.wheatSeeds <= 0) return { outcome: "no-seeds", state };
 
   return {
     outcome: "planted",
     state: {
       ...state,
+      wheatSeeds: state.wheatSeeds - 1,
       wheatCrops: [...state.wheatCrops, { gridX, gridY, plantedAt: now }],
     },
   };

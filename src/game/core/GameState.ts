@@ -1,11 +1,15 @@
 import { createInitialResident } from "../systems/ResidentSystem";
-import { RESIDENT_REQUEST_INITIAL_DELAY_MS } from "../constants/gameConstants";
+import {
+  INITIAL_WHEAT_SEEDS,
+  RESIDENT_REQUEST_INITIAL_DELAY_MS,
+} from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 
 export function createInitialGameState(now = Date.now()): GameState {
   return {
     coins: 100,
+    wheatSeeds: INITIAL_WHEAT_SEEDS,
     wheat: 0,
     wheatCrops: [],
     villageLevel: 1,
@@ -17,7 +21,7 @@ export function createInitialGameState(now = Date.now()): GameState {
       { id: "tree-2", buildingId: "tree", gridX: 16, gridY: 4 },
     ],
     unlockedCountries: ["poland"],
-    unlockedBuildings: ["tree", "flower"],
+    unlockedBuildings: ["field", "tree", "flower"],
     activeResidentRequest: null,
     nextResidentRequestAt: now + RESIDENT_REQUEST_INITIAL_DELAY_MS,
     residentRequestDayKey: getLocalDateKey(now),

@@ -5,6 +5,7 @@ import { getBuildingDefinition } from "../../game/data/buildings";
 import type { BuildingInstance } from "../../game/types/Building";
 import { buildingToWorldPosition } from "../../utils/grid";
 import { House } from "./House";
+import { Field } from "./Field";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
 import { Torii } from "./Torii";
@@ -16,6 +17,7 @@ import { Tree } from "../environment/Tree";
 const buildingRenderers: Record<string, ComponentType> = {
   house: House,
   fountain: Fountain,
+  field: Field,
   tree: Tree,
   "cherry-tree": CherryTree,
   flower: Flower,

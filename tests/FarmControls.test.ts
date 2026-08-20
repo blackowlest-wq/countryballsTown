@@ -44,6 +44,7 @@ describe("FarmControls", () => {
     const harvestButton = buttons.find((button) => button.textContent?.includes("収穫"));
     expect(plantButton?.getAttribute("aria-pressed")).toBe("true");
     expect(harvestButton?.getAttribute("aria-pressed")).toBe("false");
+    expect(container.textContent).toContain("種を1個使用");
 
     await act(async () => {
       harvestButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -51,6 +52,7 @@ describe("FarmControls", () => {
     expect(useGameStore.getState().wheatAction).toBe("harvest");
     expect(plantButton?.getAttribute("aria-pressed")).toBe("false");
     expect(harvestButton?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.textContent).toContain("種を2個獲得");
 
     await act(async () => root.unmount());
   });

@@ -13,7 +13,8 @@ export type BuildingOperationReason =
   | "not-found"
   | "duplicate-id"
   | "not-movable"
-  | "not-removable";
+  | "not-removable"
+  | "field-not-empty";
 
 export interface BuildingOperationResult {
   success: boolean;
@@ -36,6 +37,14 @@ function getOccupiedCells(
     }
   }
   return cells;
+}
+
+function fieldHasCrop(state: GameState, field: BuildingInstance): boolean {
+  if (field.buildingId !== "field") return false;
+  const occupiedCells = getOccupiedCells(field.buildingId, field.gridX, field.gridY);
+  return occupiedCells.some((cell) =>
+    state.wheatCrops.some((crop) => crop.gridX === cell.x && crop.gridY === cell.y)
+  );
 }
 
 function isWithinGrid(definition: BuildingDefinition, gridX: number, gridY: number): boolean {
@@ -151,6 +160,9 @@ export function moveBuilding(
   const existing = lookup.building;
   const definition = getBuildingDefinition(existing.buildingId);
   if (!definition) return { success: false, state, reason: "unknown-building" };
+  if (fieldHasCrop(state, existing)) {
+    return { success: false, state, reason: "field-not-empty" };
+  }
   if (definition.movable === false) return { success: false, state, reason: "not-movable" };
   const check = checkPlacement(
     state,
@@ -182,6 +194,9 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
   const definition = getBuildingDefinition(existing.buildingId);
   if (!definition) return { success: false, state, reason: "unknown-building" };
   if (definition.removable === false) return { success: false, state, reason: "not-removable" };
+  if (fieldHasCrop(state, existing)) {
+    return { success: false, state, reason: "field-not-empty" };
+  }
   return {
     success: true,
     state: {
@@ -209,6 +224,8 @@ export function getBuildingOperationMessage(reason?: BuildingOperationReason): s
       return "この建物は移動できません。";
     case "not-removable":
       return "この建物は撤去できません。";
+    case "field-not-empty":
+      return "作物が育っている畑は移動・撤去できません。";
     case "not-found":
       return "建物が見つかりません。";
     case "duplicate-id":

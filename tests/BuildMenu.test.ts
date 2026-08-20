@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe("BuildMenu", () => {
-  it("カテゴリで絞り込み、ピザ屋を建物として表示する", async () => {
+  it("最初に畑を表示し、カテゴリで建築物を絞り込む", async () => {
     useGameStore.setState({
       game: {
         ...createInitialGameState(0),
@@ -36,17 +36,17 @@ describe("BuildMenu", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(BuildMenu)));
+    expect(container.textContent).toContain("畑");
+    expect(container.textContent).toContain("ピザ屋");
+    expect(container.textContent).not.toContain("桜の木");
+
+    const natureTab = [...container.querySelectorAll('[role="tab"]')]
+      .find((tab) => tab.textContent?.includes("自然"));
+    await act(async () => {
+      natureTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
     expect(container.textContent).toContain("桜の木");
     expect(container.textContent).not.toContain("ピザ屋");
-
-    const buildingTab = [...container.querySelectorAll('[role="tab"]')]
-      .find((tab) => tab.textContent?.includes("建物"));
-    await act(async () => {
-      buildingTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-    expect(container.textContent).toContain("ピザ屋");
-    expect(container.textContent).toContain("温泉");
-    expect(container.textContent).not.toContain("桜の木");
 
     const foodTab = [...container.querySelectorAll('[role="tab"]')]
       .find((tab) => tab.textContent?.includes("食べ物"));

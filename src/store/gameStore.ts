@@ -165,7 +165,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
-      notice: "安全のため「収穫」で始まります。植えるときは「種まき」を選んでください。",
+      notice: "畑で操作してください。安全のため「収穫」から始まります。",
     }),
 
   setWheatAction: (action) => set({ wheatAction: action, notice: null }),
@@ -183,11 +183,18 @@ export const useGameStore = create<GameStore>((setState, get) => {
       gridY,
       now,
     );
-    if (result.state === current.game) return result.outcome;
+    if (result.state === current.game) {
+      if (result.outcome === "not-field") {
+        set({ notice: "小麦は畑の中にだけ植えられます。" });
+      } else if (result.outcome === "no-seeds") {
+        set({ notice: "小麦の種がありません。収穫して種を増やしましょう。" });
+      }
+      return result.outcome;
+    }
     set({
       game: result.state,
       notice: result.outcome === "harvested"
-        ? "小麦を収穫しました。小麦が1増えました！"
+        ? "小麦1個と、小麦の種2個を収穫しました！"
         : current.notice,
     });
     return result.outcome;

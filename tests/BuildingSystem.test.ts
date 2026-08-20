@@ -29,6 +29,34 @@ describe("BuildingSystem", () => {
     expect(placeBuilding(initial, "flower", 8, 8).reason).toBe("occupied");
   });
 
+  it("畑は1マス単位で配置できる", () => {
+    const placed = placeBuilding(createInitialGameState(0), "field", 8, 8, "field-test");
+    expect(placed).toMatchObject({
+      success: true,
+      building: { buildingId: "field", gridX: 8, gridY: 8 },
+      state: { coins: 90 },
+    });
+  });
+
+  it("作物がある畑は移動・撤去できず、空なら操作できる", () => {
+    const placed = placeBuilding(createInitialGameState(0), "field", 8, 8, "field-test");
+    const growing = {
+      ...placed.state,
+      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 0 }],
+    };
+
+    expect(moveBuilding(growing, "field-test", 12, 12)).toMatchObject({
+      success: false,
+      reason: "field-not-empty",
+    });
+    expect(removeBuilding(growing, "field-test")).toMatchObject({
+      success: false,
+      reason: "field-not-empty",
+    });
+    expect(moveBuilding(placed.state, "field-test", 12, 12).success).toBe(true);
+    expect(removeBuilding(placed.state, "field-test").success).toBe(true);
+  });
+
   it("配置した建物を移動・撤去できる", () => {
     const placed = placeBuilding(createInitialGameState(0), "flower", 8, 8, "flower-test");
     expect(placed.success).toBe(true);

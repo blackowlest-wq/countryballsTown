@@ -25,7 +25,7 @@ export function GameHud(): JSX.Element {
         <VillageLevelDisplay level={game.villageLevel} />
         <div className="hud-right">
           <CoinDisplay coins={game.coins} />
-          <WheatDisplay wheat={game.wheat} />
+          <WheatDisplay wheatSeeds={game.wheatSeeds} wheat={game.wheat} />
           <div className="mood-pill"><span>●</span> のんびり暮らし中</div>
           <BgmToggle />
         </div>

@@ -1,4 +1,5 @@
 import {
+  INITIAL_WHEAT_SEEDS,
   RESIDENT_REQUEST_DAILY_LIMIT,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
   SAVE_KEY,
@@ -9,7 +10,7 @@ import { getUnlockedBuildingIdsForLevel } from "../data/villageLevels";
 import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
-import { normalizeWheatCrops } from "./WheatSystem";
+import { isCellInField, normalizeWheatCrops } from "./WheatSystem";
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -82,14 +83,25 @@ export function loadGameState(
       getLocalDateKey(activeResidentRequest.startedAt) === residentRequestDayKey
         ? 1
         : 0;
+    const buildings = createBuildingCollection(parsed.buildings).buildings;
+    const normalizedWheatCrops = normalizeWheatCrops(parsed.wheatCrops);
+    const wheatCrops = normalizedWheatCrops.filter((crop) =>
+      isCellInField(buildings, crop.gridX, crop.gridY)
+    );
+    const refundedSeeds = normalizedWheatCrops.length - wheatCrops.length;
+    const storedWheatSeeds =
+      typeof parsed.wheatSeeds === "number" && Number.isFinite(parsed.wheatSeeds)
+        ? Math.max(0, Math.floor(parsed.wheatSeeds))
+        : INITIAL_WHEAT_SEEDS;
     return {
       ...parsed,
+      wheatSeeds: storedWheatSeeds + refundedSeeds,
       wheat:
         typeof parsed.wheat === "number" && Number.isFinite(parsed.wheat)
           ? Math.max(0, Math.floor(parsed.wheat))
           : 0,
-      wheatCrops: normalizeWheatCrops(parsed.wheatCrops),
-      buildings: createBuildingCollection(parsed.buildings).buildings,
+      wheatCrops,
+      buildings,
       unlockedBuildings: [
         ...new Set([
           ...parsed.unlockedBuildings,

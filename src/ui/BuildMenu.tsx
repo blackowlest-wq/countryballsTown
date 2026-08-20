@@ -9,7 +9,7 @@ import type { BuildingCategory } from "../game/types/Building";
 import { useGameStore } from "../store/gameStore";
 
 export function BuildMenu(): JSX.Element | null {
-  const [selectedCategory, setSelectedCategory] = useState<BuildingCategory>("nature");
+  const [selectedCategory, setSelectedCategory] = useState<BuildingCategory>("building");
   const isOpen = useGameStore((store) => store.isBuildMenuOpen);
   const game = useGameStore((store) => store.game);
   const setOpen = useGameStore((store) => store.setBuildMenuOpen);

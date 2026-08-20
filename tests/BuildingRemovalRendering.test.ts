@@ -120,7 +120,7 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
-  it.each(["tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
+  it.each(["field", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
     "重複IDを含む旧データでも%sを別の建物へ変えずに移動する",
     async (targetBuildingId) => {
       const conflictingBuildingId = targetBuildingId === "flower" ? "tree" : "flower";
@@ -141,6 +141,7 @@ describe("BuildingRenderer", () => {
         coins: 1_000,
         villageLevel: 3,
         unlockedBuildings: [
+          "field",
           "tree",
           "cherry-tree",
           "flower",

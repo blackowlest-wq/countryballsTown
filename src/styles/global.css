@@ -59,6 +59,12 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 
 .resource-pill { display: flex; align-items: center; gap: 9px; min-width: 132px; padding: 9px 15px 9px 9px; border-radius: 23px; }
 .resource-icon { display: grid; width: 34px; height: 34px; place-items: center; color: #fff; font-size: 22px; font-weight: 900; background: #f5ae36; border: 2px solid #ffd675; border-radius: 50%; text-shadow: 0 1px 0 rgba(137, 82, 17, .25); }
+.wheat-inventory-pill { display: grid; grid-template-columns: 34px 1fr; min-width: 148px; gap: 6px 9px; padding-block: 8px; }
+.wheat-resource-copy { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 8px; }
+.resource-label { color: #8b7552; font-size: 9px; font-weight: 900; white-space: nowrap; }
+.resource-label-prefix { display: inline; }
+.wheat-resource-divider { grid-column: 1 / -1; height: 1px; background: #eadfc9; }
+.wheat-seed-icon { color: #805828; background: #dfbd68; border-color: #f5dda0; font-size: 15px; text-shadow: none; }
 .wheat-icon { color: #6d5420; background: #edc45c; border-color: #ffe49a; font-size: 19px; text-shadow: none; }
 .resource-value { color: var(--ink); font-size: 22px; font-weight: 900; letter-spacing: .03em; }
 .mood-pill { padding: 8px 13px; border-radius: 18px; color: #6b7e62; font-size: 11px; font-weight: 800; }
@@ -179,6 +185,12 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .resource-pill { min-width: 104px; padding: 6px 10px 6px 6px; }
   .resource-icon { width: 27px; height: 27px; font-size: 17px; }
   .resource-value { font-size: 17px; }
+  .wheat-inventory-pill { grid-template-columns: 27px auto 1px 27px auto; min-width: 124px; gap: 4px; padding: 6px; }
+  .wheat-resource-copy { display: grid; justify-content: start; gap: 0; line-height: 1; }
+  .wheat-resource-divider { grid-column: auto; width: 1px; height: 27px; }
+  .resource-label { font-size: 8px; }
+  .resource-label-prefix { display: none; }
+  .wheat-seed-icon { font-size: 12px; }
   .mood-pill { display: none; }
   .goal-card { top: 76px; left: 10px; padding: 8px 11px; border-radius: 15px; }
   .goal-text { font-size: 10px; }
