@@ -5,7 +5,6 @@ import type { Group } from "three";
 export interface AnimalWanderTransform {
   x: number;
   z: number;
-  rotationY: number;
 }
 
 const WANDER_SPEED = 0.28;
@@ -34,18 +33,10 @@ function getAnimalWanderTransformAtPhase(
   const zDetailTime = time * 0.33 + phase * 1.17;
   const x = Math.sin(time) * X_AMPLITUDE + Math.sin(xDetailTime) * X_DETAIL_AMPLITUDE;
   const z = Math.cos(zMainTime) * Z_AMPLITUDE + Math.sin(zDetailTime) * Z_DETAIL_AMPLITUDE;
-  const directionX =
-    Math.cos(time) * X_AMPLITUDE +
-    Math.cos(xDetailTime) * X_DETAIL_AMPLITUDE * 0.47;
-  const directionZ =
-    -Math.sin(zMainTime) * Z_AMPLITUDE * 0.81 +
-    Math.cos(zDetailTime) * Z_DETAIL_AMPLITUDE * 0.33;
 
   return {
     x,
     z,
-    // The animal models face +X, so rotate that forward vector toward the path tangent.
-    rotationY: Math.atan2(-directionZ, directionX),
   };
 }
 
@@ -68,6 +59,5 @@ export function useAnimalWander(
     const transform = getAnimalWanderTransformAtPhase(clock.elapsedTime, phase);
     animal.position.x = transform.x;
     animal.position.z = transform.z;
-    animal.rotation.y = transform.rotationY;
   });
 }

@@ -30,4 +30,10 @@ describe("animal wandering", () => {
 
     expect(furthestDistance).toBeGreaterThan(0.25);
   });
+
+  it("does not rotate while it wanders", () => {
+    const transform = getAnimalWanderTransform(4, "cow-1");
+
+    expect(Object.keys(transform)).toEqual(["x", "z"]);
+  });
 });
