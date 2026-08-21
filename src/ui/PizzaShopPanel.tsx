@@ -87,6 +87,18 @@ export function PizzaShopPanel(): JSX.Element | null {
           >
             ＋
           </button>
+          <button
+            type="button"
+            className="pizza-quantity-shortcut"
+            aria-label="ピザを10枚に設定"
+            onClick={() => {
+              setQuantity(10);
+              setConfirming(false);
+            }}
+            disabled={maxCraftable < 10}
+          >
+            10個
+          </button>
         </span>
       </label>
       <p className="pizza-max-copy">作れる最大数：{maxCraftable}枚</p>

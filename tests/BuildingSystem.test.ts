@@ -107,6 +107,28 @@ describe("BuildingSystem", () => {
     expect(removed.state.pigProductions).toEqual([]);
   });
 
+  it("鶏を配置すると採卵待ちが始まり、撤去すると生産情報も消える", () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "chicken",
+      8,
+      8,
+      "chicken-test",
+      1_000,
+    );
+    expect(placed).toMatchObject({
+      success: true,
+      state: {
+        coins: 50,
+        chickenProductions: [{ buildingInstanceId: "chicken-test", eggReadyAt: 31_000 }],
+      },
+    });
+
+    const removed = removeBuilding(placed.state, "chicken-test");
+    expect(removed.success).toBe(true);
+    expect(removed.state.chickenProductions).toEqual([]);
+  });
+
   it("豚肉工場を配置すると未設定の生産情報が登録され、撤去すると消える", () => {
     const placed = placeBuilding(
       createInitialGameState(0),

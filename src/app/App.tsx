@@ -16,7 +16,6 @@ import { VillageScene } from "../scene/VillageScene";
 export function App(): JSX.Element {
   const notice = useGameStore((store) => store.notice);
   const dismissNotice = useGameStore((store) => store.dismissNotice);
-  const interactionMode = useGameStore((store) => store.interactionMode);
   useGameLoop();
   useSaveGame();
 
@@ -37,12 +36,10 @@ export function App(): JSX.Element {
       <PorkFactoryPanel />
       <PizzaShopPanel />
       <FarmControls />
-      {interactionMode !== "farm" && (
-        <div className="interaction-hint">
-          <span className="hint-hand">✦</span>
-          <span>ドラッグで村を見渡せます</span>
-        </div>
-      )}
+      <div className="interaction-hint">
+        <span className="hint-hand">✦</span>
+        <span>ドラッグで村を見渡せます</span>
+      </div>
       <BottomMenu />
     </main>
   );

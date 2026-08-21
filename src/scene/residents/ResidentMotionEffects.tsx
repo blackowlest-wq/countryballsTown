@@ -51,6 +51,40 @@ export function ResidentMotionEffects({ motion }: ResidentMotionEffectsProps): J
           </mesh>
         </group>
       );
+    case "fishing":
+      return (
+        <group position={[0.28, 0.68, 0.08]} scale={NON_HEART_MARK_SCALE}>
+          <mesh position={[-0.06, 0.08, 0]} rotation-z={-0.48}>
+            <cylinderGeometry args={[0.018, 0.025, 0.52, 6]} />
+            <meshBasicMaterial color="#8e684c" />
+          </mesh>
+          <mesh position={[0.14, -0.06, 0]} rotation-z={0.28}>
+            <boxGeometry args={[0.34, 0.014, 0.014]} />
+            <meshBasicMaterial color="#f7f1dc" transparent opacity={0.8} />
+          </mesh>
+          <mesh position={[0.31, -0.12, 0]}>
+            <sphereGeometry args={[0.055, 8, 6]} />
+            <meshBasicMaterial color="#f2a65a" />
+          </mesh>
+        </group>
+      );
+    case "river-play":
+      return (
+        <group position={[0.2, 0.66, 0.08]} scale={NON_HEART_MARK_SCALE}>
+          <mesh rotation-x={Math.PI / 2}>
+            <torusGeometry args={[0.16, 0.025, 8, 20]} />
+            <meshBasicMaterial color="#7bcfe0" transparent opacity={0.9} />
+          </mesh>
+          <mesh position={[0.2, 0.15, 0]}>
+            <sphereGeometry args={[0.045, 8, 6]} />
+            <meshBasicMaterial color="#dff8f7" transparent opacity={0.9} />
+          </mesh>
+          <mesh position={[0.32, 0.04, 0]}>
+            <sphereGeometry args={[0.03, 8, 6]} />
+            <meshBasicMaterial color="#dff8f7" transparent opacity={0.82} />
+          </mesh>
+        </group>
+      );
     case "use-building":
       return (
         <group position={[0.42, 0.65, 0.04]} scale={NON_HEART_MARK_SCALE}>

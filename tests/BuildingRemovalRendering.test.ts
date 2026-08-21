@@ -112,6 +112,38 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
+  it("卵を収穫できる鶏へマークを出し、タップすると卵を受け取る", async () => {
+    const placed = placeBuilding(
+      createInitialGameState(0),
+      "chicken",
+      8,
+      8,
+      "chicken-test",
+      0,
+    );
+    const game = {
+      ...placed.state,
+      chickenProductions: [{ buildingInstanceId: "chicken-test", eggReadyAt: 0 }],
+    };
+    useGameStore.setState({ game });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    expect(container.querySelector('[name="卵を収穫できます"]')).not.toBeNull();
+    const chickenGroup = container.firstElementChild?.lastElementChild;
+
+    await act(async () => {
+      chickenGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().game.eggs).toBe(2);
+    expect(container.querySelector('[name="卵を収穫できます"]')).toBeNull();
+    await act(async () => root.unmount());
+  });
+
   it("未設定の豚肉工場をタップすると設定パネルを開く", async () => {
     const placed = placeBuilding(
       createInitialGameState(0),
@@ -217,7 +249,125 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
-  it.each(["field", "cow", "pig", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
+  it("鳥居を選択して撤去するとWebGLツリーから消える", async () => {
+    const torii = {
+      id: "torii-test",
+      buildingId: "torii",
+      gridX: 12,
+      gridY: 12,
+    };
+    const game: GameState = {
+      ...createInitialGameState(0),
+      villageLevel: 3,
+      unlockedBuildings: ["torii"],
+      buildings: [torii],
+    };
+
+    useGameStore.setState({ game });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    const toriiGroup = container.firstElementChild?.firstElementChild;
+    expect(toriiGroup).toBeInstanceOf(Element);
+
+    await act(async () => {
+      toriiGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(useGameStore.getState().selectedBuildingId).toBe("torii-test");
+
+    await act(async () => {
+      expect(useGameStore.getState().removeSelectedBuilding()).toBe(true);
+    });
+
+    expect(useGameStore.getState().game.buildings).toEqual([]);
+    expect(toriiGroup?.isConnected).toBe(false);
+    expect(container.firstElementChild?.children).toHaveLength(0);
+    await act(async () => root.unmount());
+  });
+
+  it("鳥居を移動した直後に撤去しても表示を残さない", async () => {
+    const torii = {
+      id: "torii-test",
+      buildingId: "torii",
+      gridX: 12,
+      gridY: 12,
+    };
+    const game: GameState = {
+      ...createInitialGameState(0),
+      villageLevel: 3,
+      unlockedBuildings: ["torii"],
+      buildings: [torii],
+    };
+
+    useGameStore.setState({ game });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    const toriiGroup = container.firstElementChild?.firstElementChild;
+    await act(async () => {
+      toriiGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => useGameStore.getState().beginMove("torii-test"));
+    await act(async () => {
+      expect(useGameStore.getState().moveSelectedBuilding(14, 14)).toBe(true);
+    });
+    expect(container.querySelector('group[position="4.5,0,4.5"]')).not.toBeNull();
+
+    await act(async () => {
+      expect(useGameStore.getState().removeSelectedBuilding()).toBe(true);
+    });
+
+    expect(container.querySelector('group[position="4.5,0,4.5"]')).toBeNull();
+    expect(container.firstElementChild?.children).toHaveLength(0);
+    await act(async () => root.unmount());
+  });
+
+  it("重複IDを含む旧データから先頭の建物を撤去した後も鳥居の位置を正しく描画する", async () => {
+    const tree = {
+      id: "legacy-duplicate",
+      buildingId: "tree",
+      gridX: 12,
+      gridY: 12,
+    };
+    const torii = {
+      id: "legacy-duplicate",
+      buildingId: "torii",
+      gridX: 2,
+      gridY: 10,
+    };
+    const game: GameState = {
+      ...createInitialGameState(0),
+      villageLevel: 3,
+      unlockedBuildings: ["tree", "torii"],
+      buildings: [tree, torii],
+    };
+
+    useGameStore.setState({ game });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+    const renderedTree = container.firstElementChild?.children[0];
+    expect(renderedTree).toBeInstanceOf(Element);
+
+    await act(async () => {
+      useGameStore.setState({ game: { ...game, buildings: [torii] } });
+    });
+
+    expect(renderedTree?.isConnected).toBe(false);
+    expect(container.querySelector('group[position="-7.5,0,0.5"]')).not.toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it.each(["field", "cow", "pig", "chicken", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
     "重複IDを含む旧データでも%sを別の建物へ変えずに移動する",
     async (targetBuildingId) => {
       const conflictingBuildingId = targetBuildingId === "flower" ? "tree" : "flower";
@@ -241,6 +391,7 @@ describe("BuildingRenderer", () => {
           "field",
           "cow",
           "pig",
+          "chicken",
           "tree",
           "cherry-tree",
           "flower",

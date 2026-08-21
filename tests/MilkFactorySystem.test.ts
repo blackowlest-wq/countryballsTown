@@ -31,7 +31,7 @@ describe("MilkFactorySystem", () => {
     });
   });
 
-  it("設定済み工場は牛乳を1個ずつ消費して加工物を自動生産する", () => {
+  it("設定済み工場は牛乳1個から加工物を3個自動生産する", () => {
     let state = createInitialGameState(0);
     state = registerMilkFactoryProduction(state, "factory-test");
     state = configureMilkFactory(state, "factory-test", "cheese", 0).state;
@@ -41,7 +41,7 @@ describe("MilkFactorySystem", () => {
     expect(advanced).toMatchObject({
       milk: 0,
       butter: 0,
-      cheese: 3,
+      cheese: 9,
       milkFactoryProductions: [{
         buildingInstanceId: "factory-test",
         productType: "cheese",
@@ -59,7 +59,7 @@ describe("MilkFactorySystem", () => {
     expect(waiting).toBe(state);
 
     const resumed = advanceMilkFactoryProductions({ ...waiting, milk: 1 }, 20_000);
-    expect(resumed).toMatchObject({ milk: 0, butter: 1 });
+    expect(resumed).toMatchObject({ milk: 0, butter: 3 });
     expect(resumed.milkFactoryProductions[0].nextProductionAt).toBe(40_000);
   });
 

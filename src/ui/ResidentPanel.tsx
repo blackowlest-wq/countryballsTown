@@ -5,6 +5,7 @@ import { useGameStore } from "../store/gameStore";
 export function ResidentPanel(): JSX.Element | null {
   const open = useGameStore((store) => store.isResidentPanelOpen);
   const residents = useGameStore((store) => store.game.residents);
+  const currentMap = useGameStore((store) => store.game.currentMap);
   const selectedResidentId = useGameStore((store) => store.selectedResidentId);
   const setOpen = useGameStore((store) => store.setResidentPanelOpen);
   const selectResident = useGameStore((store) => store.selectResident);
@@ -44,7 +45,11 @@ export function ResidentPanel(): JSX.Element | null {
         <div className="resident-detail">
           <p className="detail-country">{getCountryDefinition(selected.countryId)?.name}</p>
           <p className="detail-status"><span className="status-dot" /> {getResidentStatusLabel(selected)}</p>
-          <p className="detail-copy">村の中を自由に歩きながら、好きな場所でひと休みします。</p>
+          <p className="detail-copy">
+            {currentMap === "village"
+              ? "村の中を自由に歩きながら、好きな場所でひと休みします。"
+              : "海岸や川辺を歩きながら、釣りや川遊びを楽しみます。"}
+          </p>
         </div>
       )}
     </section>

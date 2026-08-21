@@ -81,4 +81,15 @@ describe("building definitions", () => {
       category: "building",
     });
   });
+
+  it("鶏を1マスの自然建築物として定義する", () => {
+    expect(playerBuildingIds).toContain("chicken");
+    expect(getBuildingDefinition("chicken")).toMatchObject({
+      name: "鶏",
+      width: 1,
+      height: 1,
+      cost: 50,
+      category: "nature",
+    });
+  });
 });

@@ -24,6 +24,7 @@ export const villageLevels: VillageLevelDefinition[] = [
       "pork-factory",
       "cow",
       "pig",
+      "chicken",
       "tree",
       "flower",
     ],

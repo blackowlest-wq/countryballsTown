@@ -9,10 +9,8 @@ const cropOptions: Array<{ type: CropType; icon: string }> = [
 
 export function FarmControls(): JSX.Element | null {
   const interactionMode = useGameStore((store) => store.interactionMode);
-  const cropAction = useGameStore((store) => store.cropAction);
   const selectedCropType = useGameStore((store) => store.selectedCropType);
   const game = useGameStore((store) => store.game);
-  const setCropAction = useGameStore((store) => store.setCropAction);
   const selectCropType = useGameStore((store) => store.selectCropType);
   if (interactionMode !== "farm") return null;
 
@@ -58,6 +56,11 @@ export function FarmControls(): JSX.Element | null {
               <span>豚肉</span>
               <strong>{game.pork.toLocaleString("ja-JP")}</strong>
             </span>
+            <span className="processing-stock-item" aria-label={`卵 ${game.eggs}`}>
+              <span className="processing-stock-icon egg-stock-icon" aria-hidden="true">🥚</span>
+              <span>卵</span>
+              <strong>{game.eggs.toLocaleString("ja-JP")}</strong>
+            </span>
           </div>
         </div>
         <div className="processing-stock-group">
@@ -97,32 +100,8 @@ export function FarmControls(): JSX.Element | null {
         </div>
       </div>
       <div className="farm-control-row">
-        <div className="farm-action-buttons" role="group" aria-label="栽培操作を選ぶ">
-          <button
-            type="button"
-            className="farm-action-button"
-            data-action="plant"
-            aria-pressed={cropAction === "plant"}
-            onClick={() => setCropAction("plant")}
-          >
-            <span aria-hidden="true">🌱</span>
-            種まき
-          </button>
-          <button
-            type="button"
-            className="farm-action-button"
-            data-action="harvest"
-            aria-pressed={cropAction === "harvest"}
-            onClick={() => setCropAction("harvest")}
-          >
-            <span aria-hidden="true">🧺</span>
-            収穫
-          </button>
-        </div>
         <span className="farm-action-copy">
-          {cropAction === "plant"
-            ? `${getCropName(selectedCropType)}の種を空の畑へ（種を1個使用）`
-            : "実った作物を収穫（作物1個・種2個）"}
+          {`${getCropName(selectedCropType)}の種を空の畑へ（種を1個使用）。成熟した作物は村画面でタップして収穫`}
         </span>
       </div>
     </section>

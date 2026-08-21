@@ -1,4 +1,5 @@
-import { useMemo, type ComponentType } from "react";
+import { useLayoutEffect, useMemo, useRef, type ComponentType } from "react";
+import type { Group, Material, Object3D } from "three";
 import { useGameStore } from "../../store/gameStore";
 import { createBuildingCollection } from "../../game/core/BuildingCollection";
 import { getBuildingDefinition } from "../../game/data/buildings";
@@ -7,6 +8,7 @@ import { buildingToWorldPosition } from "../../utils/grid";
 import { House } from "./House";
 import { Cow } from "./Cow";
 import { Pig } from "./Pig";
+import { Chicken } from "./Chicken";
 import { MilkFactory } from "./MilkFactory";
 import { PorkFactory } from "./PorkFactory";
 import { Field } from "./Field";
@@ -35,6 +37,72 @@ interface BuildingInstanceRendererProps {
   selectionSource: BuildingInstance;
 }
 
+const PLACEMENT_BUILDING_OPACITY = 0.28;
+
+function getBuildingRenderKey(building: BuildingInstance): string {
+  // Legacy saves may reuse an ID; include the rendered content so a removed
+  // building's Three.js subtree cannot be reused for another entry.
+  return JSON.stringify([
+    building.id,
+    building.buildingId,
+    building.gridX,
+    building.gridY,
+  ]);
+}
+
+interface OriginalMaterialState {
+  opacity: number;
+  transparent: boolean;
+  depthWrite: boolean;
+}
+
+type MaterialObject = Object3D & {
+  material?: Material | Material[];
+};
+
+function setPlacementVisibility(
+  root: Group,
+  faded: boolean,
+  materialStates: Map<Material, OriginalMaterialState>,
+): void {
+  if (typeof root.traverse !== "function") return;
+
+  root.traverse((object) => {
+    const material = (object as MaterialObject).material;
+    if (!material) return;
+    const materials = Array.isArray(material) ? material : [material];
+
+    materials.forEach((currentMaterial) => {
+      if (faded) {
+        if (!materialStates.has(currentMaterial)) {
+          materialStates.set(currentMaterial, {
+            opacity: currentMaterial.opacity,
+            transparent: currentMaterial.transparent,
+            depthWrite: currentMaterial.depthWrite,
+          });
+        }
+        currentMaterial.transparent = true;
+        currentMaterial.opacity = Math.min(
+          currentMaterial.opacity,
+          PLACEMENT_BUILDING_OPACITY,
+        );
+        currentMaterial.depthWrite = false;
+        currentMaterial.needsUpdate = true;
+        return;
+      }
+
+      const original = materialStates.get(currentMaterial);
+      if (!original) return;
+      currentMaterial.opacity = original.opacity;
+      currentMaterial.transparent = original.transparent;
+      currentMaterial.depthWrite = original.depthWrite;
+      currentMaterial.needsUpdate = true;
+    });
+  });
+
+  if (!faded) materialStates.clear();
+}
+
 function BuildingInstanceRenderer({
   instance,
   selectionSource,
@@ -43,16 +111,20 @@ function BuildingInstanceRenderer({
   const Renderer = definition ? buildingRenderers[instance.buildingId] : undefined;
   const selectedBuildingId = useGameStore((store) => store.selectedBuildingId);
   const interactionMode = useGameStore((store) => store.interactionMode);
+  const group = useRef<Group>(null);
+  const materialStates = useRef(new Map<Material, OriginalMaterialState>());
   const selectBuilding = useGameStore((store) => store.selectBuilding);
   const openMilkFactoryPanel = useGameStore((store) => store.openMilkFactoryPanel);
   const openPorkFactoryPanel = useGameStore((store) => store.openPorkFactoryPanel);
   const collectCowMilk = useGameStore((store) => store.collectCowMilk);
   const collectPigPork = useGameStore((store) => store.collectPigPork);
+  const collectChickenEggs = useGameStore((store) => store.collectChickenEggs);
   const cowProduction = useGameStore((store) => store.game.cowProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
   const isCow = instance.buildingId === "cow";
   const isPig = instance.buildingId === "pig";
+  const isChicken = instance.buildingId === "chicken";
   const isMilkFactory = instance.buildingId === "milk-factory";
   const isPorkFactory = instance.buildingId === "pork-factory";
   const milkFactoryProduction = useGameStore((store) => store.game.milkFactoryProductions.find(
@@ -61,21 +133,38 @@ function BuildingInstanceRenderer({
   const pigProduction = useGameStore((store) => store.game.pigProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
+  const chickenProduction = useGameStore((store) => store.game.chickenProductions.find(
+    (production) => production.buildingInstanceId === instance.id,
+  ));
   const porkFactoryProduction = useGameStore((store) => store.game.porkFactoryProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
-  if (!definition || (!Renderer && !isCow && !isPig && !isMilkFactory && !isPorkFactory)) return null;
+  const isPlacementMode = interactionMode === "build" || interactionMode === "move";
+
+  useLayoutEffect(() => {
+    if (!group.current) return;
+    setPlacementVisibility(group.current, isPlacementMode, materialStates.current);
+    return () => {
+      if (group.current) {
+        setPlacementVisibility(group.current, false, materialStates.current);
+      }
+    };
+  }, [isPlacementMode]);
+
+  if (!definition || (!Renderer && !isCow && !isPig && !isChicken && !isMilkFactory && !isPorkFactory)) return null;
   const position = buildingToWorldPosition(instance, definition.width, definition.height);
   const selected = selectedBuildingId === instance.id && interactionMode !== "build";
 
   return (
     <group
+      ref={group}
       position={[position.x, 0, position.z]}
       onClick={(event) => {
         if (interactionMode !== "inspect") return;
         event.stopPropagation();
         if (isCow && collectCowMilk(instance.id) === "collected") return;
         if (isPig && collectPigPork(instance.id) === "collected") return;
+        if (isChicken && collectChickenEggs(instance.id) === "collected") return;
         if (isMilkFactory && !milkFactoryProduction?.productType) {
           openMilkFactoryPanel(instance.id);
           return;
@@ -99,6 +188,8 @@ function BuildingInstanceRenderer({
         ? <Cow milkReadyAt={cowProduction?.milkReadyAt} wanderSeed={instance.id} />
         : isPig
           ? <Pig porkReadyAt={pigProduction?.porkReadyAt} wanderSeed={instance.id} />
+          : isChicken
+            ? <Chicken eggReadyAt={chickenProduction?.eggReadyAt} wanderSeed={instance.id} />
         : isMilkFactory
           ? <MilkFactory productType={milkFactoryProduction?.productType} />
           : isPorkFactory
@@ -124,7 +215,7 @@ export function BuildingRenderer(): JSX.Element {
     <group>
       {collection.entries.map(({ building, source }) => (
         <BuildingInstanceRenderer
-          key={building.id}
+          key={getBuildingRenderKey(building)}
           instance={building}
           selectionSource={source}
         />

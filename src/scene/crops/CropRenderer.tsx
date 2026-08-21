@@ -168,6 +168,8 @@ function CropPlant({ crop }: { crop: Crop }): JSX.Element {
 
 export function CropRenderer(): JSX.Element {
   const crops = useGameStore((store) => store.game.crops);
+  const interactionMode = useGameStore((store) => store.interactionMode);
+  const harvestCrop = useGameStore((store) => store.harvestCrop);
   return (
     <group>
       {crops.map((crop) => {
@@ -176,6 +178,11 @@ export function CropRenderer(): JSX.Element {
           <group
             key={`${crop.type}:${crop.gridX}:${crop.gridY}:${crop.plantedAt}`}
             position={[position.x, 0, position.z]}
+            onClick={(event) => {
+              if (interactionMode !== "inspect") return;
+              event.stopPropagation();
+              harvestCrop(crop.gridX, crop.gridY);
+            }}
           >
             <CropPlant crop={crop} />
           </group>

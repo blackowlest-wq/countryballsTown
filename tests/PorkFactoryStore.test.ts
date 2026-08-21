@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe("pork factory store interaction", () => {
-  it("豚肉工場で作るものを選ぶと豚肉を消費して自動生産する", () => {
+  it("豚肉工場で作るものを選ぶと豚肉1個で加工物を3個生産する", () => {
     const placed = placeBuilding(
       { ...createInitialGameState(0), pork: 1 },
       "pork-factory",
@@ -35,6 +35,6 @@ describe("pork factory store interaction", () => {
     });
 
     useGameStore.getState().tick(0, 20_000);
-    expect(useGameStore.getState().game).toMatchObject({ pork: 0, sausage: 1 });
+    expect(useGameStore.getState().game).toMatchObject({ pork: 0, sausage: 3 });
   });
 });

@@ -1,5 +1,22 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { OrthographicCamera } from "three";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getGroundPanDelta, type CameraPanBasis } from "../src/scene/cameraPan";
+import { CameraController } from "../src/scene/CameraController";
+import { createInitialGameState } from "../src/game/core/GameState";
+import { useGameStore } from "../src/store/gameStore";
+
+const useThreeMock = vi.fn();
+
+vi.mock("@react-three/fiber", () => ({
+  useThree: () => useThreeMock(),
+}));
+
+(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
+  .IS_REACT_ACT_ENVIRONMENT = true;
 
 const isometricBasis: CameraPanBasis = {
   rightX: Math.SQRT1_2,
@@ -25,4 +42,49 @@ describe("Camera pan", () => {
     expect(visibleWorldMovement.x).toBeCloseTo(swipe.x * scale, 5);
     expect(visibleWorldMovement.y).toBeCloseTo(-swipe.y * scale, 5);
   });
+
+  it("moves the camera while the crop mode is active", async () => {
+    const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+    camera.zoom = 40;
+    const domElement = document.createElement("div");
+    useThreeMock.mockReturnValue({ camera, gl: { domElement } });
+    useGameStore.setState({
+      game: createInitialGameState(0),
+      interactionMode: "farm",
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CameraController)));
+    const initialPosition = camera.position.clone();
+    const createPointerEvent = (
+      type: string,
+      clientX: number,
+      clientY: number,
+    ): PointerEvent => {
+      const event = new Event(type) as PointerEvent;
+      Object.defineProperties(event, {
+        pointerId: { value: 1 },
+        clientX: { value: clientX },
+        clientY: { value: clientY },
+      });
+      return event;
+    };
+
+    await act(async () => {
+      domElement.dispatchEvent(createPointerEvent("pointerdown", 100, 100));
+      domElement.dispatchEvent(createPointerEvent("pointermove", 124, 112));
+    });
+
+    expect(camera.position.x).not.toBe(initialPosition.x);
+    expect(camera.position.z).not.toBe(initialPosition.z);
+
+    await act(async () => root.unmount());
+    useGameStore.setState({ interactionMode: "inspect" });
+  });
+});
+
+afterEach(() => {
+  useThreeMock.mockReset();
+  document.body.replaceChildren();
 });

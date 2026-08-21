@@ -66,4 +66,35 @@ describe("PizzaShopPanel", () => {
     });
     await act(async () => root.unmount());
   });
+
+  it("10個ボタンでピザの生産数を10枚に設定できる", async () => {
+    useGameStore.setState({
+      game: {
+        ...createInitialGameState(0),
+        buildings: [{ id: "pizza-shop-test", buildingId: "pizza-shop", gridX: 8, gridY: 8 }],
+        bacon: 10,
+        cheese: 10,
+        tomatoes: 10,
+        wheat: 20,
+      },
+      pizzaShopPanelBuildingId: "pizza-shop-test",
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(PizzaShopPanel)));
+    const tenButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("10個"));
+    expect(tenButton).not.toBeUndefined();
+
+    await act(async () => {
+      tenButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.querySelector<HTMLInputElement>('input[aria-label="ピザの生産数"]')?.value)
+      .toBe("10");
+    expect(container.querySelector(".pizza-recipe-heading")?.textContent).toContain("10枚分");
+    await act(async () => root.unmount());
+  });
 });

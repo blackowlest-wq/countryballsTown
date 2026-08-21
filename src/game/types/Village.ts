@@ -5,6 +5,7 @@ export interface GameState {
   tomatoSeeds: number;
   tomatoes: number;
   crops: import("./Crop").Crop[];
+  eggs: number;
   milk: number;
   pork: number;
   butter: number;
@@ -13,8 +14,10 @@ export interface GameState {
   sausage: number;
   bacon: number;
   pizzas: number;
+  currentMap: import("./Map").MapId;
   cowProductions: import("./Cow").CowProduction[];
   pigProductions: import("./Pig").PigProduction[];
+  chickenProductions: import("./Chicken").ChickenProduction[];
   milkFactoryProductions: import("./MilkFactory").MilkFactoryProduction[];
   porkFactoryProductions: import("./PorkFactory").PorkFactoryProduction[];
   villageLevel: number;

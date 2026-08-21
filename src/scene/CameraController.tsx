@@ -7,7 +7,6 @@ import {
   CAMERA_MIN_ZOOM,
 } from "../game/constants/gameConstants";
 import { getGroundPanDelta } from "./cameraPan";
-import { useGameStore } from "../store/gameStore";
 
 interface PointerPosition {
   x: number;
@@ -16,7 +15,6 @@ interface PointerPosition {
 
 export function CameraController(): null {
   const { camera, gl } = useThree();
-  const interactionMode = useGameStore((store) => store.interactionMode);
   const target = useRef({ x: 0, z: 0 });
   const pointers = useRef(new Map<number, PointerPosition>());
   const lastPinchDistance = useRef<number | null>(null);
@@ -79,9 +77,7 @@ export function CameraController(): null {
         lastPinchDistance.current = nextDistance;
         return;
       }
-      if (interactionMode !== "farm") {
-        panBy(event.clientX - previous.x, event.clientY - previous.y);
-      }
+      panBy(event.clientX - previous.x, event.clientY - previous.y);
     };
 
     const onPointerUp = (event: PointerEvent): void => {
@@ -108,7 +104,7 @@ export function CameraController(): null {
       element.removeEventListener("pointercancel", onPointerUp);
       element.removeEventListener("wheel", onWheel);
     };
-  }, [camera, gl, interactionMode]);
+  }, [camera, gl]);
 
   return null;
 }

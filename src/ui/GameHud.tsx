@@ -12,11 +12,14 @@ export function GameHud(): JSX.Element {
   const treeCount = countBuildings(game, "tree");
   const flowerCount = countBuildings(game, "flower");
   const onsenCount = countBuildings(game, "onsen");
-  const nextGoal = game.villageLevel === 1
-    ? `木 ${treeCount}/3  ・  花 ${flowerCount}/3`
-    : game.villageLevel === 2
-      ? `住民 ${game.residents.length}/2  ・  温泉 ${onsenCount}/1`
-      : "村のみんなが楽しく暮らしています";
+  const isVillage = game.currentMap === "village";
+  const nextGoal = !isVillage
+    ? "海岸で釣り、川辺で遊べます"
+    : game.villageLevel === 1
+      ? `木 ${treeCount}/3  ・  花 ${flowerCount}/3`
+      : game.villageLevel === 2
+        ? `住民 ${game.residents.length}/2  ・  温泉 ${onsenCount}/1`
+        : "村のみんなが楽しく暮らしています";
 
   return (
     <>
@@ -31,7 +34,7 @@ export function GameHud(): JSX.Element {
       <div className="goal-card">
         <span className="goal-sparkle">✦</span>
         <div>
-          <p className="goal-label">つぎの村の目標</p>
+          <p className="goal-label">{isVillage ? "つぎの村の目標" : "海と川"}</p>
           <p className="goal-text">{nextGoal}</p>
         </div>
       </div>

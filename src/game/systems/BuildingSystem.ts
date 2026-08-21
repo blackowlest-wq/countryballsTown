@@ -5,6 +5,7 @@ import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type { GameState } from "../types/Village";
 import { registerCowProduction, removeCowProduction } from "./CowSystem";
 import { registerPigProduction, removePigProduction } from "./PigSystem";
+import { registerChickenProduction, removeChickenProduction } from "./ChickenSystem";
 import {
   registerMilkFactoryProduction,
   removeMilkFactoryProduction,
@@ -157,11 +158,13 @@ export function placeBuilding(
     ? registerCowProduction(placedState, building.id, now)
     : buildingId === "pig"
       ? registerPigProduction(placedState, building.id, now)
-      : buildingId === "milk-factory"
-        ? registerMilkFactoryProduction(placedState, building.id)
-        : buildingId === "pork-factory"
-          ? registerPorkFactoryProduction(placedState, building.id)
-          : placedState;
+      : buildingId === "chicken"
+        ? registerChickenProduction(placedState, building.id, now)
+        : buildingId === "milk-factory"
+          ? registerMilkFactoryProduction(placedState, building.id)
+          : buildingId === "pork-factory"
+            ? registerPorkFactoryProduction(placedState, building.id)
+            : placedState;
   return {
     success: true,
     building,
@@ -227,12 +230,14 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
     state: existing.buildingId === "cow"
       ? removeCowProduction(removedState, existing.id)
       : existing.buildingId === "pig"
-        ? removePigProduction(removedState, existing.id)
-        : existing.buildingId === "milk-factory"
-          ? removeMilkFactoryProduction(removedState, existing.id)
-          : existing.buildingId === "pork-factory"
-            ? removePorkFactoryProduction(removedState, existing.id)
-            : removedState,
+      ? removePigProduction(removedState, existing.id)
+        : existing.buildingId === "chicken"
+          ? removeChickenProduction(removedState, existing.id)
+          : existing.buildingId === "milk-factory"
+            ? removeMilkFactoryProduction(removedState, existing.id)
+            : existing.buildingId === "pork-factory"
+              ? removePorkFactoryProduction(removedState, existing.id)
+              : removedState,
   };
 }
 

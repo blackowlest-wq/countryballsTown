@@ -15,7 +15,6 @@ afterEach(() => {
   useGameStore.setState({
     game: createInitialGameState(0),
     interactionMode: "inspect",
-    cropAction: "harvest",
     selectedCropType: "wheat",
     isBuildMenuOpen: false,
     isResidentPanelOpen: false,
@@ -25,14 +24,13 @@ afterEach(() => {
 });
 
 describe("FarmControls", () => {
-  it("作物モードは誤植えしないよう収穫から始める", () => {
-    useGameStore.setState({ interactionMode: "inspect", cropAction: "plant" });
+  it("作物モードは種まき用に開き、収穫操作を持たない", () => {
+    useGameStore.setState({ interactionMode: "inspect" });
 
     useGameStore.getState().beginFarming();
 
     expect(useGameStore.getState()).toMatchObject({
       interactionMode: "farm",
-      cropAction: "harvest",
     });
   });
 
@@ -44,6 +42,7 @@ describe("FarmControls", () => {
         wheat: 3,
         tomatoSeeds: 5,
         tomatoes: 2,
+        eggs: 8,
         milk: 7,
         pork: 6,
         butter: 4,
@@ -54,7 +53,6 @@ describe("FarmControls", () => {
         pizzas: 2,
       },
       interactionMode: "farm",
-      cropAction: "harvest",
       selectedCropType: "wheat",
     });
     const container = document.createElement("div");
@@ -63,7 +61,6 @@ describe("FarmControls", () => {
 
     await act(async () => root.render(createElement(FarmControls)));
     const tomatoButton = container.querySelector<HTMLButtonElement>('[data-crop="tomato"]');
-    const plantButton = container.querySelector<HTMLButtonElement>('[data-action="plant"]');
     const harvestButton = container.querySelector<HTMLButtonElement>('[data-action="harvest"]');
 
     expect(container.querySelector('[data-crop="wheat"]')?.getAttribute("aria-label"))
@@ -72,30 +69,24 @@ describe("FarmControls", () => {
       .toBe("トマトの種を選ぶ。種 5、収穫 2");
     expect(container.querySelector('[aria-label="牛乳 7"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="豚肉 6"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="卵 8"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="バター 4"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="チーズ 2"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ハム 3"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ソーセージ 5"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ベーコン 1"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
-    expect(harvestButton?.getAttribute("aria-pressed")).toBe("true");
+    expect(harvestButton).toBeNull();
 
     await act(async () => {
       tomatoButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(useGameStore.getState()).toMatchObject({
       selectedCropType: "tomato",
-      cropAction: "plant",
     });
     expect(tomatoButton?.getAttribute("aria-pressed")).toBe("true");
-    expect(plantButton?.getAttribute("aria-pressed")).toBe("true");
     expect(container.textContent).toContain("トマトの種を空の畑へ");
-
-    await act(async () => {
-      harvestButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-    expect(useGameStore.getState().cropAction).toBe("harvest");
-    expect(container.textContent).toContain("作物1個・種2個");
+    expect(container.textContent).toContain("成熟した作物は村画面でタップして収穫");
 
     await act(async () => root.unmount());
   });
@@ -115,6 +106,32 @@ describe("FarmControls", () => {
       cropButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(useGameStore.getState().interactionMode).toBe("farm");
+
+    await act(async () => root.unmount());
+  });
+
+  it("海と川メニューでマップを切り替える", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(BottomMenu)));
+    const mapButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("海と川"));
+    expect(mapButton).toBeDefined();
+
+    await act(async () => {
+      mapButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(useGameStore.getState().game.currentMap).toBe("sea-and-river");
+    expect(container.textContent).toContain("村へ戻る");
+
+    await act(async () => {
+      [...container.querySelectorAll("button")]
+        .find((button) => button.textContent?.includes("村へ戻る"))
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(useGameStore.getState().game.currentMap).toBe("village");
 
     await act(async () => root.unmount());
   });

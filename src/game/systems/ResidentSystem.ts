@@ -3,6 +3,7 @@ import {
   RESIDENT_DECISION_MAX_MS,
   RESIDENT_DECISION_MIN_MS,
   RESIDENT_FALL_MS,
+  RESIDENT_FISHING_MS,
   RESIDENT_HAPPY_MS,
   RESIDENT_HEART_MS,
   RESIDENT_LOOK_MS,
@@ -10,10 +11,15 @@ import {
   RESIDENT_MEETING_WAIT_MS,
   RESIDENT_SLEEP_MS,
   RESIDENT_TALK_MS,
+  RESIDENT_RIVER_PLAY_MS,
 } from "../constants/gameConstants";
 import { getBuildingDefinition } from "../data/buildings";
 import { getCountryDefinition } from "../data/countries";
 import { clampToMap, distanceBetween, moveTowards } from "./MovementSystem";
+import {
+  getMapActivityPosition,
+  isMapPositionWalkable,
+} from "./MapSystem";
 import type { GridPosition } from "../types/GridPosition";
 import {
   getResidentMotion,
@@ -33,6 +39,7 @@ function getNextDecisionAt(now: number, random: RandomSource): number {
 }
 
 function isBlockedByBuilding(state: GameState, position: GridPosition): boolean {
+  if (state.currentMap !== "village") return false;
   return state.buildings.some((instance) => {
     const definition = getBuildingDefinition(instance.buildingId);
     if (!definition || definition.residentCollision !== "blocking") return false;
@@ -67,6 +74,10 @@ function getMotionDuration(motion: ResidentMotion): number {
     case "look-tree":
     case "look-fountain":
       return RESIDENT_LOOK_MS;
+    case "fishing":
+      return RESIDENT_FISHING_MS;
+    case "river-play":
+      return RESIDENT_RIVER_PLAY_MS;
     case "use-building":
       return RESIDENT_ACTION_MS;
     case "happy":
@@ -133,7 +144,7 @@ function getSocialDestination(
       x: target.position.x + offset.x,
       z: target.position.z + offset.z,
     });
-    if (!isBlockedByBuilding(state, candidate)) {
+    if (isMapPositionWalkable(state.currentMap, candidate) && !isBlockedByBuilding(state, candidate)) {
       return {
         position: candidate,
         motion: "approach-resident",
@@ -163,15 +174,32 @@ export function chooseResidentDestination(
   resident: Resident,
   random: RandomSource = Math.random,
 ): ResidentDestination {
-  const country = getCountryDefinition(resident.countryId);
-  const favorite = country?.favoriteBuildingIds.find((buildingId) =>
-    state.buildings.some(
-      (building) => building.buildingId === buildingId && getBuildingMotion(buildingId),
-    ),
-  );
-  if (favorite && random() > 0.72) {
-    const buildingPosition = getBuildingDestination(state, favorite, random);
-    if (buildingPosition) return buildingPosition;
+  if (state.currentMap === "sea-and-river") {
+    const residentIndex = Math.max(0, state.residents.findIndex(({ id }) => id === resident.id));
+    const activityRoll = random();
+    if (activityRoll < 0.22) {
+      return {
+        position: getMapActivityPosition("fishing", residentIndex),
+        motion: "fishing",
+      };
+    }
+    if (activityRoll < 0.44) {
+      return {
+        position: getMapActivityPosition("river-play", residentIndex),
+        motion: "river-play",
+      };
+    }
+  } else {
+    const country = getCountryDefinition(resident.countryId);
+    const favorite = country?.favoriteBuildingIds.find((buildingId) =>
+      state.buildings.some(
+        (building) => building.buildingId === buildingId && getBuildingMotion(buildingId),
+      ),
+    );
+    if (favorite && random() > 0.72) {
+      const buildingPosition = getBuildingDestination(state, favorite, random);
+      if (buildingPosition) return buildingPosition;
+    }
   }
 
   const activityRoll = random();
@@ -207,7 +235,9 @@ export function chooseResidentDestination(
       x: randomBetween(0.7, 19.3, random),
       z: randomBetween(0.7, 19.3, random),
     });
-    if (!isBlockedByBuilding(state, candidate)) return { position: candidate, motion: "idle" };
+    if (isMapPositionWalkable(state.currentMap, candidate) && !isBlockedByBuilding(state, candidate)) {
+      return { position: candidate, motion: "idle" };
+    }
   }
   return { position: { x: 10, z: 14 }, motion: "idle" };
 }
@@ -362,6 +392,8 @@ function arriveAtDestination(resident: Resident, now: number, random: RandomSour
   if (
     motion === "look-tree" ||
     motion === "look-fountain" ||
+    motion === "fishing" ||
+    motion === "river-play" ||
     motion === "use-building"
   ) {
     return beginTimedMotion(
@@ -447,7 +479,7 @@ export function advanceResidents(
     const nextPosition = clampToMap(
       moveTowards(resident.position, resident.destination, deltaMs),
     );
-    if (isBlockedByBuilding(state, nextPosition)) {
+    if (!isMapPositionWalkable(state.currentMap, nextPosition) || isBlockedByBuilding(state, nextPosition)) {
       return returnToIdle(resident, now, random);
     }
     if (distanceBetween(nextPosition, resident.destination) > 0.12) {
@@ -465,6 +497,8 @@ export function getResidentStatusLabel(resident: Resident): string {
     if (motion === "approach-resident") return "他の住民に近づいています";
     if (motion === "look-tree") return "木へ移動中";
     if (motion === "look-fountain") return "噴水へ移動中";
+    if (motion === "fishing") return "海辺へ移動中";
+    if (motion === "river-play") return "川へ移動中";
     if (motion === "use-building") {
       const building = resident.actionBuildingId
         ? getBuildingDefinition(resident.actionBuildingId)
@@ -478,6 +512,10 @@ export function getResidentStatusLabel(resident: Resident): string {
       return "木を見ています";
     case "look-fountain":
       return "噴水を見ています";
+    case "fishing":
+      return "釣りをしています";
+    case "river-play":
+      return "川で遊んでいます";
     case "use-building": {
       const building = resident.actionBuildingId
         ? getBuildingDefinition(resident.actionBuildingId)

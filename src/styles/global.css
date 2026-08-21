@@ -120,6 +120,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-icon-milk-factory { background: #6aa7a5; }
 .building-icon-pork-factory { background: #b76f64; }
 .building-icon-pig { background: #d7909a; }
+.building-icon-chicken { background: #d7a75e; }
 .building-icon-cherry-tree,
 .building-icon-flower { background: #ed9aa8; }
 .building-icon-onsen, .building-icon-torii { background: #d97263; }
@@ -155,6 +156,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .bottom-menu { position: absolute; bottom: 20px; left: 50%; z-index: 10; display: flex; gap: 8px; padding: 8px; border-radius: 21px; transform: translateX(-50%); }
 .bottom-menu-button { display: grid; min-width: 98px; gap: 3px; place-items: center; padding: 9px 17px 8px; color: #8d8374; background: transparent; border: 0; border-radius: 15px; cursor: pointer; font-size: 11px; font-weight: 900; transition: background .18s ease, color .18s ease, transform .18s ease; }
 .bottom-menu-button:hover, .bottom-menu-button.is-active { color: #557b47; background: #eef6de; transform: translateY(-2px); }
+.bottom-menu-button:disabled { color: #c2baab; background: transparent; cursor: not-allowed; opacity: .72; transform: none; }
 .menu-icon { display: block; height: 21px; color: #7ba95e; font-size: 20px; line-height: 21px; letter-spacing: -6px; }
 .crop-menu-icon { letter-spacing: 0; }
 
@@ -180,12 +182,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .processing-stock-icon { font-size: 14px; line-height: 1; }
 .milk-stock-icon { color: #4c8294; }
 .pork-stock-icon { color: #b95f58; }
+.egg-stock-icon { color: #c99a4c; }
 .farm-control-row { display: flex; width: 100%; gap: 8px; align-items: center; }
-.farm-action-buttons { display: flex; gap: 4px; padding: 3px; background: #eee5d5; border-radius: 13px; }
-.farm-action-button { display: inline-flex; gap: 5px; align-items: center; min-height: 36px; padding: 7px 11px; color: #81786b; white-space: nowrap; background: transparent; border: 0; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: 900; transition: color .16s ease, background .16s ease, transform .16s ease; }
-.farm-action-button:hover { color: #557b47; transform: translateY(-1px); }
-.farm-action-button[aria-pressed="true"] { color: #fff; background: #78b557; box-shadow: 0 2px 0 #568c40; }
-.farm-action-button[data-action="harvest"][aria-pressed="true"] { color: #6f501f; background: #f2c45e; box-shadow: 0 2px 0 #c49237; }
 .farm-action-copy { flex: 1; color: #765f2c; font-size: 10px; font-weight: 800; line-height: 1.35; }
 .factory-product-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .factory-product-option { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 58px; color: #756b5d; background: rgba(255,255,255,.6); border: 2px solid #e6dccb; border-radius: 14px; cursor: pointer; font-size: 13px; font-weight: 900; transition: color .16s ease, background .16s ease, border-color .16s ease, transform .16s ease; }
@@ -200,6 +198,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .pizza-quantity-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #756b5d; font-size: 12px; font-weight: 900; }
 .pizza-quantity-control { display: inline-flex; align-items: center; gap: 5px; padding: 4px; background: #f2eadc; border-radius: 12px; }
 .pizza-quantity-control button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; color: #6d875c; background: #fffdf6; border: 1px solid #ded2bf; border-radius: 9px; cursor: pointer; font-size: 18px; font-weight: 900; }
+.pizza-quantity-control .pizza-quantity-shortcut { width: auto; min-width: 44px; padding: 0 7px; font-size: 11px; white-space: nowrap; }
 .pizza-quantity-control button:disabled { color: #b7afa2; background: #eee7da; cursor: not-allowed; }
 .pizza-quantity-control input { width: 54px; height: 30px; padding: 2px 4px; color: var(--ink); text-align: center; background: #fffdf6; border: 1px solid #ded2bf; border-radius: 8px; font-size: 14px; font-weight: 900; }
 .pizza-max-copy { margin: 5px 0 12px; color: var(--muted); font-size: 10px; text-align: right; }
@@ -246,8 +245,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .request-progress-row { margin-top: 7px; font-size: 9px; }
   .floating-panel { left: 10px; right: 10px; bottom: 93px; width: auto; max-height: calc(100vh - 160px); padding: 16px; border-radius: 19px; }
   .building-panel, .milk-factory-panel, .pork-factory-panel, .pizza-shop-panel { left: 10px; right: 10px; width: auto; }
-  .bottom-menu { bottom: 10px; padding: 6px; }
-  .bottom-menu-button { min-width: 82px; padding: 7px 12px; }
+  .bottom-menu { bottom: 10px; gap: 4px; padding: 6px; }
+  .bottom-menu-button { min-width: 68px; padding: 7px 7px; }
   .farm-controls { bottom: 91px; width: calc(100vw - 20px); gap: 6px; padding: 7px; }
   .crop-choice-button { grid-template-columns: 29px minmax(0, 1fr); gap: 5px; padding: 5px; }
   .crop-choice-icon { width: 29px; height: 29px; font-size: 17px; }
@@ -259,7 +258,6 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .processing-stock-item { padding: 3px 4px; font-size: 8px; }
   .processing-stock-item strong { font-size: 10px; }
   .processing-stock-icon { font-size: 12px; }
-  .farm-action-button { padding-inline: 8px; font-size: 10px; }
   .farm-action-copy { font-size: 9px; }
   .interaction-hint { display: none; }
   .notice-banner { top: 80px; }
@@ -271,9 +269,9 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .level-title { font-size: 12px; }
   .level-card .eyebrow, .level-card .level-subtitle { display: none; }
   .farm-controls { padding: 6px; }
+  .bottom-menu-button { min-width: 62px; padding-inline: 4px; font-size: 10px; }
   .crop-choice-button { grid-template-columns: 25px minmax(0, 1fr); gap: 4px; padding: 4px; }
   .crop-choice-icon { width: 25px; height: 25px; font-size: 15px; }
-  .farm-action-button { padding-inline: 6px; }
   .farm-action-copy { font-size: 8px; }
   .processing-stock { gap: 4px; }
   .processing-stock-heading { font-size: 7px; }

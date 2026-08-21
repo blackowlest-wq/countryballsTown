@@ -38,13 +38,19 @@ export function PlacementGrid(): JSX.Element | null {
       {cells.map((cell) => {
         const position = gridToWorld({ x: cell.x, z: cell.z });
         return (
-          <mesh key={`${cell.x}-${cell.z}`} position={[position.x, 0.012, position.z]} rotation-x={-Math.PI / 2}>
+          <mesh
+            key={`${cell.x}-${cell.z}`}
+            position={[position.x, 0.012, position.z]}
+            rotation-x={-Math.PI / 2}
+            renderOrder={10}
+          >
             <planeGeometry args={[0.9, 0.9]} />
             <meshBasicMaterial
               color={cell.valid ? "#6fd39a" : "#eb7b7b"}
               transparent
               opacity={0.3}
               depthWrite={false}
+              depthTest={false}
             />
           </mesh>
         );

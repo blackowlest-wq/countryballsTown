@@ -11,8 +11,10 @@ import { getUnlockedBuildingIdsForLevel } from "../data/villageLevels";
 import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
+import { normalizeChickenProductions } from "./ChickenSystem";
 import { normalizeCowProductions } from "./CowSystem";
 import { isCellInField, normalizeCrops } from "./CropSystem";
+import { isMapId } from "./MapSystem";
 import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
 import { normalizePigProductions } from "./PigSystem";
 import { normalizePorkFactoryProductions } from "./PorkFactorySystem";
@@ -64,6 +66,7 @@ export function saveGameState(
     const now = Date.now();
     const buildings = createBuildingCollection(state.buildings).buildings;
     const crops = normalizeCrops(state.crops);
+    const chickenProductions = normalizeChickenProductions(state.chickenProductions, buildings, now);
     const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
     const milkFactoryProductions = normalizeMilkFactoryProductions(
       state.milkFactoryProductions,
@@ -83,6 +86,7 @@ export function saveGameState(
       ...stateWithoutLegacyCrops,
       buildings,
       crops,
+      chickenProductions,
       cowProductions,
       milkFactoryProductions,
       pigProductions,
@@ -153,6 +157,10 @@ export function loadGameState(
           ? Math.max(0, Math.floor(parsed.tomatoes))
           : 0,
       crops,
+      eggs:
+        typeof parsed.eggs === "number" && Number.isFinite(parsed.eggs)
+          ? Math.max(0, Math.floor(parsed.eggs))
+          : 0,
       milk:
         typeof parsed.milk === "number" && Number.isFinite(parsed.milk)
           ? Math.max(0, Math.floor(parsed.milk))
@@ -185,6 +193,8 @@ export function loadGameState(
         typeof parsed.pizzas === "number" && Number.isFinite(parsed.pizzas)
           ? Math.max(0, Math.floor(parsed.pizzas))
           : 0,
+      currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
+      chickenProductions: normalizeChickenProductions(parsed.chickenProductions, buildings, now),
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
       milkFactoryProductions: normalizeMilkFactoryProductions(
         parsed.milkFactoryProductions,

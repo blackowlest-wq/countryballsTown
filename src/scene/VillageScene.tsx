@@ -9,12 +9,16 @@ import { ResidentRenderer } from "./residents/ResidentRenderer";
 import { ShopVisitorRenderer } from "./visitors/ShopVisitorRenderer";
 import { CropRenderer } from "./crops/CropRenderer";
 import { useGameStore } from "../store/gameStore";
+import type { MapId } from "../game/types/Map";
+import { SeaAndRiverMap } from "./SeaAndRiverMap";
 
-function SceneContents(): JSX.Element {
+function SceneContents({ currentMap }: { currentMap: MapId }): JSX.Element {
+  const isVillage = currentMap === "village";
+  const background = isVillage ? "#9bd2ed" : "#a8dff0";
   return (
     <>
-      <color attach="background" args={["#9bd2ed"]} />
-      <fog attach="fog" args={["#9bd2ed", 32, 78]} />
+      <color attach="background" args={[background]} />
+      <fog attach="fog" args={[background, 32, 78]} />
       <ambientLight intensity={1.35} />
       <directionalLight
         castShadow
@@ -29,18 +33,19 @@ function SceneContents(): JSX.Element {
       />
       <hemisphereLight args={["#fff2d1", "#6f9279", 0.6]} />
       <CameraController />
-      <Ground />
-      <PlacementGrid />
-      <CropRenderer />
-      <BuildingRenderer />
+      {isVillage ? <Ground /> : <SeaAndRiverMap />}
+      {isVillage && <PlacementGrid />}
+      {isVillage && <CropRenderer />}
+      {isVillage && <BuildingRenderer />}
       <ResidentRenderer />
-      <ShopVisitorRenderer />
+      {isVillage && <ShopVisitorRenderer />}
     </>
   );
 }
 
 export function VillageScene(): JSX.Element {
   const interactionMode = useGameStore((store) => store.interactionMode);
+  const currentMap = useGameStore((store) => store.game.currentMap);
   return (
     <div
       className={`scene-layer ${interactionMode === "farm" ? "is-farming" : ""}`}
@@ -54,7 +59,7 @@ export function VillageScene(): JSX.Element {
         gl={{ antialias: true, powerPreference: "high-performance" }}
       >
         <Suspense fallback={null}>
-          <SceneContents />
+          <SceneContents currentMap={currentMap} />
         </Suspense>
       </Canvas>
     </div>

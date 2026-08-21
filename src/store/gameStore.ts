@@ -19,6 +19,11 @@ import {
   type PigPorkOutcome,
 } from "../game/systems/PigSystem";
 import {
+  collectChickenEggs as collectEggsFromChicken,
+  normalizeChickenProductions,
+  type ChickenEggOutcome,
+} from "../game/systems/ChickenSystem";
+import {
   configureMilkFactory as configureFactory,
   advanceMilkFactoryProductions,
   getMilkFactoryProductName,
@@ -42,11 +47,11 @@ import {
   maybeStartResidentRequest,
 } from "../game/systems/ResidentRequestSystem";
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
+import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
   getCropName,
   performCropAction,
-  type CropAction,
   type CropActionOutcome,
 } from "../game/systems/CropSystem";
 import type { BuildingInstance } from "../game/types/Building";
@@ -54,6 +59,7 @@ import type { CropType } from "../game/types/Crop";
 import type { MilkFactoryProductType } from "../game/types/MilkFactory";
 import type { PorkFactoryProductType } from "../game/types/PorkFactory";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
+import type { MapId } from "../game/types/Map";
 import type { GameState } from "../game/types/Village";
 
 export type InteractionMode = "inspect" | "build" | "move" | "farm";
@@ -63,7 +69,6 @@ interface GameStore {
   economyRemainderMs: number;
   visitorSimulation: ShopVisitorSimulation;
   interactionMode: InteractionMode;
-  cropAction: CropAction;
   selectedCropType: CropType;
   selectedBuildingId: string | null;
   milkFactoryPanelBuildingId: string | null;
@@ -76,13 +81,18 @@ interface GameStore {
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
   setResidentPanelOpen: (open: boolean) => void;
+  travelToMap: (mapId: MapId, now?: number) => void;
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
   beginFarming: () => void;
-  setCropAction: (action: CropAction) => void;
   selectCropType: (cropType: CropType) => void;
   cancelInteraction: () => void;
   interactCrop: (
+    gridX: number,
+    gridY: number,
+    now?: number,
+  ) => CropActionOutcome | null;
+  harvestCrop: (
     gridX: number,
     gridY: number,
     now?: number,
@@ -92,6 +102,7 @@ interface GameStore {
   removeSelectedBuilding: () => boolean;
   collectCowMilk: (buildingInstanceId: string, now?: number) => CowMilkOutcome | null;
   collectPigPork: (buildingInstanceId: string, now?: number) => PigPorkOutcome | null;
+  collectChickenEggs: (buildingInstanceId: string, now?: number) => ChickenEggOutcome | null;
   openMilkFactoryPanel: (buildingInstanceId: string) => void;
   closeMilkFactoryPanel: () => void;
   configureMilkFactory: (
@@ -133,6 +144,11 @@ function normalizeGameState(state: GameState): GameState {
     buildings,
     Date.now(),
   );
+  const chickenProductions = normalizeChickenProductions(
+    state.chickenProductions,
+    buildings,
+    Date.now(),
+  );
   const porkFactoryProductions = normalizePorkFactoryProductions(
     state.porkFactoryProductions,
     buildings,
@@ -142,6 +158,7 @@ function normalizeGameState(state: GameState): GameState {
     cowProductions === state.cowProductions &&
     milkFactoryProductions === state.milkFactoryProductions &&
     pigProductions === state.pigProductions &&
+    chickenProductions === state.chickenProductions &&
     porkFactoryProductions === state.porkFactoryProductions
     ? state
     : {
@@ -150,6 +167,7 @@ function normalizeGameState(state: GameState): GameState {
       cowProductions,
       milkFactoryProductions,
       pigProductions,
+      chickenProductions,
       porkFactoryProductions,
     };
 }
@@ -181,7 +199,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
   economyRemainderMs: 0,
   visitorSimulation: createShopVisitorSimulation(),
   interactionMode: "inspect",
-  cropAction: "harvest",
   selectedCropType: "wheat",
   selectedBuildingId: null,
   milkFactoryPanelBuildingId: null,
@@ -235,6 +252,24 @@ export const useGameStore = create<GameStore>((setState, get) => {
   setBuildMenuOpen: (open) => set({ isBuildMenuOpen: open }),
   setResidentPanelOpen: (open) => set({ isResidentPanelOpen: open }),
 
+  travelToMap: (mapId, now = Date.now()) => {
+    const current = get();
+    const game = travelToMapSystem(current.game, mapId, now);
+    if (game === current.game) return;
+    set({
+      game: persist(game),
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      porkFactoryPanelBuildingId: null,
+      pizzaShopPanelBuildingId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      selectedResidentId: null,
+      notice: mapId === "sea-and-river" ? "海と川へ移動しました。" : "村へ戻りました。",
+    });
+  },
+
   beginBuild: (buildingId) =>
     set({
       interactionMode: "build",
@@ -262,7 +297,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
   beginFarming: () =>
     set({
       interactionMode: "farm",
-      cropAction: "harvest",
       selectedBuildingId: null,
       milkFactoryPanelBuildingId: null,
       porkFactoryPanelBuildingId: null,
@@ -270,14 +304,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
-      notice: "畑で操作してください。安全のため「収穫」から始まります。",
+      notice: "種を選んで畑をタップしてください。成熟した作物は村画面でタップすると収穫できます。",
     }),
-
-  setCropAction: (action) => set({ cropAction: action, notice: null }),
 
   selectCropType: (cropType) => set({
     selectedCropType: cropType,
-    cropAction: "plant",
     notice: null,
   }),
 
@@ -296,7 +327,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     if (current.interactionMode !== "farm") return null;
     const result = performCropAction(
       current.game,
-      current.cropAction,
+      "plant",
       current.selectedCropType,
       gridX,
       gridY,
@@ -315,6 +346,33 @@ export const useGameStore = create<GameStore>((setState, get) => {
     const harvestedCropName = result.cropType ? getCropName(result.cropType) : "作物";
     set({
       game: result.state,
+      notice: result.outcome === "harvested"
+        ? `${harvestedCropName}1個と、${harvestedCropName}の種2個を収穫しました！`
+        : current.notice,
+    });
+    return result.outcome;
+  },
+
+  harvestCrop: (gridX, gridY, now = Date.now()) => {
+    const current = get();
+    if (current.interactionMode !== "inspect") return null;
+    const result = performCropAction(
+      current.game,
+      "harvest",
+      current.selectedCropType,
+      gridX,
+      gridY,
+      now,
+    );
+    if (result.state === current.game) {
+      if (result.outcome === "growing" && result.cropType) {
+        set({ notice: `${getCropName(result.cropType)}はまだ成長中です。` });
+      }
+      return result.outcome;
+    }
+    const harvestedCropName = result.cropType ? getCropName(result.cropType) : "作物";
+    set({
+      game: persist(result.state),
       notice: result.outcome === "harvested"
         ? `${harvestedCropName}1個と、${harvestedCropName}の種2個を収穫しました！`
         : current.notice,
@@ -402,6 +460,19 @@ export const useGameStore = create<GameStore>((setState, get) => {
       game: persist(result.state),
       selectedBuildingId: null,
       notice: "豚肉を2個収穫しました！",
+    });
+    return result.outcome;
+  },
+
+  collectChickenEggs: (buildingInstanceId, now = Date.now()) => {
+    const current = get();
+    if (current.interactionMode !== "inspect") return null;
+    const result = collectEggsFromChicken(current.game, buildingInstanceId, now);
+    if (result.state === current.game) return result.outcome;
+    set({
+      game: persist(result.state),
+      selectedBuildingId: null,
+      notice: "卵を2個収穫しました！",
     });
     return result.outcome;
   },
@@ -579,7 +650,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
       economyRemainderMs: 0,
       visitorSimulation: createShopVisitorSimulation(),
       interactionMode: "inspect",
-      cropAction: "harvest",
       selectedCropType: "wheat",
       selectedBuildingId: null,
       milkFactoryPanelBuildingId: null,

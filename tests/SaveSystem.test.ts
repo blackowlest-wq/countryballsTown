@@ -27,6 +27,7 @@ describe("SaveSystem", () => {
       wheat: 4,
       tomatoSeeds: 3,
       tomatoes: 2,
+      eggs: 7,
       milk: 6,
       pork: 5,
       butter: 4,
@@ -46,6 +47,7 @@ describe("SaveSystem", () => {
         { id: "cow-test", buildingId: "cow", gridX: 12, gridY: 12 },
         { id: "factory-test", buildingId: "milk-factory", gridX: 14, gridY: 12 },
         { id: "pig-test", buildingId: "pig", gridX: 16, gridY: 12 },
+        { id: "chicken-test", buildingId: "chicken", gridX: 17, gridY: 12 },
         { id: "pork-factory-test", buildingId: "pork-factory", gridX: 18, gridY: 12 },
       ],
       cowProductions: [{ buildingInstanceId: "cow-test", milkReadyAt: 75 }],
@@ -55,6 +57,7 @@ describe("SaveSystem", () => {
         nextProductionAt: 20_000,
       }],
       pigProductions: [{ buildingInstanceId: "pig-test", porkReadyAt: 80 }],
+      chickenProductions: [{ buildingInstanceId: "chicken-test", eggReadyAt: 85 }],
       porkFactoryProductions: [{
         buildingInstanceId: "pork-factory-test",
         productType: "bacon" as const,
@@ -70,6 +73,7 @@ describe("SaveSystem", () => {
       wheat: 4,
       tomatoSeeds: 3,
       tomatoes: 2,
+      eggs: 7,
       milk: 6,
       pork: 5,
       butter: 4,
@@ -89,6 +93,7 @@ describe("SaveSystem", () => {
         nextProductionAt: 20_000,
       }],
       pigProductions: [{ buildingInstanceId: "pig-test", porkReadyAt: 80 }],
+      chickenProductions: [{ buildingInstanceId: "chicken-test", eggReadyAt: 85 }],
       porkFactoryProductions: [{
         buildingInstanceId: "pork-factory-test",
         productType: "bacon",
@@ -198,6 +203,29 @@ describe("SaveSystem", () => {
       milk: 0,
       cowProductions: [],
     });
+  });
+
+  it("卵情報がない旧セーブデータを移行する", () => {
+    const storage = memoryStorage();
+    const {
+      eggs: _eggs,
+      chickenProductions: _chickenProductions,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      eggs: 0,
+      chickenProductions: [],
+    });
+  });
+
+  it("マップ情報がない旧セーブデータは村から再開する", () => {
+    const storage = memoryStorage();
+    const { currentMap: _currentMap, ...legacyState } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000).currentMap).toBe("village");
   });
 
   it("加工物情報がない旧セーブデータを0個へ移行する", () => {

@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe("milk factory store interaction", () => {
-  it("工場で作るものを選ぶと20秒後から牛乳を消費して生産する", () => {
+  it("工場で作るものを選ぶと20秒後から牛乳1個で加工物を3個生産する", () => {
     const placed = placeBuilding(
       { ...createInitialGameState(0), milk: 1 },
       "milk-factory",
@@ -35,6 +35,6 @@ describe("milk factory store interaction", () => {
     });
 
     useGameStore.getState().tick(0, 20_000);
-    expect(useGameStore.getState().game).toMatchObject({ milk: 0, butter: 1 });
+    expect(useGameStore.getState().game).toMatchObject({ milk: 0, butter: 3 });
   });
 });

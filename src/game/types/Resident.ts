@@ -5,6 +5,8 @@ export type ResidentMotion =
   | "idle"
   | "look-tree"
   | "look-fountain"
+  | "fishing"
+  | "river-play"
   | "approach-resident"
   | "use-building"
   | "happy"

@@ -24,7 +24,7 @@ describe("PorkFactorySystem", () => {
     });
   });
 
-  it("豚肉を消費してハム・ソーセージ・ベーコンを作る", () => {
+  it("豚肉1個からハム・ソーセージ・ベーコンを3個作る", () => {
     for (const productType of ["ham", "sausage", "bacon"] as const) {
       let state = createInitialGameState(0);
       state = registerPorkFactoryProduction(state, "factory-test");
@@ -32,7 +32,7 @@ describe("PorkFactorySystem", () => {
       const advanced = advancePorkFactoryProductions({ ...state, pork: 1 }, 20_000);
 
       expect(advanced.pork).toBe(0);
-      expect(advanced[productType]).toBe(1);
+      expect(advanced[productType]).toBe(3);
       expect(advanced.porkFactoryProductions[0].nextProductionAt).toBe(40_000);
     }
   });
@@ -46,7 +46,7 @@ describe("PorkFactorySystem", () => {
     expect(waiting).toBe(state);
 
     const resumed = advancePorkFactoryProductions({ ...waiting, pork: 1 }, 20_000);
-    expect(resumed).toMatchObject({ pork: 0, bacon: 1 });
+    expect(resumed).toMatchObject({ pork: 0, bacon: 3 });
     expect(resumed.porkFactoryProductions[0].nextProductionAt).toBe(40_000);
   });
 

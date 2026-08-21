@@ -52,6 +52,7 @@ describe("BuildMenu", () => {
     expect(container.textContent).toContain("桜の木");
     expect(container.textContent).toContain("牛");
     expect(container.textContent).toContain("豚");
+    expect(container.textContent).toContain("鶏");
     expect(container.textContent).not.toContain("ピザ屋");
 
     const buildingTab = [...container.querySelectorAll('[role="tab"]')]
