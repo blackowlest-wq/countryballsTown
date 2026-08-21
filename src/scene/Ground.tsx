@@ -4,10 +4,9 @@ import { isCropMature } from "../game/systems/CropSystem";
 import { useGameStore } from "../store/gameStore";
 import { worldToGrid } from "../utils/grid";
 import {
-  beginHarvestGesture,
-  endHarvestGesture,
-  isHarvestGestureActive,
-} from "./crops/harvestGesture";
+  beginCropGesture,
+  endCropGesture,
+} from "./crops/cropGesture";
 
 type CropGestureMode = "plant" | "harvest";
 
@@ -32,7 +31,7 @@ export function Ground(): JSX.Element {
     activePointers.current.delete(pointerId);
     visitedCells.current.delete(pointerId);
     gestureModes.current.delete(pointerId);
-    endHarvestGesture(pointerId);
+    endCropGesture(pointerId);
   };
 
   return (
@@ -48,11 +47,9 @@ export function Ground(): JSX.Element {
         event.stopPropagation();
         activePointers.current.add(event.pointerId);
         visitedCells.current.set(event.pointerId, new Set());
-        const mode: CropGestureMode = startsWithHarvest || isHarvestGestureActive(event.pointerId)
-          ? "harvest"
-          : "plant";
+        const mode: CropGestureMode = startsWithHarvest ? "harvest" : "plant";
         gestureModes.current.set(event.pointerId, mode);
-        if (mode === "harvest") beginHarvestGesture(event.pointerId);
+        beginCropGesture(event.pointerId);
         const target = event.nativeEvent.target;
         if (target instanceof Element) target.setPointerCapture(event.pointerId);
         if (activePointers.current.size !== 1) return;
@@ -79,12 +76,8 @@ export function Ground(): JSX.Element {
         if (!visited || visited.has(key)) return;
         visited.add(key);
         const currentMode = gestureModes.current.get(event.pointerId) ?? "plant";
-        if (currentMode === "plant" && (
-          isHarvestGestureActive(event.pointerId) ||
-          hasMatureCropAt(cell.x, cell.z)
-        )) {
+        if (currentMode === "plant" && hasMatureCropAt(cell.x, cell.z)) {
           gestureModes.current.set(event.pointerId, "harvest");
-          beginHarvestGesture(event.pointerId);
         }
         if (gestureModes.current.get(event.pointerId) === "harvest") {
           if (hasMatureCropAt(cell.x, cell.z)) harvestCrop(cell.x, cell.z);

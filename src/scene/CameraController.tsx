@@ -8,9 +8,9 @@ import {
 } from "../game/constants/gameConstants";
 import { getGroundPanDelta } from "./cameraPan";
 import {
-  endHarvestGesture,
-  hasActiveHarvestGesture,
-} from "./crops/harvestGesture";
+  endCropGesture,
+  hasActiveCropGesture,
+} from "./crops/cropGesture";
 
 interface PointerPosition {
   x: number;
@@ -65,13 +65,13 @@ export function CameraController(): null {
     };
 
     const onPointerDown = (event: PointerEvent): void => {
-      if (hasActiveHarvestGesture()) return;
+      if (hasActiveCropGesture()) return;
       pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pointers.current.size === 2) lastPinchDistance.current = pinchDistance();
     };
 
     const onPointerMove = (event: PointerEvent): void => {
-      if (hasActiveHarvestGesture()) return;
+      if (hasActiveCropGesture()) return;
       const previous = pointers.current.get(event.pointerId);
       if (!previous) return;
       pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -88,7 +88,7 @@ export function CameraController(): null {
 
     const onPointerUp = (event: PointerEvent): void => {
       pointers.current.delete(event.pointerId);
-      endHarvestGesture(event.pointerId);
+      endCropGesture(event.pointerId);
       if (pointers.current.size < 2) lastPinchDistance.current = null;
     };
 

@@ -7,7 +7,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getGroundPanDelta, type CameraPanBasis } from "../src/scene/cameraPan";
 import { CameraController } from "../src/scene/CameraController";
 import { createInitialGameState } from "../src/game/core/GameState";
-import { beginHarvestGesture, endHarvestGesture } from "../src/scene/crops/harvestGesture";
+import {
+  beginCropGesture,
+  endCropGesture,
+} from "../src/scene/crops/cropGesture";
 import { useGameStore } from "../src/store/gameStore";
 
 const useThreeMock = vi.fn();
@@ -112,7 +115,7 @@ describe("Camera pan", () => {
       return event;
     };
 
-    beginHarvestGesture(2);
+    beginCropGesture(2);
     await act(async () => {
       domElement.dispatchEvent(createPointerEvent("pointerdown", 100, 100));
       domElement.dispatchEvent(createPointerEvent("pointermove", 124, 112));
@@ -121,13 +124,57 @@ describe("Camera pan", () => {
     expect(camera.position.x).toBe(initialPosition.x);
     expect(camera.position.z).toBe(initialPosition.z);
 
-    endHarvestGesture(2);
+    endCropGesture(2);
+    await act(async () => root.unmount());
+    useGameStore.setState({ interactionMode: "inspect" });
+  });
+
+  it("prioritizes a crop planting gesture over camera movement", async () => {
+    const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+    camera.zoom = 40;
+    const domElement = document.createElement("div");
+    useThreeMock.mockReturnValue({ camera, gl: { domElement } });
+    useGameStore.setState({
+      game: createInitialGameState(0),
+      interactionMode: "farm",
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CameraController)));
+    const initialPosition = camera.position.clone();
+    const createPointerEvent = (
+      type: string,
+      clientX: number,
+      clientY: number,
+    ): PointerEvent => {
+      const event = new Event(type) as PointerEvent;
+      Object.defineProperties(event, {
+        pointerId: { value: 4 },
+        clientX: { value: clientX },
+        clientY: { value: clientY },
+      });
+      return event;
+    };
+
+    beginCropGesture(4);
+    await act(async () => {
+      domElement.dispatchEvent(createPointerEvent("pointerdown", 100, 100));
+      domElement.dispatchEvent(createPointerEvent("pointermove", 124, 112));
+    });
+
+    expect(camera.position.x).toBe(initialPosition.x);
+    expect(camera.position.z).toBe(initialPosition.z);
+
+    endCropGesture(4);
     await act(async () => root.unmount());
     useGameStore.setState({ interactionMode: "inspect" });
   });
 });
 
 afterEach(() => {
+  endCropGesture(2);
+  endCropGesture(4);
   useThreeMock.mockReset();
   document.body.replaceChildren();
 });
