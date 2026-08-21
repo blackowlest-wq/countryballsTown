@@ -185,11 +185,11 @@ function BuildingInstanceRenderer({
       }}
     >
       {isCow
-        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} wanderSeed={instance.id} />
+        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} wanderSeed={instance.id} wanderOrigin={position} />
         : isPig
-          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} wanderSeed={instance.id} />
+          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} wanderSeed={instance.id} wanderOrigin={position} />
           : isChicken
-            ? <Chicken eggReadyAt={chickenProduction?.eggReadyAt} wanderSeed={instance.id} />
+            ? <Chicken eggReadyAt={chickenProduction?.eggReadyAt} wanderSeed={instance.id} wanderOrigin={position} />
         : isMilkFactory
           ? <MilkFactory productType={milkFactoryProduction?.productType} />
           : isPorkFactory
