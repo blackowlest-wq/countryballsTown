@@ -1,0 +1,4 @@
+title = "Countryball Town Gitleaks configuration"
+
+[extend]
+useDefault = true

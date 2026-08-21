@@ -15,7 +15,16 @@ npm run dev
 npm test
 npm run lint
 npm run build
+npm run secrets:scan
 ```
+
+`secrets:scan` は Gitleaks でGit履歴の秘密情報（APIキー・トークンなど）を検査します。Windowsでは次のコマンドでGitleaksを導入できます。
+
+```powershell
+winget install --id Gitleaks.Gitleaks --exact
+```
+
+GitHub Actionsでも、`main`へのpushとPull Requestごとに同じ検査を実行します。
 
 Cloudflare Pagesでは、ビルドコマンドを `npm run build`、出力ディレクトリを `dist` に設定してください。
 
