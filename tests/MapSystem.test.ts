@@ -31,6 +31,10 @@ describe("MapSystem", () => {
     for (let index = 0; index < 4; index += 1) {
       expect(isMapPositionWalkable(
         "sea-and-river",
+        getMapArrivalPosition("sea-and-river", index),
+      )).toBe(true);
+      expect(isMapPositionWalkable(
+        "sea-and-river",
         getMapActivityPosition("fishing", index),
       )).toBe(true);
       expect(isMapPositionWalkable(
@@ -38,5 +42,13 @@ describe("MapSystem", () => {
         getMapActivityPosition("river-play", index),
       )).toBe(true);
     }
+
+    const moved = travelToMap(createInitialGameState(0), "sea-and-river", 5_000);
+    moved.residents.forEach((resident) => {
+      expect(resident.destination).toBeDefined();
+      if (resident.destination) {
+        expect(isMapPositionWalkable("sea-and-river", resident.destination)).toBe(true);
+      }
+    });
   });
 });

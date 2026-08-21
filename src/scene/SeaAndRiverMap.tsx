@@ -1,27 +1,59 @@
+import { useMemo } from "react";
+import { BufferGeometry, Float32BufferAttribute } from "three";
 import { GRID_SIZE } from "../game/constants/gameConstants";
 import {
-  getRiverCenterX,
+  getRiverHalfWidth,
+  getRiverPathPoints,
   SEA_START_X,
 } from "../game/systems/MapSystem";
 import { gridToWorld } from "../utils/grid";
 
-const RIVER_SEGMENTS = [
-  { z: 2.1, length: 4.8 },
-  { z: 6.2, length: 4.8 },
-  { z: 10.3, length: 4.8 },
-  { z: 14.4, length: 4.8 },
-  { z: 18.1, length: 4.0 },
-];
-
 const SEA_COLOR = "#70c6df";
 const RIVER_COLOR = "#80cfe1";
 
-function getRiverRotation(gridZ: number): number {
-  const slope = getRiverCenterX(gridZ + 0.5) - getRiverCenterX(gridZ - 0.5);
-  return Math.atan2(slope, 2);
+function createRiverGeometry(): BufferGeometry {
+  const path = getRiverPathPoints();
+  const vertices: number[] = [];
+  const indices: number[] = [];
+
+  path.forEach((point, index) => {
+    const previous = gridToWorld(path[Math.max(0, index - 1)]);
+    const next = gridToWorld(path[Math.min(path.length - 1, index + 1)]);
+    const worldPoint = gridToWorld(point);
+    const tangentX = next.x - previous.x;
+    const tangentZ = next.z - previous.z;
+    const tangentLength = Math.hypot(tangentX, tangentZ) || 1;
+    const normalX = -tangentZ / tangentLength;
+    const normalZ = tangentX / tangentLength;
+    const halfWidth = getRiverHalfWidth(point.z);
+
+    vertices.push(
+      worldPoint.x + normalX * halfWidth,
+      0,
+      worldPoint.z + normalZ * halfWidth,
+      worldPoint.x - normalX * halfWidth,
+      0,
+      worldPoint.z - normalZ * halfWidth,
+    );
+  });
+
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const left = index * 2;
+    const nextLeft = left + 2;
+    const right = left + 1;
+    const nextRight = left + 3;
+    indices.push(left, nextLeft, right, right, nextLeft, nextRight);
+  }
+
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
 }
 
 export function SeaAndRiverMap(): JSX.Element {
+  const riverGeometry = useMemo(createRiverGeometry, []);
   const seaStart = gridToWorld({ x: SEA_START_X, z: GRID_SIZE / 2 }).x;
   const seaWidth = GRID_SIZE / 2 - seaStart;
   const seaCenter = seaStart + seaWidth / 2;
@@ -49,7 +81,7 @@ export function SeaAndRiverMap(): JSX.Element {
       </mesh>
       <mesh
         name="海岸線"
-        position={[seaStart, 0.015, 0]}
+        position={[seaStart, -0.01, 0]}
         receiveShadow
       >
         <boxGeometry args={[0.16, 0.08, GRID_SIZE]} />
@@ -57,24 +89,9 @@ export function SeaAndRiverMap(): JSX.Element {
       </mesh>
 
       <group name="川">
-        {RIVER_SEGMENTS.map((segment) => {
-          const center = gridToWorld({
-            x: getRiverCenterX(segment.z),
-            z: segment.z,
-          });
-          return (
-            <mesh
-              key={segment.z}
-              rotation-x={-Math.PI / 2}
-              rotation-y={getRiverRotation(segment.z)}
-              position={[center.x, -0.005, center.z]}
-              receiveShadow
-            >
-              <planeGeometry args={[2.15, segment.length]} />
-              <meshStandardMaterial color={RIVER_COLOR} roughness={0.5} />
-            </mesh>
-          );
-        })}
+        <mesh geometry={riverGeometry} position={[0, 0.005, 0]} receiveShadow>
+          <meshStandardMaterial color={RIVER_COLOR} roughness={0.5} />
+        </mesh>
       </group>
 
       <group name="波紋">
