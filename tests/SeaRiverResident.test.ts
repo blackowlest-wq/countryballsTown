@@ -6,7 +6,7 @@ import {
   createInitialResident,
   getResidentStatusLabel,
 } from "../src/game/systems/ResidentSystem";
-import { getMapArrivalPosition } from "../src/game/systems/MapSystem";
+import { getMapArrivalPosition, getRiverCenterX } from "../src/game/systems/MapSystem";
 
 describe("sea and river resident activities", () => {
   it("海と川では釣りと川遊びが行動候補になる", () => {
@@ -54,5 +54,28 @@ describe("sea and river resident activities", () => {
       state: "action",
       motion: "fishing",
     });
+  });
+
+  it("海と川の住民は川を横断して移動できる", () => {
+    const initial = createInitialGameState(0);
+    const riverCenter = getRiverCenterX(10);
+    const start = { x: riverCenter - 1.5, z: 10 };
+    const destination = { x: riverCenter + 1.5, z: 10 };
+    const state = {
+      ...initial,
+      currentMap: "sea-and-river" as const,
+      residents: [{
+        ...initial.residents[0],
+        position: start,
+        state: "walking" as const,
+        motion: "idle" as const,
+        destination,
+      }],
+    };
+
+    const advanced = advanceResidents(state, 500, 500, () => 0.9);
+
+    expect(advanced.residents[0].position.x).toBeGreaterThan(start.x);
+    expect(advanced.residents[0].state).toBe("walking");
   });
 });

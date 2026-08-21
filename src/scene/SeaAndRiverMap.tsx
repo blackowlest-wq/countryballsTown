@@ -13,6 +13,7 @@ const RIVER_COLOR = "#80cfe1";
 
 function createRiverGeometry(): BufferGeometry {
   const path = getRiverPathPoints();
+  const seaStartWorld = gridToWorld({ x: SEA_START_X, z: 0 }).x;
   const vertices: number[] = [];
   const indices: number[] = [];
 
@@ -26,12 +27,14 @@ function createRiverGeometry(): BufferGeometry {
     const normalX = -tangentZ / tangentLength;
     const normalZ = tangentX / tangentLength;
     const halfWidth = getRiverHalfWidth(point.z);
+    const leftX = Math.min(worldPoint.x + normalX * halfWidth, seaStartWorld);
+    const rightX = Math.min(worldPoint.x - normalX * halfWidth, seaStartWorld);
 
     vertices.push(
-      worldPoint.x + normalX * halfWidth,
+      leftX,
       0,
       worldPoint.z + normalZ * halfWidth,
-      worldPoint.x - normalX * halfWidth,
+      rightX,
       0,
       worldPoint.z - normalZ * halfWidth,
     );

@@ -8,9 +8,9 @@ export const SEA_START_X = 13.4;
 export const RIVER_HALF_WIDTH = 0.95;
 const RIVER_MOUTH_HALF_WIDTH = 1.4;
 const RIVER_START_X = 7.2;
-const RIVER_MOUTH_X = SEA_START_X + 0.65;
-const RIVER_START_Z = 0.8;
-const RIVER_MOUTH_Z = 17.8;
+const RIVER_MOUTH_X = SEA_START_X - RIVER_MOUTH_HALF_WIDTH + 0.2;
+const RIVER_START_Z = 0.5;
+const RIVER_MOUTH_Z = GRID_SIZE - 0.5;
 const RIVER_WINDING = 0.42;
 
 export interface RiverPathPoint {
@@ -52,7 +52,7 @@ export function isMapId(value: unknown): value is MapId {
 export function isMapPositionWalkable(mapId: MapId, position: GridPosition): boolean {
   if (mapId === "village") return true;
   if (position.x >= SEA_START_X) return false;
-  return Math.abs(position.x - getRiverCenterX(position.z)) > getRiverHalfWidth(position.z);
+  return true;
 }
 
 export function getMapArrivalPosition(mapId: MapId, residentIndex: number): GridPosition {
