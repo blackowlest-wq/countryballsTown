@@ -90,14 +90,14 @@ export function PizzaShopPanel(): JSX.Element | null {
           <button
             type="button"
             className="pizza-quantity-shortcut"
-            aria-label="ピザを10枚に設定"
+            aria-label="ピザを10枚増やす"
             onClick={() => {
-              setQuantity(10);
+              setQuantity((current) => Math.min(Math.max(1, maxCraftable), current + 10));
               setConfirming(false);
             }}
-            disabled={maxCraftable < 10}
+            disabled={!canCraft || quantity >= maxCraftable}
           >
-            10個
+            ＋10個
           </button>
         </span>
       </label>
