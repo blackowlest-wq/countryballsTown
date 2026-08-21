@@ -179,7 +179,7 @@ export function CropRenderer(): JSX.Element {
             key={`${crop.type}:${crop.gridX}:${crop.gridY}:${crop.plantedAt}`}
             position={[position.x, 0, position.z]}
             onClick={(event) => {
-              if (interactionMode !== "inspect") return;
+              if (interactionMode !== "inspect" && interactionMode !== "farm") return;
               event.stopPropagation();
               harvestCrop(crop.gridX, crop.gridY);
             }}

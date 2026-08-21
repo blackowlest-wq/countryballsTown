@@ -355,7 +355,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   harvestCrop: (gridX, gridY, now = Date.now()) => {
     const current = get();
-    if (current.interactionMode !== "inspect") return null;
+    if (current.interactionMode !== "inspect" && current.interactionMode !== "farm") return null;
     const result = performCropAction(
       current.game,
       "harvest",
