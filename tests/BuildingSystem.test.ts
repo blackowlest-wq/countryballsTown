@@ -38,6 +38,22 @@ describe("BuildingSystem", () => {
     });
   });
 
+  it("柵と道路を1マス単位で配置できる", () => {
+    const fence = placeBuilding(createInitialGameState(0), "fence", 8, 8, "fence-test");
+    expect(fence).toMatchObject({
+      success: true,
+      building: { buildingId: "fence", gridX: 8, gridY: 8 },
+      state: { coins: 90 },
+    });
+
+    const road = placeBuilding(fence.state, "road", 9, 8, "road-test");
+    expect(road).toMatchObject({
+      success: true,
+      building: { buildingId: "road", gridX: 9, gridY: 8 },
+      state: { coins: 85 },
+    });
+  });
+
   it("牛を配置すると採乳待ちが始まり、撤去すると生産情報も消える", () => {
     const placed = placeBuilding(
       createInitialGameState(0),

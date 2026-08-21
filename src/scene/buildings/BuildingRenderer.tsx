@@ -9,6 +9,8 @@ import { House } from "./House";
 import { Cow } from "./Cow";
 import { Pig } from "./Pig";
 import { Chicken } from "./Chicken";
+import { Fence } from "./Fence";
+import { Road } from "./Road";
 import { MilkFactory } from "./MilkFactory";
 import { PorkFactory } from "./PorkFactory";
 import { Field } from "./Field";
@@ -19,6 +21,7 @@ import { CherryTree } from "../environment/CherryTree";
 import { Flower } from "../environment/Flower";
 import { Fountain } from "../environment/Fountain";
 import { Tree } from "../environment/Tree";
+import type { AnimalWanderFence } from "./animalWander";
 
 const buildingRenderers: Record<string, ComponentType> = {
   house: House,
@@ -29,12 +32,15 @@ const buildingRenderers: Record<string, ComponentType> = {
   flower: Flower,
   onsen: Onsen,
   torii: Torii,
+  fence: Fence,
+  road: Road,
   "pizza-shop": PizzaShop,
 };
 
 interface BuildingInstanceRendererProps {
   instance: BuildingInstance;
   selectionSource: BuildingInstance;
+  fencePositions: readonly AnimalWanderFence[];
 }
 
 const PLACEMENT_BUILDING_OPACITY = 0.28;
@@ -106,6 +112,7 @@ function setPlacementVisibility(
 function BuildingInstanceRenderer({
   instance,
   selectionSource,
+  fencePositions,
 }: BuildingInstanceRendererProps): JSX.Element | null {
   const definition = getBuildingDefinition(instance.buildingId);
   const Renderer = definition ? buildingRenderers[instance.buildingId] : undefined;
@@ -185,11 +192,11 @@ function BuildingInstanceRenderer({
       }}
     >
       {isCow
-        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} wanderSeed={instance.id} wanderOrigin={position} />
+        ? <Cow milkReadyAt={cowProduction?.milkReadyAt} wanderSeed={instance.id} wanderOrigin={position} wanderFences={fencePositions} />
         : isPig
-          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} wanderSeed={instance.id} wanderOrigin={position} />
+          ? <Pig porkReadyAt={pigProduction?.porkReadyAt} wanderSeed={instance.id} wanderOrigin={position} wanderFences={fencePositions} />
           : isChicken
-            ? <Chicken eggReadyAt={chickenProduction?.eggReadyAt} wanderSeed={instance.id} wanderOrigin={position} />
+            ? <Chicken eggReadyAt={chickenProduction?.eggReadyAt} wanderSeed={instance.id} wanderOrigin={position} wanderFences={fencePositions} />
         : isMilkFactory
           ? <MilkFactory productType={milkFactoryProduction?.productType} />
           : isPorkFactory
@@ -211,6 +218,12 @@ export function BuildingRenderer(): JSX.Element {
     () => createBuildingCollection(sourceBuildings),
     [sourceBuildings],
   );
+  const fencePositions = useMemo(
+    () => collection.buildings
+      .filter((building) => building.buildingId === "fence")
+      .map((building) => buildingToWorldPosition(building, 1, 1)),
+    [collection],
+  );
   return (
     <group>
       {collection.entries.map(({ building, source }) => (
@@ -218,6 +231,7 @@ export function BuildingRenderer(): JSX.Element {
           key={getBuildingRenderKey(building)}
           instance={building}
           selectionSource={source}
+          fencePositions={fencePositions}
         />
       ))}
     </group>

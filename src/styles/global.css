@@ -119,6 +119,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-icon-nature { background: #82b66a; }
 .building-icon-milk-factory { background: #6aa7a5; }
 .building-icon-pork-factory { background: #b76f64; }
+.building-icon-fence { background: #8b6848; }
+.building-icon-road { background: #8d8b87; }
 .building-icon-pig { background: #d7909a; }
 .building-icon-chicken { background: #d7a75e; }
 .building-icon-cherry-tree,

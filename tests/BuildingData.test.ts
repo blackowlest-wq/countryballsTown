@@ -42,6 +42,26 @@ describe("building definitions", () => {
     });
   });
 
+  it("柵と道路を1マスの建物として定義する", () => {
+    expect(playerBuildingIds).toEqual(expect.arrayContaining(["fence", "road"]));
+    expect(getBuildingDefinition("fence")).toMatchObject({
+      name: "柵",
+      width: 1,
+      height: 1,
+      cost: 10,
+      category: "building",
+      residentCollision: "blocking",
+    });
+    expect(getBuildingDefinition("road")).toMatchObject({
+      name: "道路",
+      width: 1,
+      height: 1,
+      cost: 5,
+      category: "building",
+      residentCollision: "passable",
+    });
+  });
+
   it("牛を1マスの初期建築物として定義する", () => {
     expect(playerBuildingIds).toContain("cow");
     expect(getBuildingDefinition("cow")).toMatchObject({

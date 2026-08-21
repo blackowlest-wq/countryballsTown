@@ -1,12 +1,17 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
-import { useAnimalWander, type AnimalWanderOrigin } from "./animalWander";
+import {
+  useAnimalWander,
+  type AnimalWanderFence,
+  type AnimalWanderOrigin,
+} from "./animalWander";
 
 interface ChickenProps {
   eggReadyAt?: number;
   wanderSeed?: string;
   wanderOrigin?: AnimalWanderOrigin;
+  wanderFences?: readonly AnimalWanderFence[];
 }
 
 function useEggReady(eggReadyAt?: number): boolean {
@@ -52,12 +57,12 @@ function EggReadyMark(): JSX.Element {
   );
 }
 
-export function Chicken({ eggReadyAt, wanderSeed, wanderOrigin }: ChickenProps): JSX.Element {
+export function Chicken({ eggReadyAt, wanderSeed, wanderOrigin, wanderFences }: ChickenProps): JSX.Element {
   const animal = useRef<Group>(null);
   const body = useRef<Group>(null);
   const eggMark = useRef<Group>(null);
   const eggReady = useEggReady(eggReadyAt);
-  useAnimalWander(animal, wanderSeed, wanderOrigin);
+  useAnimalWander(animal, wanderSeed, wanderOrigin, wanderFences);
 
   useFrame(({ clock }) => {
     if (body.current) {

@@ -1,12 +1,17 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
-import { useAnimalWander, type AnimalWanderOrigin } from "./animalWander";
+import {
+  useAnimalWander,
+  type AnimalWanderFence,
+  type AnimalWanderOrigin,
+} from "./animalWander";
 
 interface PigProps {
   porkReadyAt?: number;
   wanderSeed?: string;
   wanderOrigin?: AnimalWanderOrigin;
+  wanderFences?: readonly AnimalWanderFence[];
 }
 
 function usePorkReady(porkReadyAt?: number): boolean {
@@ -62,12 +67,12 @@ function PorkReadyMark(): JSX.Element {
   );
 }
 
-export function Pig({ porkReadyAt, wanderSeed, wanderOrigin }: PigProps): JSX.Element {
+export function Pig({ porkReadyAt, wanderSeed, wanderOrigin, wanderFences }: PigProps): JSX.Element {
   const animal = useRef<Group>(null);
   const body = useRef<Group>(null);
   const porkMark = useRef<Group>(null);
   const porkReady = usePorkReady(porkReadyAt);
-  useAnimalWander(animal, wanderSeed, wanderOrigin);
+  useAnimalWander(animal, wanderSeed, wanderOrigin, wanderFences);
 
   useFrame(({ clock }) => {
     if (body.current) {

@@ -41,6 +41,20 @@ describe("animal wandering", () => {
     expect(ANIMAL_WANDER_MAP_MARGIN).toBeGreaterThan(0);
   });
 
+  it("does not cross a continuous fence line", () => {
+    const fences = Array.from({ length: 19 }, (_, index) => ({
+      x: 0,
+      z: index - 9,
+    }));
+    const origin = { x: -5, z: 0 };
+
+    for (let elapsedTime = 0; elapsedTime <= 120; elapsedTime += 0.5) {
+      const transform = getAnimalWanderTransform(elapsedTime, "cow-1", origin, fences);
+      const worldX = origin.x + transform.x;
+      expect(worldX).toBeLessThan(-0.46);
+    }
+  });
+
   it("is deterministic and gives each animal its own route", () => {
     const first = getAnimalWanderTransform(12.5, "cow-1", { x: 0, z: 0 });
     const repeat = getAnimalWanderTransform(12.5, "cow-1", { x: 0, z: 0 });

@@ -12,11 +12,11 @@ function getRenderedSeaWidth(): number {
 }
 
 describe("sea and river map geometry", () => {
-  it("川の下流が海岸線を越えて海へ流れ込む", () => {
+  it("川の下流が海岸線で止まる", () => {
     const upstreamX = getRiverCenterX(2);
     const downstreamX = getRiverCenterX(18.5);
 
-    expect(downstreamX).toBeGreaterThan(SEA_START_X);
+    expect(downstreamX).toBeLessThanOrEqual(SEA_START_X);
     expect(downstreamX - upstreamX).toBeGreaterThan(3.5);
   });
 

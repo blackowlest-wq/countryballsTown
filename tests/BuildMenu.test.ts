@@ -62,6 +62,8 @@ describe("BuildMenu", () => {
     });
     expect(container.textContent).toContain("牛乳工場");
     expect(container.textContent).toContain("ピザ屋");
+    expect(container.textContent).toContain("柵");
+    expect(container.textContent).toContain("道路");
 
     await act(async () => root.unmount());
   });
