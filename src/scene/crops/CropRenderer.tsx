@@ -7,11 +7,17 @@ import {
 } from "../../game/constants/gameConstants";
 import {
   getCropGrowthStage,
+  isCropMature,
   type CropGrowthStage,
 } from "../../game/systems/CropSystem";
 import type { Crop } from "../../game/types/Crop";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
+import {
+  beginHarvestGesture,
+  endHarvestGesture,
+  isHarvestGestureActive,
+} from "./harvestGesture";
 
 const WHEAT_STALKS = [
   { x: -0.19, z: -0.12, height: 0.66, rotation: -0.08 },
@@ -178,6 +184,26 @@ export function CropRenderer(): JSX.Element {
           <group
             key={`${crop.type}:${crop.gridX}:${crop.gridY}:${crop.plantedAt}`}
             position={[position.x, 0, position.z]}
+            onPointerDown={(event) => {
+              if (
+                (interactionMode === "inspect" || interactionMode === "farm") &&
+                isCropMature(crop, Date.now())
+              ) {
+                beginHarvestGesture(event.pointerId);
+              }
+            }}
+            onPointerMove={(event) => {
+              if (interactionMode !== "inspect" && interactionMode !== "farm") return;
+              if (!isCropMature(crop, Date.now())) return;
+              if (!isHarvestGestureActive(event.pointerId)) {
+                if (event.buttons === 0) return;
+                beginHarvestGesture(event.pointerId);
+              }
+              event.stopPropagation();
+              harvestCrop(crop.gridX, crop.gridY);
+            }}
+            onPointerUp={(event) => endHarvestGesture(event.pointerId)}
+            onPointerCancel={(event) => endHarvestGesture(event.pointerId)}
             onClick={(event) => {
               if (interactionMode !== "inspect" && interactionMode !== "farm") return;
               event.stopPropagation();

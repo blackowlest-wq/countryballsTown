@@ -86,7 +86,7 @@ describe("FarmControls", () => {
     });
     expect(tomatoButton?.getAttribute("aria-pressed")).toBe("true");
     expect(container.textContent).toContain("トマトの種を空の畑へ");
-    expect(container.textContent).toContain("成熟した作物は村画面でタップして収穫");
+    expect(container.textContent).toContain("成熟した作物は村画面でタップまたはスワイプして収穫");
 
     await act(async () => root.unmount());
   });

@@ -101,7 +101,7 @@ export function FarmControls(): JSX.Element | null {
       </div>
       <div className="farm-control-row">
         <span className="farm-action-copy">
-          {`${getCropName(selectedCropType)}の種を空の畑へ（種を1個使用）。成熟した作物は村画面でタップして収穫`}
+          {`${getCropName(selectedCropType)}の種を空の畑へ（種を1個使用）。成熟した作物は村画面でタップまたはスワイプして収穫`}
         </span>
       </div>
     </section>

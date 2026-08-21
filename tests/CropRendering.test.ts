@@ -96,4 +96,51 @@ describe("CropRenderer", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("成熟作物の上をスワイプすると収穫できる", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const initial = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...initial,
+        wheatSeeds: 7,
+        crops: [{
+          type: "wheat",
+          gridX: 8,
+          gridY: 8,
+          plantedAt: Date.now() - CROP_MATURE_STAGE_MS,
+        }],
+      },
+      interactionMode: "farm",
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CropRenderer)));
+    const matureCrop = container.querySelector('[name="収穫できる小麦"]');
+    expect(matureCrop).not.toBeNull();
+    const pointerEvent = (type: string): PointerEvent => {
+      const event = new Event(type, { bubbles: true }) as PointerEvent;
+      Object.defineProperties(event, {
+        pointerId: { value: 3 },
+        buttons: { value: 1 },
+      });
+      return event;
+    };
+
+    await act(async () => {
+      matureCrop?.dispatchEvent(pointerEvent("pointerdown"));
+      matureCrop?.dispatchEvent(pointerEvent("pointermove"));
+    });
+
+    expect(useGameStore.getState().game.crops).toHaveLength(0);
+    expect(useGameStore.getState().game.wheat).toBe(1);
+
+    await act(async () => {
+      matureCrop?.dispatchEvent(pointerEvent("pointerup"));
+    });
+
+    await act(async () => root.unmount());
+  });
 });
