@@ -12,6 +12,7 @@ import {
 import { createInitialResident } from "../../src/game/systems/ResidentSystem";
 import {
   advanceResidentRequest,
+  describeResidentRequestEvent,
   getEligibleResidentRequests,
   maybeStartResidentRequest,
 } from "../../src/game/systems/ResidentRequestSystem";
@@ -273,5 +274,17 @@ describe("ResidentRequestSystem", () => {
     );
     expect(result.event).toMatchObject({ type: "completed", rewardCoins: 3 });
     expect(result.state.coins).toBe(123);
+  });
+
+  it("お願い達成通知の報酬コインを整数表示する", () => {
+    const notice = describeResidentRequestEvent({
+      type: "completed",
+      definitionId: "italy-festival-savings",
+      residentId: "request-italy",
+      rewardCoins: 7.9,
+    });
+
+    expect(notice).toContain("コイン +7");
+    expect(notice).not.toContain("コイン +7.9");
   });
 });

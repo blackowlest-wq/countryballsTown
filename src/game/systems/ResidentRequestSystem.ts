@@ -11,6 +11,7 @@ import {
 import { getCountryDefinition } from "../data/countries";
 import type { ResidentRequestDefinition } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
+import { formatCoinAmount } from "../../utils/coinFormatting";
 import { getLocalDateKey } from "../../utils/date";
 import { celebrateResident } from "./ResidentSystem";
 import { roundCoins } from "./EconomySystem";
@@ -219,5 +220,5 @@ export function describeResidentRequestEvent(event: ResidentRequestEvent): strin
   const country = definition ? getCountryDefinition(definition.countryId) : undefined;
   const speaker = `${country?.flagEmoji ?? "💬"} ${country?.name ?? "住民"}`;
   if (event.type === "started") return `${speaker}からお願いが届きました！`;
-  return `${speaker}のお願い達成！ コイン +${event.rewardCoins}`;
+  return `${speaker}のお願い達成！ コイン +${formatCoinAmount(event.rewardCoins)}`;
 }

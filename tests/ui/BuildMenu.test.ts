@@ -3,7 +3,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
-import { playerBuildingIds } from "../../src/game/data/buildings";
+import { buildingsById, playerBuildingIds } from "../../src/game/data/buildings";
 import { useGameStore } from "../../src/store/gameStore";
 import { BuildMenu } from "../../src/ui/BuildMenu";
 
@@ -21,6 +21,32 @@ afterEach(() => {
 });
 
 describe("BuildMenu", () => {
+  it("建築コストを整数に切り捨てて表示する", async () => {
+    const originalCost = buildingsById.field.cost;
+    buildingsById.field.cost = 10.9;
+    useGameStore.setState({
+      game: {
+        ...createInitialGameState(0),
+        villageLevel: 3,
+        unlockedBuildings: ["field"],
+      },
+      isBuildMenuOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    try {
+      await act(async () => root.render(createElement(BuildMenu)));
+      const fieldButton = container.querySelector<HTMLButtonElement>(".building-option");
+      expect(fieldButton?.querySelector(".building-cost")?.textContent).toContain("10");
+      expect(fieldButton?.querySelector(".building-cost")?.textContent).not.toContain("10.9");
+    } finally {
+      await act(async () => root.unmount());
+      buildingsById.field.cost = originalCost;
+    }
+  });
+
   it("最初に畑を表示し、カテゴリで建築物を絞り込む", async () => {
     useGameStore.setState({
       game: {

@@ -9,6 +9,7 @@ import {
 } from "../game/data/buildings";
 import type { BuildingCategory } from "../game/types/Building";
 import { useGameStore } from "../store/gameStore";
+import { formatCoinAmount } from "../utils/coinFormatting";
 
 export function BuildMenu(): JSX.Element | null {
   const [selectedCategory, setSelectedCategory] = useState<BuildingCategory>("building");
@@ -90,7 +91,7 @@ export function BuildMenu(): JSX.Element | null {
             </span>
             <span className="building-cost">
               <span className="tiny-coin">✦</span>
-              {building.cost}
+              {formatCoinAmount(building.cost)}
             </span>
           </button>
         ))}
