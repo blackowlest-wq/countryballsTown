@@ -5,7 +5,6 @@ import { placeBuilding } from "../../src/game/systems/BuildingSystem";
 import {
   collectPigPork,
   isPigPorkReady,
-  normalizePigProductions,
 } from "../../src/game/systems/PigSystem";
 
 function createStateWithPig(now = 1_000) {
@@ -47,21 +46,5 @@ describe("PigSystem", () => {
     const readyAt = state.pigProductions[0].porkReadyAt;
     expect(collectPigPork(state, "pig-test", readyAt - 1).outcome).toBe("not-ready");
     expect(collectPigPork(state, "missing-pig", readyAt).outcome).toBe("not-found");
-  });
-
-  it("保存データの豚情報を建物にそろえる", () => {
-    const buildings = [
-      { id: "pig-a", buildingId: "pig", gridX: 8, gridY: 8 },
-      { id: "pig-b", buildingId: "pig", gridX: 10, gridY: 8 },
-    ] as const;
-    const normalized = normalizePigProductions([
-      { buildingInstanceId: "pig-a", porkReadyAt: 5_000 },
-      { buildingInstanceId: "missing", porkReadyAt: 6_000 },
-    ], buildings, 10_000);
-
-    expect(normalized).toEqual([
-      { buildingInstanceId: "pig-a", porkReadyAt: 5_000 },
-      { buildingInstanceId: "pig-b", porkReadyAt: 40_000 },
-    ]);
   });
 });

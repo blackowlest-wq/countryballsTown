@@ -3,7 +3,6 @@ import { createInitialGameState } from "../../src/game/core/GameState";
 import {
   advanceWheatFactoryProductions,
   configureWheatFactory,
-  normalizeWheatFactoryProductions,
   registerWheatFactoryProduction,
 } from "../../src/game/systems/WheatFactorySystem";
 
@@ -36,19 +35,5 @@ describe("WheatFactorySystem", () => {
     const supplied = { ...waiting, wheat: 2 };
     const produced = advanceWheatFactoryProductions(supplied, 20_000);
     expect(produced).toMatchObject({ wheat: 1, wheatFlour: 1 });
-  });
-
-  it("保存データから存在する小麦工場だけを復元する", () => {
-    const buildings = [
-      { id: "wheat-factory-test", buildingId: "wheat-factory", gridX: 8, gridY: 8 },
-    ];
-    const normalized = normalizeWheatFactoryProductions(
-      [{ buildingInstanceId: "removed", productType: "wheat-flour", nextProductionAt: 10 }],
-      buildings,
-      0,
-    );
-    expect(normalized).toEqual([
-      { buildingInstanceId: "wheat-factory-test", productType: null, nextProductionAt: null },
-    ]);
   });
 });

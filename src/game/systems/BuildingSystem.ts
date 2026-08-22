@@ -7,21 +7,10 @@ import {
 } from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type { GameState } from "../types/Village";
-import { registerCowProduction, removeCowProduction } from "./CowSystem";
-import { registerPigProduction, removePigProduction } from "./PigSystem";
-import { registerChickenProduction, removeChickenProduction } from "./ChickenSystem";
 import {
-  registerMilkFactoryProduction,
-  removeMilkFactoryProduction,
-} from "./MilkFactorySystem";
-import {
-  registerPorkFactoryProduction,
-  removePorkFactoryProduction,
-} from "./PorkFactorySystem";
-import {
-  registerWheatFactoryProduction,
-  removeWheatFactoryProduction,
-} from "./WheatFactorySystem";
+  registerProductionForBuilding,
+  removeProductionForBuilding,
+} from "./ProductionRegistry";
 
 export type BuildingOperationReason =
   | "unknown-building"
@@ -170,19 +159,12 @@ export function placeBuilding(
     coins: state.coins - definition.cost,
     buildings: [...collection.buildings, building],
   };
-  const productionState = buildingId === "cow"
-    ? registerCowProduction(placedState, building.id, now)
-    : buildingId === "pig"
-      ? registerPigProduction(placedState, building.id, now)
-      : buildingId === "chicken"
-        ? registerChickenProduction(placedState, building.id, now)
-        : buildingId === "milk-factory"
-          ? registerMilkFactoryProduction(placedState, building.id)
-          : buildingId === "pork-factory"
-            ? registerPorkFactoryProduction(placedState, building.id)
-            : buildingId === "wheat-factory"
-              ? registerWheatFactoryProduction(placedState, building.id)
-            : placedState;
+  const productionState = registerProductionForBuilding(
+    placedState,
+    buildingId,
+    building.id,
+    now,
+  );
   return {
     success: true,
     building,
@@ -245,19 +227,7 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
   };
   return {
     success: true,
-    state: existing.buildingId === "cow"
-      ? removeCowProduction(removedState, existing.id)
-      : existing.buildingId === "pig"
-      ? removePigProduction(removedState, existing.id)
-        : existing.buildingId === "chicken"
-          ? removeChickenProduction(removedState, existing.id)
-          : existing.buildingId === "milk-factory"
-            ? removeMilkFactoryProduction(removedState, existing.id)
-            : existing.buildingId === "pork-factory"
-              ? removePorkFactoryProduction(removedState, existing.id)
-              : existing.buildingId === "wheat-factory"
-                ? removeWheatFactoryProduction(removedState, existing.id)
-              : removedState,
+    state: removeProductionForBuilding(removedState, existing.buildingId, existing.id),
   };
 }
 

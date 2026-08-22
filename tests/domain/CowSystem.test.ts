@@ -5,7 +5,6 @@ import { placeBuilding } from "../../src/game/systems/BuildingSystem";
 import {
   collectCowMilk,
   isCowMilkReady,
-  normalizeCowProductions,
 } from "../../src/game/systems/CowSystem";
 
 function createStateWithCow(now = 1_000) {
@@ -53,23 +52,5 @@ describe("CowSystem", () => {
       readyAt + COW_MILK_INTERVAL_MS,
     );
     expect(second.state.milk).toBe(4);
-  });
-
-  it("保存値の不正・重複・孤立した牛情報を修復する", () => {
-    const buildings = [
-      { id: "cow-1", buildingId: "cow", gridX: 1, gridY: 1 },
-      { id: "cow-2", buildingId: "cow", gridX: 2, gridY: 2 },
-      { id: "tree-1", buildingId: "tree", gridX: 3, gridY: 3 },
-    ];
-
-    expect(normalizeCowProductions([
-      { buildingInstanceId: "cow-1", milkReadyAt: 500 },
-      { buildingInstanceId: "cow-1", milkReadyAt: 600 },
-      { buildingInstanceId: "missing-cow", milkReadyAt: 700 },
-      { buildingInstanceId: "cow-2", milkReadyAt: Number.NaN },
-    ], buildings, 1_000)).toEqual([
-      { buildingInstanceId: "cow-1", milkReadyAt: 500 },
-      { buildingInstanceId: "cow-2", milkReadyAt: 1_000 + COW_MILK_INTERVAL_MS },
-    ]);
   });
 });

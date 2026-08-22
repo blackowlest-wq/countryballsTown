@@ -1,7 +1,5 @@
 import { advanceEconomy, roundCoins } from "./EconomySystem";
-import { advanceMilkFactoryProductions } from "./MilkFactorySystem";
-import { advancePorkFactoryProductions } from "./PorkFactorySystem";
-import { advanceWheatFactoryProductions } from "./WheatFactorySystem";
+import { advanceFactoryProductions } from "./ProductionRegistry";
 import { advanceResidents } from "./ResidentSystem";
 import {
   advanceResidentRequest,
@@ -49,10 +47,8 @@ export function advanceGameProgress(
   now: number,
   random: GameProgressRandomSource,
 ): GameProgressResult {
-  const wheatFactory = advanceWheatFactoryProductions(current.game, now);
-  const milkFactory = advanceMilkFactoryProductions(wheatFactory, now);
   const factory = syncEncyclopediaCollection(
-    advancePorkFactoryProductions(milkFactory, now),
+    advanceFactoryProductions(current.game, now),
   );
   const economy = advanceEconomy(factory, deltaMs, current.economyRemainderMs);
   const visitorResult = advanceShopVisitors(

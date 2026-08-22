@@ -3,7 +3,6 @@ import { createInitialGameState } from "../../src/game/core/GameState";
 import {
   advancePorkFactoryProductions,
   configurePorkFactory,
-  normalizePorkFactoryProductions,
   registerPorkFactoryProduction,
 } from "../../src/game/systems/PorkFactorySystem";
 
@@ -48,20 +47,5 @@ describe("PorkFactorySystem", () => {
     const resumed = advancePorkFactoryProductions({ ...waiting, pork: 1 }, 20_000);
     expect(resumed).toMatchObject({ pork: 0, bacon: 3 });
     expect(resumed.porkFactoryProductions[0].nextProductionAt).toBe(40_000);
-  });
-
-  it("保存データの工場情報を既存の豚肉工場にそろえる", () => {
-    const buildings = [
-      { id: "factory-a", buildingId: "pork-factory", gridX: 8, gridY: 8 },
-      { id: "flower-a", buildingId: "flower", gridX: 10, gridY: 8 },
-    ] as const;
-    const normalized = normalizePorkFactoryProductions([
-      { buildingInstanceId: "factory-a", productType: "sausage", nextProductionAt: 5_000 },
-      { buildingInstanceId: "missing", productType: "ham", nextProductionAt: 5_000 },
-    ], buildings, 10_000);
-
-    expect(normalized).toEqual([
-      { buildingInstanceId: "factory-a", productType: "sausage", nextProductionAt: 5_000 },
-    ]);
   });
 });

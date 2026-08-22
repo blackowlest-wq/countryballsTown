@@ -3,7 +3,6 @@ import { createInitialGameState } from "../../src/game/core/GameState";
 import {
   advanceMilkFactoryProductions,
   configureMilkFactory,
-  normalizeMilkFactoryProductions,
   registerMilkFactoryProduction,
 } from "../../src/game/systems/MilkFactorySystem";
 import { placeBuilding } from "../../src/game/systems/BuildingSystem";
@@ -61,20 +60,5 @@ describe("MilkFactorySystem", () => {
     const resumed = advanceMilkFactoryProductions({ ...waiting, milk: 1 }, 20_000);
     expect(resumed).toMatchObject({ milk: 0, butter: 3 });
     expect(resumed.milkFactoryProductions[0].nextProductionAt).toBe(40_000);
-  });
-
-  it("保存データの工場情報を既存の工場にそろえる", () => {
-    const buildings = [
-      { id: "factory-a", buildingId: "milk-factory", gridX: 8, gridY: 8 },
-      { id: "flower-a", buildingId: "flower", gridX: 10, gridY: 8 },
-    ] as const;
-    const normalized = normalizeMilkFactoryProductions([
-      { buildingInstanceId: "factory-a", productType: "cheese", nextProductionAt: 5_000 },
-      { buildingInstanceId: "missing", productType: "butter", nextProductionAt: 5_000 },
-    ], buildings, 10_000);
-
-    expect(normalized).toEqual([
-      { buildingInstanceId: "factory-a", productType: "cheese", nextProductionAt: 5_000 },
-    ]);
   });
 });

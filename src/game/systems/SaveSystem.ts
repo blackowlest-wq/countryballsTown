@@ -12,16 +12,11 @@ import { getUnlockedBuildingIdsForLevel } from "../data/villageLevels";
 import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
-import { normalizeChickenProductions } from "./ChickenSystem";
-import { normalizeCowProductions } from "./CowSystem";
 import { isCellInField, normalizeCrops } from "./CropSystem";
 import { normalizeFishInventory } from "../data/fish";
 import { isMapId } from "./MapSystem";
-import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
-import { normalizePigProductions } from "./PigSystem";
-import { normalizePorkFactoryProductions } from "./PorkFactorySystem";
-import { normalizeWheatFactoryProductions } from "./WheatFactorySystem";
 import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
+import { normalizeProductionCollections } from "./ProductionRegistry";
 
 interface LegacyCropState {
   wheatCrops?: unknown;
@@ -67,24 +62,14 @@ export function prepareGameStateForSave(
 ): GameState {
   const buildings = createBuildingCollection(state.buildings).buildings;
   const crops = normalizeCrops(state.crops);
-  const chickenProductions = normalizeChickenProductions(state.chickenProductions, buildings, now);
-  const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
-  const milkFactoryProductions = normalizeMilkFactoryProductions(
-    state.milkFactoryProductions,
-    buildings,
-    now,
-  );
-  const pigProductions = normalizePigProductions(state.pigProductions, buildings, now);
-  const porkFactoryProductions = normalizePorkFactoryProductions(
-    state.porkFactoryProductions,
-    buildings,
-    now,
-  );
-  const wheatFactoryProductions = normalizeWheatFactoryProductions(
-    state.wheatFactoryProductions,
-    buildings,
-    now,
-  );
+  const productionCollections = normalizeProductionCollections({
+    cowProductions: state.cowProductions,
+    pigProductions: state.pigProductions,
+    chickenProductions: state.chickenProductions,
+    milkFactoryProductions: state.milkFactoryProductions,
+    porkFactoryProductions: state.porkFactoryProductions,
+    wheatFactoryProductions: state.wheatFactoryProductions,
+  }, buildings, now);
   const fishInventory = normalizeFishInventory(state.fishInventory);
   const normalizedState = syncEncyclopediaCollection({
     ...state,
@@ -99,12 +84,7 @@ export function prepareGameStateForSave(
     ...stateWithoutLegacyCrops,
     buildings,
     crops,
-    chickenProductions,
-    cowProductions,
-    milkFactoryProductions,
-    pigProductions,
-    porkFactoryProductions,
-    wheatFactoryProductions,
+    ...productionCollections,
     fishInventory,
     encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
     lastSavedAt: now,
@@ -267,24 +247,14 @@ export function loadGameState(
           : 0,
       fishInventory: normalizeFishInventory(parsed.fishInventory),
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
-      chickenProductions: normalizeChickenProductions(parsed.chickenProductions, buildings, now),
-      cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
-      milkFactoryProductions: normalizeMilkFactoryProductions(
-        parsed.milkFactoryProductions,
-        buildings,
-        now,
-      ),
-      pigProductions: normalizePigProductions(parsed.pigProductions, buildings, now),
-      porkFactoryProductions: normalizePorkFactoryProductions(
-        parsed.porkFactoryProductions,
-        buildings,
-        now,
-      ),
-      wheatFactoryProductions: normalizeWheatFactoryProductions(
-        parsed.wheatFactoryProductions,
-        buildings,
-        now,
-      ),
+      ...normalizeProductionCollections({
+        cowProductions: parsed.cowProductions,
+        pigProductions: parsed.pigProductions,
+        chickenProductions: parsed.chickenProductions,
+        milkFactoryProductions: parsed.milkFactoryProductions,
+        porkFactoryProductions: parsed.porkFactoryProductions,
+        wheatFactoryProductions: parsed.wheatFactoryProductions,
+      }, buildings, now),
       buildings,
       unlockedBuildings: [
         ...new Set([

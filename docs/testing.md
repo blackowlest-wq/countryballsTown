@@ -21,6 +21,9 @@
 
 `GameProgressSystem` の変更では、まず `tests/domain/GameProgressSystem.test.ts` を時間・乱数を注入して反復し、通知・進行後状態・即時保存シグナルをInterfaceから確認する。Storeのtickを通すテストは、Zustandと保存Adapterの接続を確認する最小ケースに限定する。
 
+生産の共通化では、`LivestockProductionSystem` と `FactoryProductionSystem` のdirect testで、登録・撤去・no-op identity・保存時normalize、収集または設定、工場のcatch-up・入力不足・複数生産の消費順を確認する。`CowSystem`、`PigSystem`、`ChickenSystem`、各FactorySystemのテストは、buildingId・state/inventory key・readyAt/interval・product定義などのFacade配線と既存公開契約に絞り、共通mechanismの同じケースを重複させない。生産変更時は共通Moduleの `test:related` と、代表Facade（Cow/MilkFactory）の `test:related` を記録する。
+`ProductionRegistry` のdirect testでは、6種類すべてのregister/remove、unknown buildingのno-op、6 collectionのnormalize接続、3工場を一度に進行するAdapter契約をtable-drivenに確認する。
+
 `test:related` は変更したソースパスを引数に取り、VitestのModule graphから関連テストを選ぶ。選択結果が空、または依存関係を判断しづらい場合は、該当projectを実行する。
 
 新しい `*.test.ts` は3つのproject配下へ置く。`npm run test:layout` が `tests/` 直下や未知の分類フォルダを検出するため、CIで分類漏れを検証できる。

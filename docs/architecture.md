@@ -15,6 +15,10 @@ React UI / scene / hooks
 gameStore ──► GameProgressSystem ──► game/systems
          └──► SaveSystem ──► StorageLike ──► browser localStorage
 
+BuildingSystem / SaveSystem / GameProgressSystem
+          └──► ProductionRegistry ──► production Facade
+                                      └──► LivestockProductionSystem / FactoryProductionSystem
+
 game/core ──► game/systems / data / types
 game/systems ──► game/core / data / types / constants
 ```
@@ -23,6 +27,10 @@ game/systems ──► game/core / data / types / constants
 - `src/game/data` と `src/game/constants` は建物・魚・図鑑・レベルなどの定義とルール値を持つ。
 - `src/game/core` は初期 `GameState` の生成と建物コレクションの整合性を担当する。
 - `src/game/systems` は建築、作物、生産、住民、経済、釣り、保存などのゲームルールをModuleとして公開する。多くは `GameState` と入力を受け、更新後の状態または結果を返す。
+- 生産の共通mechanismは `LivestockProductionSystem` と `FactoryProductionSystem` が定義駆動の深いModuleとして持つ。`CowSystem`、`PigSystem`、`ChickenSystem` と3つのFactorySystemは、保存shapeと既存の公開関数を維持する薄いFacadeとして、定数・キー・product定義だけを配線する。
+- 生産定義のgeneric Interfaceは、家畜ではproduction型に対応するGameState collectionとnumber型のreadyAt field、工場では既知ProductTypeに対応するstate/input/outputを型で連動させる。新しい未知ProductTypeでは共通のnumeric key unionへ退避するため、型パズルを追加せず拡張できる一方、既存6種のFacade配線ミスは `tsc`/buildで検出できる。
+- 生産collectionのnormalizeは、通常更新では呼び出さず保存境界に限定する。Livestockは必須field・有限値・建物順が妥当なら、旧互換のためunknown fieldを含む既存recordと入力配列を再利用する。Factoryは保存shape（既知の3 field）がcanonicalな場合に入力配列とrecordを再利用し、shape補正や建物順の修復が必要な場合だけ新しい配列・recordを生成する。これは保存境界での不要なallocationを抑えるための挙動である。
+- `ProductionRegistry` は6種類の生産の配置・撤去・保存時normalize・工場進行を一つのRegistryへ接続する。`BuildingSystem`、`SaveSystem`、`GameProgressSystem` は個別生産Systemを列挙せず、このRegistryのInterfaceを使う。工場進行の順序（wheat → milk → pork）はここで明示的に維持する。
 - `src/store/gameStore.ts` はZustandのStore Adapterで、UIが使う状態と操作を公開する。時間経過の一回のtickは `GameProgressSystem` のInterfaceへ委譲し、Storeはその結果の保持と必要な保存だけを行う。建築・収穫・設定などの即時操作では、対応する各SystemをAdapterとして呼び出す。
 - `src/hooks` はブラウザのタイマー・ライフサイクルをStore操作へ接続するAdapterである。
 - `src/ui` と `src/scene` はStoreのInterfaceを読み、表示と入力を担当する。ただし現在はStoreだけでなく、表示名・定義・判定のために `src/game/systems`、`src/game/data`、`src/game/types`、`src/game/constants`、一部の `src/game/core` も直接importしている。Reactの描画やDOMをゲームSystemから参照する依存はない。
@@ -35,7 +43,7 @@ Storeの通常の `set` はゲーム全体のnormalize/repairを行わない。�
 
 ### 現在のSeam
 
-- ゲームルールとStoreのSeamは、各Systemが公開する関数と `GameState` である。SystemテストはこのInterfaceを直接呼び出す。
+- ゲームルールとStoreのSeamは、各Systemが公開する関数と `GameState` である。SystemテストはこのInterfaceを直接呼び出す。生産の共通mechanismは共通ModuleのInterfaceを直接テストし、個別Facadeは定義配線と既存公開契約をテストする。
 - 時間経過のゲームルールとStoreのSeamは `GameProgressSystem.advanceGameProgress` である。結果には次のゲーム状態、経済の端数、来訪客シミュレーション、表示通知、即時保存の推奨が含まれ、永続化の副作用は含まれない。
 - StoreとUIのSeamは `GameStore` のセレクタと操作である。StoreテストはZustandのStoreを通じた観測結果を確認する。
 - 保存のSeamは `StorageLike` である。テストはインメモリAdapterを渡し、ブラウザ環境に依存しない。`saveGameState` の戻り値が保存可否にかかわらずcanonical stateであることも、このInterfaceから確認する。
@@ -45,7 +53,7 @@ Storeの通常の `set` はゲーム全体のnormalize/repairを行わない。�
 
 1. [適用済み] Storeからゲーム進行の調整を取り出し、純粋な進行Moduleの小さなInterfaceを設ける。Storeは状態保持・永続化・UI操作のAdapterに近づける。
 2. [適用済み] セーブデータの修復をロード時の専用Moduleへ集約し、通常のtickや状態更新で全体正規化を繰り返さない。保存時のcanonicalizationも `prepareGameStateForSave` に集約する。
-3. 家畜・工場など共通する生産ルールを生産定義と深いModuleへ集約する。新しい種類の追加が個別System、Store、UIへ同じ分岐を増やす形にならないようにする。
+3. [適用済み] 家畜・工場など共通する生産ルールを `LivestockProductionSystem`、`FactoryProductionSystem`、`ProductionRegistry` と生産定義へ集約する。新しい種類の追加が個別System、Store、UIへ同じ分岐を増やす形にならないようにする。
 4. Interfaceを変更したときは、そのInterfaceからのテストを新しいテスト面とし、内部実装に結びついた古いテストを置き換える。Adapterを増やす必要がない箇所には新しいSeamを作らない。
 
 目標へ進む際も、セーブ互換性、時間経過、在庫、UIの観測結果を既存テストで固定してから一段ずつ変更する。

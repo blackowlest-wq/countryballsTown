@@ -7,7 +7,6 @@ import { placeBuilding } from "../../src/game/systems/BuildingSystem";
 import {
   collectChickenEggs,
   isChickenEggReady,
-  normalizeChickenProductions,
 } from "../../src/game/systems/ChickenSystem";
 import { describe, expect, it } from "vitest";
 
@@ -54,21 +53,5 @@ describe("ChickenSystem", () => {
     const readyAt = state.chickenProductions[0].eggReadyAt;
     expect(collectChickenEggs(state, "chicken-test", readyAt - 1).outcome).toBe("not-ready");
     expect(collectChickenEggs(state, "missing-chicken", readyAt).outcome).toBe("not-found");
-  });
-
-  it("保存データの鶏情報を建物にそろえる", () => {
-    const buildings = [
-      { id: "chicken-a", buildingId: "chicken", gridX: 8, gridY: 8 },
-      { id: "chicken-b", buildingId: "chicken", gridX: 10, gridY: 8 },
-    ] as const;
-    const normalized = normalizeChickenProductions([
-      { buildingInstanceId: "chicken-a", eggReadyAt: 5_000 },
-      { buildingInstanceId: "missing", eggReadyAt: 6_000 },
-    ], buildings, 10_000);
-
-    expect(normalized).toEqual([
-      { buildingInstanceId: "chicken-a", eggReadyAt: 5_000 },
-      { buildingInstanceId: "chicken-b", eggReadyAt: 40_000 },
-    ]);
   });
 });
