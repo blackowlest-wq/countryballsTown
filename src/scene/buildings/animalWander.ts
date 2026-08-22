@@ -5,6 +5,7 @@ import { GRID_SIZE } from "../../game/constants/gameConstants";
 export interface AnimalWanderTransform {
   x: number;
   z: number;
+  rotationY: number;
 }
 
 export interface AnimalWanderOrigin {
@@ -18,11 +19,16 @@ export interface AnimalWanderFence {
 }
 
 export const ANIMAL_WANDER_MAP_MARGIN = 1;
+// The largest animal model is roughly 0.9 world units from its pivot.
+// Keep this clearance when checking a fence so the body cannot pass through it
+// even when the pivot itself is still outside the fence post.
+export const ANIMAL_WANDER_FENCE_CLEARANCE = 0.9;
 
 const WANDER_SEGMENT_SECONDS = 8;
 const WANDER_MIN_STEP = 2.1;
 const WANDER_MAX_STEP = 4.2;
 const FENCE_COLLISION_HALF_SIZE = 0.46;
+const ANIMAL_FENCE_COLLISION_HALF_SIZE = FENCE_COLLISION_HALF_SIZE + ANIMAL_WANDER_FENCE_CLEARANCE;
 const PATH_SAMPLE_DISTANCE = 0.15;
 const WORLD_MIN = -GRID_SIZE / 2 + ANIMAL_WANDER_MAP_MARGIN;
 const WORLD_MAX = GRID_SIZE / 2 - ANIMAL_WANDER_MAP_MARGIN;
@@ -92,9 +98,22 @@ function isInsideFence(
   fences: readonly AnimalWanderFence[],
 ): boolean {
   return fences.some((fence) =>
-    Math.abs(position.x - fence.x) <= FENCE_COLLISION_HALF_SIZE &&
-    Math.abs(position.z - fence.z) <= FENCE_COLLISION_HALF_SIZE,
+    Math.abs(position.x - fence.x) <= ANIMAL_FENCE_COLLISION_HALF_SIZE &&
+    Math.abs(position.z - fence.z) <= ANIMAL_FENCE_COLLISION_HALF_SIZE,
   );
+}
+
+function getFacingRotationY(
+  start: AnimalWanderOrigin,
+  target: AnimalWanderOrigin,
+): number {
+  const directionX = target.x - start.x;
+  const directionZ = target.z - start.z;
+  if (Math.hypot(directionX, directionZ) < Number.EPSILON) return 0;
+
+  // Animal meshes face local +X, while Three.js rotates local +X toward -Z
+  // for a positive Y rotation.
+  return Math.atan2(-directionZ, directionX);
 }
 
 function isFenceFreePath(
@@ -136,6 +155,7 @@ function getAnimalWanderTransformAtTime(
     // as an offset from the building's world position.
     x: worldX - origin.x,
     z: worldZ - origin.z,
+    rotationY: getFacingRotationY(start, target),
   };
 }
 
@@ -160,5 +180,6 @@ export function useAnimalWander(
     const transform = getAnimalWanderTransform(clock.elapsedTime, seed, origin, fences);
     animal.position.x = transform.x;
     animal.position.z = transform.z;
+    animal.rotation.y = transform.rotationY;
   });
 }
