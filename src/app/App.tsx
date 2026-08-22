@@ -14,6 +14,7 @@ import { WheatFactoryPanel } from "../ui/WheatFactoryPanel";
 import { BakeryPanel } from "../ui/BakeryPanel";
 import { RiceShopPanel } from "../ui/RiceShopPanel";
 import { ResidentPanel } from "../ui/ResidentPanel";
+import { EncyclopediaPanel } from "../ui/EncyclopediaPanel";
 import { VillageScene } from "../scene/VillageScene";
 
 export function App(): JSX.Element {
@@ -41,6 +42,7 @@ export function App(): JSX.Element {
       <PizzaShopPanel />
       <BakeryPanel />
       <RiceShopPanel />
+      <EncyclopediaPanel />
       <FarmControls />
       <div className="interaction-hint">
         <span className="hint-hand">✦</span>

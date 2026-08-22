@@ -7,9 +7,10 @@ import {
 } from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
+import { syncEncyclopediaCollection } from "../systems/EncyclopediaSystem";
 
 export function createInitialGameState(now = Date.now()): GameState {
-  return {
+  return syncEncyclopediaCollection({
     coins: 100,
     wheatSeeds: INITIAL_WHEAT_SEEDS,
     wheat: 0,
@@ -49,6 +50,7 @@ export function createInitialGameState(now = Date.now()): GameState {
       { id: "tree-1", buildingId: "tree", gridX: 3, gridY: 3 },
       { id: "tree-2", buildingId: "tree", gridX: 16, gridY: 4 },
     ],
+    encyclopediaCollectedIds: [],
     unlockedCountries: ["poland"],
     unlockedBuildings: [
       "field",
@@ -69,5 +71,5 @@ export function createInitialGameState(now = Date.now()): GameState {
     residentRequestDayKey: getLocalDateKey(now),
     residentRequestsStartedToday: 0,
     lastSavedAt: now,
-  };
+  });
 }

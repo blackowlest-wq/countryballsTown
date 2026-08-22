@@ -61,6 +61,7 @@ import {
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
+import { syncEncyclopediaCollection } from "../game/systems/EncyclopediaSystem";
 import {
   getCropName,
   performCropAction,
@@ -94,10 +95,13 @@ interface GameStore {
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
   isResidentPanelOpen: boolean;
+  isEncyclopediaOpen: boolean;
   notice: string | null;
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
   setResidentPanelOpen: (open: boolean) => void;
+  openEncyclopedia: () => void;
+  closeEncyclopedia: () => void;
   travelToMap: (mapId: MapId, now?: number) => void;
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
@@ -192,13 +196,15 @@ function normalizeGameState(state: GameState): GameState {
     buildings,
     Date.now(),
   );
+  const encyclopediaState = syncEncyclopediaCollection({ ...state, buildings });
   return buildings === state.buildings &&
     cowProductions === state.cowProductions &&
     milkFactoryProductions === state.milkFactoryProductions &&
     pigProductions === state.pigProductions &&
     chickenProductions === state.chickenProductions &&
     porkFactoryProductions === state.porkFactoryProductions &&
-    wheatFactoryProductions === state.wheatFactoryProductions
+    wheatFactoryProductions === state.wheatFactoryProductions &&
+    encyclopediaState.encyclopediaCollectedIds === state.encyclopediaCollectedIds
     ? state
     : {
       ...state,
@@ -209,6 +215,7 @@ function normalizeGameState(state: GameState): GameState {
       chickenProductions,
       porkFactoryProductions,
       wheatFactoryProductions,
+      encyclopediaCollectedIds: encyclopediaState.encyclopediaCollectedIds,
     };
 }
 
@@ -250,13 +257,16 @@ export const useGameStore = create<GameStore>((setState, get) => {
   selectedResidentId: null,
   isBuildMenuOpen: false,
   isResidentPanelOpen: false,
+  isEncyclopediaOpen: false,
   notice: null,
 
   tick: (deltaMs, now) => {
     const current = get();
     const wheatFactory = advanceWheatFactoryProductions(current.game, now);
     const milkFactory = advanceMilkFactoryProductions(wheatFactory, now);
-    const factory = advancePorkFactoryProductions(milkFactory, now);
+    const factory = syncEncyclopediaCollection(
+      advancePorkFactoryProductions(milkFactory, now),
+    );
     const economy = advanceEconomy(factory, deltaMs, current.economyRemainderMs);
     const visitorResult = advanceShopVisitors(
       economy.state,
@@ -298,8 +308,30 @@ export const useGameStore = create<GameStore>((setState, get) => {
     });
   },
 
-  setBuildMenuOpen: (open) => set({ isBuildMenuOpen: open }),
-  setResidentPanelOpen: (open) => set({ isResidentPanelOpen: open }),
+  setBuildMenuOpen: (open) => set(open
+    ? { isBuildMenuOpen: true, isEncyclopediaOpen: false }
+    : { isBuildMenuOpen: false }),
+  setResidentPanelOpen: (open) => set(open
+    ? { isResidentPanelOpen: true, isEncyclopediaOpen: false }
+    : { isResidentPanelOpen: false }),
+
+  openEncyclopedia: () => set({
+    interactionMode: "inspect",
+    selectedBuildingId: null,
+    milkFactoryPanelBuildingId: null,
+    porkFactoryPanelBuildingId: null,
+    wheatFactoryPanelBuildingId: null,
+    pizzaShopPanelBuildingId: null,
+    bakeryPanelBuildingId: null,
+    riceShopPanelBuildingId: null,
+    selectedResidentId: null,
+    isBuildMenuOpen: false,
+    isResidentPanelOpen: false,
+    isEncyclopediaOpen: true,
+    notice: null,
+  }),
+
+  closeEncyclopedia: () => set({ isEncyclopediaOpen: false }),
 
   travelToMap: (mapId, now = Date.now()) => {
     const current = get();
@@ -317,6 +349,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       riceShopPanelBuildingId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isEncyclopediaOpen: false,
       selectedResidentId: null,
       notice: mapId === "sea-and-river" ? "海と川へ移動しました。" : "村へ戻りました。",
     });
@@ -335,6 +368,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isEncyclopediaOpen: false,
       notice: null,
     }),
 
@@ -349,6 +383,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
       isBuildMenuOpen: false,
+      isEncyclopediaOpen: false,
       notice: "移動先のセルをクリックしてください。",
     }),
 
@@ -365,6 +400,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isEncyclopediaOpen: false,
       notice: "種を選んで畑をタップしてください。成熟した作物は村画面でタップすると収穫できます。",
     }),
 
@@ -384,6 +420,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
       notice: null,
+      isEncyclopediaOpen: false,
     }),
 
   interactCrop: (gridX, gridY, now = Date.now()) => {
@@ -784,6 +821,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         riceShopPanelBuildingId: null,
         selectedResidentId: null,
         isResidentPanelOpen: false,
+        isEncyclopediaOpen: false,
       });
       return;
     }
@@ -802,6 +840,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         riceShopPanelBuildingId: null,
         selectedResidentId: null,
         isResidentPanelOpen: false,
+        isEncyclopediaOpen: false,
       });
       return;
     }
@@ -820,6 +859,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isResidentPanelOpen: false,
+      isEncyclopediaOpen: false,
     });
   },
 
@@ -853,6 +893,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
       selectedResidentId: null,
+      isEncyclopediaOpen: false,
       notice: "新しい村を始めました。",
     }),
   };

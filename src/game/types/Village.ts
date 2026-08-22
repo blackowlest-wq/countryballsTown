@@ -33,6 +33,7 @@ export interface GameState {
   villageLevel: number;
   residents: import("./Resident").Resident[];
   buildings: import("./Building").BuildingInstance[];
+  encyclopediaCollectedIds: string[];
   unlockedCountries: string[];
   unlockedBuildings: string[];
   activeResidentRequest: import("./ResidentRequest").ActiveResidentRequest | null;

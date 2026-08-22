@@ -13,6 +13,7 @@ export function BuildingPanel(): JSX.Element | null {
   const openPizzaShopPanel = useGameStore((store) => store.openPizzaShopPanel);
   const openBakeryPanel = useGameStore((store) => store.openBakeryPanel);
   const openRiceShopPanel = useGameStore((store) => store.openRiceShopPanel);
+  const openEncyclopedia = useGameStore((store) => store.openEncyclopedia);
   const cancel = useGameStore((store) => store.cancelInteraction);
   if (!building || mode === "build") return null;
   const definition = getBuildingDefinition(building.buildingId);
@@ -90,6 +91,11 @@ export function BuildingPanel(): JSX.Element | null {
               onClick={() => openRiceShopPanel(building.id)}
             >
               ごはんを作る
+            </button>
+          )}
+          {building.buildingId === "house" && (
+            <button className="primary-button" type="button" onClick={openEncyclopedia}>
+              図鑑を見る
             </button>
           )}
           {definition.movable !== false && (

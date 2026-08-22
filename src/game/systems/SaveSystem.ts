@@ -20,6 +20,7 @@ import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
 import { normalizePigProductions } from "./PigSystem";
 import { normalizePorkFactoryProductions } from "./PorkFactorySystem";
 import { normalizeWheatFactoryProductions } from "./WheatFactorySystem";
+import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
 
 interface LegacyCropState {
   wheatCrops?: unknown;
@@ -86,8 +87,9 @@ export function saveGameState(
       buildings,
       now,
     );
+    const normalizedState = syncEncyclopediaCollection({ ...state, buildings, crops });
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
-      state as GameState & LegacyCropState
+      normalizedState as GameState & LegacyCropState
     );
     storage.setItem(SAVE_KEY, JSON.stringify({
       ...stateWithoutLegacyCrops,
@@ -99,6 +101,7 @@ export function saveGameState(
       pigProductions,
       porkFactoryProductions,
       wheatFactoryProductions,
+      encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
       lastSavedAt: now,
     }));
   } catch {
@@ -157,7 +160,7 @@ export function loadGameState(
         ? Math.max(0, Math.floor(parsed.riceSeeds))
         : INITIAL_RICE_SEEDS;
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = legacyParsed;
-    return {
+    const loadedState: GameState = {
       ...stateWithoutLegacyCrops,
       wheatSeeds: storedWheatSeeds + refundedWheatSeeds,
       wheat:
@@ -280,6 +283,7 @@ export function loadGameState(
         : migratedActiveRequestCount,
       lastSavedAt: parsed.lastSavedAt || now,
     };
+    return syncEncyclopediaCollection(loadedState);
   } catch {
     return createInitialGameState(now);
   }
