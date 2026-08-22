@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fishDefinitions } from "../game/data/fish";
 import {
   advanceFishingGauge,
@@ -43,12 +43,17 @@ export function FishingGamePanel(): JSX.Element | null {
   const [fish, setFish] = useState<FishDefinition>(() => chooseFishDefinition(fishDefinitions));
   const [target, setTarget] = useState<FishingGaugeTarget>(() => createFishingGaugeTarget(fish));
   const [gauge, setGauge] = useState<FishingGaugeState>(createGaugeState);
+  const gaugeRef = useRef<FishingGaugeState>(createGaugeState());
+  const gaugeUpdatedAtRef = useRef<number | null>(null);
 
   const startRound = useCallback(() => {
     const nextFish = chooseFishDefinition(fishDefinitions);
+    const nextGauge = createGaugeState();
     setFish(nextFish);
     setTarget(createFishingGaugeTarget(nextFish));
-    setGauge(createGaugeState());
+    gaugeRef.current = nextGauge;
+    gaugeUpdatedAtRef.current = null;
+    setGauge(nextGauge);
     setPhase("waiting");
   }, []);
 
@@ -73,8 +78,18 @@ export function FishingGamePanel(): JSX.Element | null {
 
   useEffect(() => {
     if (!open || phase !== "gauge") return;
+    gaugeUpdatedAtRef.current = performance.now();
     const timer = window.setInterval(() => {
-      setGauge((current) => advanceFishingGauge(current, 16, fish.gaugeSpeed));
+      const now = performance.now();
+      const previous = gaugeUpdatedAtRef.current ?? now;
+      const nextGauge = advanceFishingGauge(
+        gaugeRef.current,
+        now - previous,
+        fish.gaugeSpeed,
+      );
+      gaugeRef.current = nextGauge;
+      gaugeUpdatedAtRef.current = now;
+      setGauge(nextGauge);
     }, 16);
     return () => window.clearInterval(timer);
   }, [fish.gaugeSpeed, open, phase]);
@@ -87,7 +102,16 @@ export function FishingGamePanel(): JSX.Element | null {
 
   const handleStopGauge = (): void => {
     if (phase !== "gauge") return;
-    if (isFishingGaugeInTarget(gauge.position, target)) {
+    const now = performance.now();
+    const previous = gaugeUpdatedAtRef.current ?? now;
+    const currentGauge = advanceFishingGauge(
+      gaugeRef.current,
+      now - previous,
+      fish.gaugeSpeed,
+    );
+    gaugeRef.current = currentGauge;
+    gaugeUpdatedAtRef.current = now;
+    if (isFishingGaugeInTarget(currentGauge.position, target)) {
       recordFishCatch(fish.type);
       setPhase("caught");
     } else {

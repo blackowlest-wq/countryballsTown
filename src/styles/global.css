@@ -279,7 +279,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fishing-gauge-wrap { position: absolute; right: 7%; bottom: 17px; left: 7%; z-index: 5; display: grid; gap: 5px; padding: 10px; background: rgba(255,250,238,.94); border: 1px solid rgba(255,255,255,.9); border-radius: 15px; box-shadow: 0 5px 12px rgba(53, 93, 105, .16); }
 .fishing-gauge { position: relative; height: 18px; overflow: hidden; background: #d9d2c5; border: 2px solid #fffdf6; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(74, 82, 75, .18); }
 .fishing-gauge-target { position: absolute; top: 0; bottom: 0; background: #8fc86d; border-right: 2px solid #558c43; border-left: 2px solid #558c43; box-shadow: inset 0 0 0 1px rgba(255,255,255,.34); }
-.fishing-gauge-marker { position: absolute; top: -2px; bottom: -2px; width: 5px; background: #e65559; border: 1px solid #fff; border-radius: 5px; box-shadow: 0 0 0 2px rgba(165, 62, 65, .2); transform: translateX(-50%); transition: left .02s linear; }
+.fishing-gauge-marker { position: absolute; top: -2px; bottom: -2px; width: 5px; background: #e65559; border: 1px solid #fff; border-radius: 5px; box-shadow: 0 0 0 2px rgba(165, 62, 65, .2); transform: translateX(-50%); }
 .fishing-gauge-direction { color: #78978a; text-align: center; font-size: 17px; font-weight: 1000; line-height: .8; }
 .fishing-status-copy { display: grid; height: 72px; gap: 4px; align-content: center; text-align: center; }
 .fishing-phase-message { margin: 0; color: var(--ink); font-size: 14px; font-weight: 900; }

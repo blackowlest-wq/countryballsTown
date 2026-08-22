@@ -85,4 +85,43 @@ describe("fishing panels", () => {
     expect(retryButton?.closest(".fishing-action-slot")).toBe(actionSlot);
     await act(async () => root.unmount());
   });
+
+  it("停止時に最後の更新からの経過時間も含めて判定する", async () => {
+    vi.useFakeTimers();
+    const realPerformanceNow = performance.now.bind(performance);
+    let elapsedMs = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => realPerformanceNow() + elapsedMs);
+    vi.spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.05857142857142857)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.05857142857142857)
+      .mockReturnValueOnce(0)
+      .mockReturnValue(0);
+    useGameStore.setState({
+      game: createInitialGameState(0),
+      isFishingGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(FishingGamePanel)));
+    await act(async () => vi.advanceTimersByTime(1_200));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[aria-label=\"魚が食いついたのでタップ\"]")
+        ?.click();
+    });
+    elapsedMs = 100;
+    await act(async () => vi.advanceTimersByTime(100));
+    await act(async () => {
+      [...container.querySelectorAll("button")]
+        .find((button) => button.textContent?.includes("ここで止める"))
+        ?.click();
+    });
+
+    expect(container.textContent).toContain("魚を釣り上げました！");
+    expect(useGameStore.getState().game.fishInventory.sardine).toBe(1);
+    await act(async () => root.unmount());
+  });
 });
