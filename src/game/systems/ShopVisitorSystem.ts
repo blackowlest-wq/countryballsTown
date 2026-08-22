@@ -21,6 +21,7 @@ import type { GridPosition } from "../types/GridPosition";
 import type { ShopVisitor, ShopVisitorSimulation } from "../types/ShopVisitor";
 import type { GameState } from "../types/Village";
 import { distanceBetween, moveTowards } from "./MovementSystem";
+import { roundCoins } from "./EconomySystem";
 
 type RandomSource = () => number;
 
@@ -300,7 +301,7 @@ export function advanceShopVisitors(
       const productType = getAvailableShopProduct(shop, state, productsSold);
       if (productStock !== null && !productType) return beginLeaving(visitor);
       if (productType) productsSold[productType] = (productsSold[productType] ?? 0) + 1;
-      coinsEarned += shop.definition.visitorService?.saleCoins ?? 0;
+      coinsEarned = roundCoins(coinsEarned + (shop.definition.visitorService?.saleCoins ?? 0));
       const layout = getQueueLayout(shop, shop.definition.visitorService?.queueCapacity ?? 1);
       return beginLeaving(visitor, getMapEdgePosition(layout, 1.25));
     }
@@ -408,7 +409,7 @@ export function advanceShopVisitors(
 
   return {
     simulation: { visitors, nextArrivalAt, nextSequence },
-    coinsEarned,
+    coinsEarned: roundCoins(coinsEarned),
     productsSold,
     pizzasSold: productsSold.pizza ?? 0,
   };

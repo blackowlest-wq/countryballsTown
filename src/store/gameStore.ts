@@ -7,7 +7,7 @@ import {
   placeBuilding,
   removeBuilding,
 } from "../game/systems/BuildingSystem";
-import { advanceEconomy } from "../game/systems/EconomySystem";
+import { advanceEconomy, roundCoins } from "../game/systems/EconomySystem";
 import {
   collectCowMilk as collectMilkFromCow,
   normalizeCowProductions,
@@ -267,7 +267,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       : consumeCraftedProducts(
         {
           ...economy.state,
-          coins: economy.state.coins + visitorResult.coinsEarned,
+          coins: roundCoins(economy.state.coins + visitorResult.coinsEarned),
         },
         visitorResult.productsSold,
       );

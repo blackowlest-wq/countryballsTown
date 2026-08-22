@@ -11,7 +11,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 2,
       progressLabel: "木をそろえる",
     },
-    rewardCoins: 40,
+    rewardCoins: 4,
   },
   {
     id: "poland-flower-field",
@@ -23,7 +23,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 3,
       progressLabel: "花をそろえる",
     },
-    rewardCoins: 50,
+    rewardCoins: 5,
   },
   {
     id: "poland-village-savings",
@@ -34,7 +34,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 20,
       progressLabel: "コインを集める",
     },
-    rewardCoins: 30,
+    rewardCoins: 3,
   },
   {
     id: "japan-more-flowers",
@@ -46,7 +46,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 3,
       progressLabel: "花をそろえる",
     },
-    rewardCoins: 50,
+    rewardCoins: 5,
   },
   {
     id: "japan-torii-view",
@@ -58,7 +58,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 1,
       progressLabel: "鳥居を建てる",
     },
-    rewardCoins: 70,
+    rewardCoins: 7,
   },
   {
     id: "japan-hot-spring",
@@ -70,7 +70,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 1,
       progressLabel: "温泉を建てる",
     },
-    rewardCoins: 100,
+    rewardCoins: 10,
   },
   {
     id: "japan-green-walk",
@@ -82,7 +82,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 3,
       progressLabel: "木か花をそろえる",
     },
-    rewardCoins: 60,
+    rewardCoins: 6,
   },
   {
     id: "italy-pizza-work",
@@ -94,7 +94,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 1,
       progressLabel: "ピザ屋を建てる",
     },
-    rewardCoins: 120,
+    rewardCoins: 12,
   },
   {
     id: "italy-shop-flowers",
@@ -106,7 +106,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 2,
       progressLabel: "花をそろえる",
     },
-    rewardCoins: 50,
+    rewardCoins: 5,
   },
   {
     id: "italy-festival-savings",
@@ -117,7 +117,7 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
       target: 40,
       progressLabel: "コインを集める",
     },
-    rewardCoins: 70,
+    rewardCoins: 7,
   },
 ];
 

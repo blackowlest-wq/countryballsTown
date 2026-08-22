@@ -240,8 +240,8 @@ describe("ResidentRequestSystem", () => {
       () => 0,
     );
 
-    expect(completed.event).toMatchObject({ type: "completed", rewardCoins: 50 });
-    expect(completed.state.coins).toBe(150);
+    expect(completed.event).toMatchObject({ type: "completed", rewardCoins: 5 });
+    expect(completed.state.coins).toBe(105);
     expect(completed.state.activeResidentRequest).toBeNull();
     expect(completed.state.nextResidentRequestAt).toBe(
       3_000 + RESIDENT_REQUEST_COOLDOWN_MIN_MS,
@@ -271,7 +271,7 @@ describe("ResidentRequestSystem", () => {
       5_000,
       () => 0,
     );
-    expect(result.event).toMatchObject({ type: "completed", rewardCoins: 30 });
-    expect(result.state.coins).toBe(150);
+    expect(result.event).toMatchObject({ type: "completed", rewardCoins: 3 });
+    expect(result.state.coins).toBe(123);
   });
 });

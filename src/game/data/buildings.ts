@@ -233,7 +233,7 @@ export const buildingDefinitions: BuildingDefinition[] = [
     interactionType: "pizza-shop",
     visitorService: {
       queueCapacity: 3,
-      saleCoins: 3,
+      saleCoins: 0.3,
       doorOffset: 0.45,
       product: "pizza",
     },
@@ -253,7 +253,7 @@ export const buildingDefinitions: BuildingDefinition[] = [
     interactionType: "bakery",
     visitorService: {
       queueCapacity: 3,
-      saleCoins: 3,
+      saleCoins: 0.3,
       doorOffset: 0.45,
       products: ["bread", "hot-dog", "croissant", "ham-sandwich"],
     },

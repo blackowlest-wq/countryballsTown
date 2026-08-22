@@ -13,6 +13,7 @@ import type { ResidentRequestDefinition } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 import { celebrateResident } from "./ResidentSystem";
+import { roundCoins } from "./EconomySystem";
 
 export type ResidentRequestProgressSource =
   | { type: "building-placed"; buildingId: string }
@@ -197,7 +198,7 @@ export function advanceResidentRequest(
 
   const rewardedState: GameState = {
     ...state,
-    coins: state.coins + definition.rewardCoins,
+    coins: roundCoins(state.coins + definition.rewardCoins),
     activeResidentRequest: null,
     lastResidentRequestDefinitionId: definition.id,
     nextResidentRequestAt: now + randomCooldown(random),

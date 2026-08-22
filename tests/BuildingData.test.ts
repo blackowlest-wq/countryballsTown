@@ -25,7 +25,7 @@ describe("building definitions", () => {
       category: "building",
       visitorService: {
         queueCapacity: 3,
-        saleCoins: 3,
+        saleCoins: 0.3,
         product: "pizza",
       },
     });

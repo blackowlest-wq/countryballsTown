@@ -49,7 +49,7 @@ describe("gameStore shop visitors", () => {
     useGameStore.setState({ game, economyRemainderMs: 0, visitorSimulation: arrived });
     useGameStore.getState().tick(0, 20_000 + SHOP_VISITOR_SERVICE_MS);
 
-    expect(useGameStore.getState().game.coins).toBe(game.coins + 3);
+    expect(useGameStore.getState().game.coins).toBe(game.coins + 0.3);
     expect(useGameStore.getState().game.pizzas).toBe(0);
     expect(useGameStore.getState().visitorSimulation.visitors[0].phase).toBe("leaving");
   });

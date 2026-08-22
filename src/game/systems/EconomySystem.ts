@@ -7,6 +7,10 @@ export interface EconomyResult {
   coinsEarned: number;
 }
 
+export function roundCoins(amount: number): number {
+  return Math.round((amount + Number.EPSILON) * 10) / 10;
+}
+
 export function advanceEconomy(
   state: GameState,
   elapsedMs: number,
@@ -14,12 +18,13 @@ export function advanceEconomy(
 ): EconomyResult {
   const totalElapsed = Math.max(0, remainderMs + elapsedMs);
   const payoutCount = Math.floor(totalElapsed / COIN_INTERVAL_MS);
+  const coinsEarned = roundCoins(payoutCount * COINS_PER_INTERVAL);
   return {
     state:
       payoutCount === 0
         ? state
-        : { ...state, coins: state.coins + payoutCount * COINS_PER_INTERVAL },
+        : { ...state, coins: roundCoins(state.coins + coinsEarned) },
     remainderMs: totalElapsed % COIN_INTERVAL_MS,
-    coinsEarned: payoutCount * COINS_PER_INTERVAL,
+    coinsEarned,
   };
 }

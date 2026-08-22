@@ -22,7 +22,7 @@ describe("SaveSystem", () => {
     const storage = memoryStorage();
     const original = {
       ...createInitialGameState(0),
-      coins: 321,
+      coins: 321.4,
       villageLevel: 2,
       wheatSeeds: 4,
       wheat: 4,
@@ -68,7 +68,7 @@ describe("SaveSystem", () => {
     };
     saveGameState(original, storage);
     expect(loadGameState(storage, 100)).toMatchObject({
-      coins: 321,
+      coins: 321.4,
       villageLevel: 2,
       wheatSeeds: 4,
       wheat: 4,
