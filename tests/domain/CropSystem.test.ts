@@ -6,6 +6,7 @@ import {
   INITIAL_TOMATO_SEEDS,
 } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
+import { getCropEncyclopediaId } from "../../src/game/data/encyclopedia";
 import {
   getCropGrowthStage,
   isCellInField,
@@ -35,6 +36,7 @@ describe("CropSystem", () => {
     ]);
     expect(result.state.wheatSeeds).toBe(initial.wheatSeeds - 1);
     expect(result.state.tomatoSeeds).toBe(INITIAL_TOMATO_SEEDS);
+    expect(result.state.encyclopediaCollectedIds).toContain(getCropEncyclopediaId("wheat"));
   });
 
   it("初期5個のトマトの種から選んで蒔ける", () => {

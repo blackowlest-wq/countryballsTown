@@ -5,6 +5,7 @@ import {
   CROP_SEEDS_PER_HARVEST,
 } from "../constants/gameConstants";
 import { getBuildingDefinition } from "../data/buildings";
+import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
 import type { BuildingInstance } from "../types/Building";
 import {
   getCropDefinition,
@@ -113,11 +114,11 @@ function plantCrop(
   now: number,
 ): GameState {
   const definition = getCropDefinition(cropType);
-  return {
+  return syncEncyclopediaCollection({
     ...state,
     [definition.seedKey]: state[definition.seedKey] - 1,
     crops: [...state.crops, { type: cropType, gridX, gridY, plantedAt: now }],
-  };
+  });
 }
 
 function harvestCrop(state: GameState, crop: Crop): GameState {

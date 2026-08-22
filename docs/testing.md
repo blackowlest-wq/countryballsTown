@@ -19,6 +19,8 @@
 | `src/ui`、`src/scene`、DOM/ブラウザ接続 | `npm run test:ui` と関係するStore | 全suite、lint、build |
 | テスト設定、分類、共通fixture | 変更したproject | 全suite、lint、build |
 
+`GameProgressSystem` の変更では、まず `tests/domain/GameProgressSystem.test.ts` を時間・乱数を注入して反復し、通知・進行後状態・即時保存シグナルをInterfaceから確認する。Storeのtickを通すテストは、Zustandと保存Adapterの接続を確認する最小ケースに限定する。
+
 `test:related` は変更したソースパスを引数に取り、VitestのModule graphから関連テストを選ぶ。選択結果が空、または依存関係を判断しづらい場合は、該当projectを実行する。
 
 新しい `*.test.ts` は3つのproject配下へ置く。`npm run test:layout` が `tests/` 直下や未知の分類フォルダを検出するため、CIで分類漏れを検証できる。

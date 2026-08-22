@@ -7,62 +7,47 @@ import {
   placeBuilding,
   removeBuilding,
 } from "../game/systems/BuildingSystem";
-import { advanceEconomy, roundCoins } from "../game/systems/EconomySystem";
+import { advanceGameProgress } from "../game/systems/GameProgressSystem";
 import {
   collectCowMilk as collectMilkFromCow,
-  normalizeCowProductions,
   type CowMilkOutcome,
 } from "../game/systems/CowSystem";
 import {
   collectPigPork as collectPorkFromPig,
-  normalizePigProductions,
   type PigPorkOutcome,
 } from "../game/systems/PigSystem";
 import {
   collectChickenEggs as collectEggsFromChicken,
-  normalizeChickenProductions,
   type ChickenEggOutcome,
 } from "../game/systems/ChickenSystem";
 import {
   configureMilkFactory as configureFactory,
-  advanceMilkFactoryProductions,
   getMilkFactoryProductName,
-  normalizeMilkFactoryProductions,
 } from "../game/systems/MilkFactorySystem";
 import {
-  advancePorkFactoryProductions,
   configurePorkFactory as configurePorkFactorySystem,
   getPorkFactoryProductName,
-  normalizePorkFactoryProductions,
 } from "../game/systems/PorkFactorySystem";
 import {
-  advanceWheatFactoryProductions,
   configureWheatFactory as configureWheatFactorySystem,
   getWheatFactoryProductName,
-  normalizeWheatFactoryProductions,
 } from "../game/systems/WheatFactorySystem";
 import {
-  consumeCraftedProducts,
   craftProduct,
   getCraftingProductName,
 } from "../game/systems/CraftingSystem";
 import { BAKERY_PRODUCT_TYPES } from "../game/systems/BakerySystem";
 import { RICE_SHOP_PRODUCT_TYPES } from "../game/systems/RiceShopSystem";
-import { advanceResidents } from "../game/systems/ResidentSystem";
 import {
-  advanceShopVisitors,
   createShopVisitorSimulation,
 } from "../game/systems/ShopVisitorSystem";
 import {
   advanceResidentRequest,
   describeResidentRequestEvent,
-  maybeStartResidentRequest,
 } from "../game/systems/ResidentRequestSystem";
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
-import { syncEncyclopediaCollection } from "../game/systems/EncyclopediaSystem";
-import { normalizeFishInventory } from "../game/data/fish";
 import {
   getCropName,
   performCropAction,
@@ -173,69 +158,8 @@ interface GameStore {
   resetForDevelopment: () => void;
 }
 
-function normalizeGameState(state: GameState): GameState {
-  const buildings = createBuildingCollection(state.buildings).buildings;
-  const cowProductions = normalizeCowProductions(
-    state.cowProductions,
-    buildings,
-    Date.now(),
-  );
-  const milkFactoryProductions = normalizeMilkFactoryProductions(
-    state.milkFactoryProductions,
-    buildings,
-    Date.now(),
-  );
-  const pigProductions = normalizePigProductions(
-    state.pigProductions,
-    buildings,
-    Date.now(),
-  );
-  const chickenProductions = normalizeChickenProductions(
-    state.chickenProductions,
-    buildings,
-    Date.now(),
-  );
-  const porkFactoryProductions = normalizePorkFactoryProductions(
-    state.porkFactoryProductions,
-    buildings,
-    Date.now(),
-  );
-  const wheatFactoryProductions = normalizeWheatFactoryProductions(
-    state.wheatFactoryProductions,
-    buildings,
-    Date.now(),
-  );
-  const fishInventory = normalizeFishInventory(state.fishInventory);
-  const encyclopediaState = syncEncyclopediaCollection({ ...state, buildings });
-  return buildings === state.buildings &&
-    cowProductions === state.cowProductions &&
-    milkFactoryProductions === state.milkFactoryProductions &&
-    pigProductions === state.pigProductions &&
-    chickenProductions === state.chickenProductions &&
-    porkFactoryProductions === state.porkFactoryProductions &&
-    wheatFactoryProductions === state.wheatFactoryProductions &&
-    fishInventory === state.fishInventory &&
-    encyclopediaState.encyclopediaCollectedIds === state.encyclopediaCollectedIds
-    ? state
-    : {
-      ...state,
-      buildings,
-      cowProductions,
-      milkFactoryProductions,
-      pigProductions,
-      chickenProductions,
-      porkFactoryProductions,
-      wheatFactoryProductions,
-      fishInventory,
-      encyclopediaCollectedIds: encyclopediaState.encyclopediaCollectedIds,
-    };
-}
-
 function persist(state: GameState): GameState {
-  const normalized = normalizeGameState(state);
-  const saved = { ...normalized, lastSavedAt: Date.now() };
-  saveGameState(saved);
-  return saved;
+  return saveGameState(state);
 }
 
 function withProgress(state: GameState): { game: GameState; notice: string | null } {
@@ -250,7 +174,7 @@ function combineNotices(...notices: Array<string | null>): string | null {
 
 export const useGameStore = create<GameStore>((setState, get) => {
   const set = (update: Partial<GameStore>): void => {
-    setState(update.game ? { ...update, game: normalizeGameState(update.game) } : update);
+    setState(update);
   };
 
   return {
@@ -276,49 +200,17 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   tick: (deltaMs, now) => {
     const current = get();
-    const wheatFactory = advanceWheatFactoryProductions(current.game, now);
-    const milkFactory = advanceMilkFactoryProductions(wheatFactory, now);
-    const factory = syncEncyclopediaCollection(
-      advancePorkFactoryProductions(milkFactory, now),
-    );
-    const economy = advanceEconomy(factory, deltaMs, current.economyRemainderMs);
-    const visitorResult = advanceShopVisitors(
-      economy.state,
-      current.visitorSimulation,
-      deltaMs,
-      now,
-    );
-    const hasProductSales = Object.values(visitorResult.productsSold).some(
-      (quantity) => (quantity ?? 0) > 0,
-    );
-    const withVisitorSales = visitorResult.coinsEarned === 0 && !hasProductSales
-      ? economy.state
-      : consumeCraftedProducts(
-        {
-          ...economy.state,
-          coins: roundCoins(economy.state.coins + visitorResult.coinsEarned),
-        },
-        visitorResult.productsSold,
-      );
-    const withResidents = advanceResidents(withVisitorSales, deltaMs, now);
-    const progress = withProgress(withResidents);
-    const requestProgress = advanceResidentRequest(
-      progress.game,
-      { type: "coins-earned", amount: economy.coinsEarned + visitorResult.coinsEarned },
-      now,
-    );
-    const requestStart = maybeStartResidentRequest(requestProgress.state, now);
-    const requestEvent = requestProgress.event ?? requestStart.event;
-    const requestNotice = requestEvent ? describeResidentRequestEvent(requestEvent) : null;
-    const nextNotice = combineNotices(progress.notice, requestNotice);
-    const nextGame = nextNotice || factory !== current.game || hasProductSales
-      ? persist(requestStart.state)
-      : requestStart.state;
+    const progress = advanceGameProgress({
+      game: current.game,
+      economyRemainderMs: current.economyRemainderMs,
+      visitorSimulation: current.visitorSimulation,
+    }, deltaMs, now, Math.random);
+    const nextGame = progress.shouldPersist ? persist(progress.game) : progress.game;
     set({
       game: nextGame,
-      economyRemainderMs: economy.remainderMs,
-      visitorSimulation: visitorResult.simulation,
-      notice: nextNotice ?? current.notice,
+      economyRemainderMs: progress.economyRemainderMs,
+      visitorSimulation: progress.visitorSimulation,
+      notice: progress.notice ?? current.notice,
     });
   },
 

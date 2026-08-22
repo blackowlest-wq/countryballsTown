@@ -6,7 +6,12 @@ import {
   INITIAL_RICE_SEEDS,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
 } from "../../src/game/constants/gameConstants";
-import { loadGameState, saveGameState, type StorageLike } from "../../src/game/systems/SaveSystem";
+import {
+  loadGameState,
+  prepareGameStateForSave,
+  saveGameState,
+  type StorageLike,
+} from "../../src/game/systems/SaveSystem";
 import { getLocalDateKey } from "../../src/utils/date";
 
 function memoryStorage(): StorageLike {
@@ -17,7 +22,51 @@ function memoryStorage(): StorageLike {
   };
 }
 
+function stateWithUnscheduledFactory() {
+  const initial = createInitialGameState(0);
+  return {
+    ...initial,
+    buildings: [{ id: "factory-test", buildingId: "milk-factory", gridX: 8, gridY: 8 }],
+    milkFactoryProductions: [{
+      buildingInstanceId: "factory-test",
+      productType: "butter" as const,
+      nextProductionAt: Number.NaN,
+    }],
+  };
+}
+
 describe("SaveSystem", () => {
+  it("保存用canonical stateを返し、指定時刻をタイマーとlastSavedAtへ反映する", () => {
+    const state = stateWithUnscheduledFactory();
+    const now = 123_000;
+
+    const prepared = prepareGameStateForSave(state, now);
+    const saved = saveGameState(state, memoryStorage(), now);
+
+    expect(prepared).toEqual(saved);
+    expect(saved.lastSavedAt).toBe(now);
+    expect(saved.milkFactoryProductions).toEqual([{
+      buildingInstanceId: "factory-test",
+      productType: "butter",
+      nextProductionAt: now + 20_000,
+    }]);
+  });
+
+  it("ストレージがない、または書き込みに失敗してもcanonical stateを返す", () => {
+    const state = stateWithUnscheduledFactory();
+    const now = 456_000;
+    const expected = prepareGameStateForSave(state, now);
+    const throwingStorage: StorageLike = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error("quota exceeded");
+      },
+    };
+
+    expect(saveGameState(state, undefined, now)).toEqual(expected);
+    expect(saveGameState(state, throwingStorage, now)).toEqual(expected);
+  });
+
   it("ゲーム状態を保存して復元できる", () => {
     const storage = memoryStorage();
     const original = {

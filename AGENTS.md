@@ -3,10 +3,12 @@
 このリポジトリでは、変更の影響範囲を小さく保ち、既存のゲーム挙動を観測可能なテストで守る。
 
 - ゲームルールの変更は `src/game` の Module として実装し、UIやStoreに同じルールを重複させない。
+- 時間経過のゲームルールは `src/game/systems/GameProgressSystem.ts` の Interfaceへ集約し、Storeの `tick` に個別Systemの進行順序を再実装しない。
 - 既存の Module の Interface と依存方向を確認してから、新しい分岐・状態・保存項目を追加する。
 - テストは責務に応じた `tests/domain`、`tests/store`、`tests/ui` のプロジェクトへ置き、変更に対応する最小のsuiteを反復する。
 - 新しい `*.test.ts` は3つのテスト分類配下へ置き、配置確認の `npm run test:layout` を通す。
 - 実装の詳細ではなく、ModuleのInterfaceから観測できる結果をテストする。
+- 通常のStore更新でゲーム全体をnormalize/repairせず、修復と保存用canonicalizationは `SaveSystem` のload/save Seamへ限定する。
 
 ## Context pointers
 
@@ -18,6 +20,8 @@
 
 - 変更の責務に対応するテストプロジェクトが追加・更新されているか確認する。
 - 既存のInterfaceを迂回して、同じゲームルールをUIやStoreへ複製していないか確認する。
+- `GameProgressSystem` の時間・乱数注入と結果（進行状態、通知、即時保存シグナル）がInterfaceから決定論的にテストされ、Storeに進行順序が戻っていないか確認する。
 - 新しい保存データや移行処理がある場合、旧データと壊れた入力を含む `SaveSystem` の観測可能な結果を確認する。
+- 保存用canonicalizationの実装が `SaveSystem` とStoreや他のSystemに重複していないか確認する。
 - テスト範囲を広げる変更では、依存を広げる理由と `test:related` の結果をレビュー報告またはPR説明で確認する。
 - 文書は現状と目標を分け、まだ存在しない構造を現在の規則として扱わない。

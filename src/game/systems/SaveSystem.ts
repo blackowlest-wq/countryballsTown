@@ -61,60 +61,75 @@ function getBrowserStorage(): StorageLike | undefined {
   return window.localStorage;
 }
 
+export function prepareGameStateForSave(
+  state: GameState,
+  now = Date.now(),
+): GameState {
+  const buildings = createBuildingCollection(state.buildings).buildings;
+  const crops = normalizeCrops(state.crops);
+  const chickenProductions = normalizeChickenProductions(state.chickenProductions, buildings, now);
+  const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
+  const milkFactoryProductions = normalizeMilkFactoryProductions(
+    state.milkFactoryProductions,
+    buildings,
+    now,
+  );
+  const pigProductions = normalizePigProductions(state.pigProductions, buildings, now);
+  const porkFactoryProductions = normalizePorkFactoryProductions(
+    state.porkFactoryProductions,
+    buildings,
+    now,
+  );
+  const wheatFactoryProductions = normalizeWheatFactoryProductions(
+    state.wheatFactoryProductions,
+    buildings,
+    now,
+  );
+  const fishInventory = normalizeFishInventory(state.fishInventory);
+  const normalizedState = syncEncyclopediaCollection({
+    ...state,
+    buildings,
+    crops,
+    fishInventory,
+  });
+  const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
+    normalizedState as GameState & LegacyCropState
+  );
+  return {
+    ...stateWithoutLegacyCrops,
+    buildings,
+    crops,
+    chickenProductions,
+    cowProductions,
+    milkFactoryProductions,
+    pigProductions,
+    porkFactoryProductions,
+    wheatFactoryProductions,
+    fishInventory,
+    encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
+    lastSavedAt: now,
+  };
+}
+
 export function saveGameState(
   state: GameState,
   storage: StorageLike | undefined = getBrowserStorage(),
-): void {
-  if (!storage) return;
+  now = Date.now(),
+): GameState {
+  let saved: GameState;
   try {
-    const now = Date.now();
-    const buildings = createBuildingCollection(state.buildings).buildings;
-    const crops = normalizeCrops(state.crops);
-    const chickenProductions = normalizeChickenProductions(state.chickenProductions, buildings, now);
-    const cowProductions = normalizeCowProductions(state.cowProductions, buildings, now);
-    const milkFactoryProductions = normalizeMilkFactoryProductions(
-      state.milkFactoryProductions,
-      buildings,
-      now,
-    );
-    const pigProductions = normalizePigProductions(state.pigProductions, buildings, now);
-    const porkFactoryProductions = normalizePorkFactoryProductions(
-      state.porkFactoryProductions,
-      buildings,
-      now,
-    );
-    const wheatFactoryProductions = normalizeWheatFactoryProductions(
-      state.wheatFactoryProductions,
-      buildings,
-      now,
-    );
-    const fishInventory = normalizeFishInventory(state.fishInventory);
-    const normalizedState = syncEncyclopediaCollection({
-      ...state,
-      buildings,
-      crops,
-      fishInventory,
-    });
-    const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
-      normalizedState as GameState & LegacyCropState
-    );
-    storage.setItem(SAVE_KEY, JSON.stringify({
-      ...stateWithoutLegacyCrops,
-      buildings,
-      crops,
-      chickenProductions,
-      cowProductions,
-      milkFactoryProductions,
-      pigProductions,
-      porkFactoryProductions,
-      wheatFactoryProductions,
-      fishInventory: normalizedState.fishInventory,
-      encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
-      lastSavedAt: now,
-    }));
+    saved = prepareGameStateForSave(state, now);
+  } catch {
+    // Saving is best-effort: an unexpected malformed state should not stop the game.
+    return state;
+  }
+  if (!storage) return saved;
+  try {
+    storage.setItem(SAVE_KEY, JSON.stringify(saved));
   } catch {
     // Saving is best-effort: a private browsing quota error should not stop the game.
   }
+  return saved;
 }
 
 export function loadGameState(
