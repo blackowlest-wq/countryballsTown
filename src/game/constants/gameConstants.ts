@@ -3,6 +3,7 @@ export const COIN_INTERVAL_MS = 1_000;
 export const COINS_PER_INTERVAL = 1;
 export const INITIAL_WHEAT_SEEDS = 9;
 export const INITIAL_TOMATO_SEEDS = 5;
+export const INITIAL_RICE_SEEDS = 5;
 export const CROP_GREEN_STAGE_MS = 10_000;
 export const CROP_MATURE_STAGE_MS = 20_000;
 export const CROP_HARVEST_AMOUNT = 1;

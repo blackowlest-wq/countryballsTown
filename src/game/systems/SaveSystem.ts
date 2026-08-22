@@ -1,5 +1,6 @@
 import {
   INITIAL_TOMATO_SEEDS,
+  INITIAL_RICE_SEEDS,
   INITIAL_WHEAT_SEEDS,
   RESIDENT_REQUEST_DAILY_LIMIT,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
@@ -142,6 +143,7 @@ export function loadGameState(
     const discardedCrops = normalizedCrops.filter((crop) => !crops.includes(crop));
     const refundedWheatSeeds = discardedCrops.filter((crop) => crop.type === "wheat").length;
     const refundedTomatoSeeds = discardedCrops.filter((crop) => crop.type === "tomato").length;
+    const refundedRiceSeeds = discardedCrops.filter((crop) => crop.type === "rice").length;
     const storedWheatSeeds =
       typeof parsed.wheatSeeds === "number" && Number.isFinite(parsed.wheatSeeds)
         ? Math.max(0, Math.floor(parsed.wheatSeeds))
@@ -150,6 +152,10 @@ export function loadGameState(
       typeof parsed.tomatoSeeds === "number" && Number.isFinite(parsed.tomatoSeeds)
         ? Math.max(0, Math.floor(parsed.tomatoSeeds))
         : INITIAL_TOMATO_SEEDS;
+    const storedRiceSeeds =
+      typeof parsed.riceSeeds === "number" && Number.isFinite(parsed.riceSeeds)
+        ? Math.max(0, Math.floor(parsed.riceSeeds))
+        : INITIAL_RICE_SEEDS;
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = legacyParsed;
     return {
       ...stateWithoutLegacyCrops,
@@ -162,6 +168,11 @@ export function loadGameState(
       tomatoes:
         typeof parsed.tomatoes === "number" && Number.isFinite(parsed.tomatoes)
           ? Math.max(0, Math.floor(parsed.tomatoes))
+          : 0,
+      riceSeeds: storedRiceSeeds + refundedRiceSeeds,
+      rice:
+        typeof parsed.rice === "number" && Number.isFinite(parsed.rice)
+          ? Math.max(0, Math.floor(parsed.rice))
           : 0,
       crops,
       eggs:

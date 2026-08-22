@@ -3,6 +3,7 @@ import { createInitialGameState } from "../src/game/core/GameState";
 import {
   INITIAL_TOMATO_SEEDS,
   INITIAL_WHEAT_SEEDS,
+  INITIAL_RICE_SEEDS,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
 } from "../src/game/constants/gameConstants";
 import { loadGameState, saveGameState, type StorageLike } from "../src/game/systems/SaveSystem";
@@ -217,6 +218,21 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000)).toMatchObject({
       eggs: 0,
       chickenProductions: [],
+    });
+  });
+
+  it("米情報がない旧セーブデータを移行する", () => {
+    const storage = memoryStorage();
+    const {
+      riceSeeds: _riceSeeds,
+      rice: _rice,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      riceSeeds: INITIAL_RICE_SEEDS,
+      rice: 0,
     });
   });
 

@@ -76,6 +76,8 @@ describe("FarmControls", () => {
     expect(container.querySelector('[aria-label="ソーセージ 5"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ベーコン 1"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
+    expect(container.querySelector('[data-crop="rice"]')?.getAttribute("aria-label"))
+      .toBe("米の種を選ぶ。種 5、収穫 0");
     expect(harvestButton).toBeNull();
 
     await act(async () => {
@@ -87,6 +89,13 @@ describe("FarmControls", () => {
     expect(tomatoButton?.getAttribute("aria-pressed")).toBe("true");
     expect(container.textContent).toContain("トマトの種を空の畑へ");
     expect(container.textContent).toContain("成熟した作物は村画面でタップまたはスワイプして収穫");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-crop="rice"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(useGameStore.getState()).toMatchObject({ selectedCropType: "rice" });
+    expect(container.textContent).toContain("米の種を空の畑へ");
 
     await act(async () => root.unmount());
   });

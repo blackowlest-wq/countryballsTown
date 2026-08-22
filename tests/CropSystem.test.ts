@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CROP_GREEN_STAGE_MS,
   CROP_MATURE_STAGE_MS,
+  INITIAL_RICE_SEEDS,
   INITIAL_TOMATO_SEEDS,
 } from "../src/game/constants/gameConstants";
 import { createInitialGameState } from "../src/game/core/GameState";
@@ -130,6 +131,37 @@ describe("CropSystem", () => {
       outcome: "harvested",
       cropType: "wheat",
       state: { wheat: 1, wheatSeeds: 10, crops: [] },
+    });
+  });
+
+  it("米も小麦と同じ10秒・10秒の成長周期で植えて収穫できる", () => {
+    const initial = createStateWithField();
+    const planted = performCropAction(initial, "plant", "rice", 8, 8, 1_000);
+    expect(planted).toMatchObject({
+      outcome: "planted",
+      cropType: "rice",
+      state: {
+        riceSeeds: INITIAL_RICE_SEEDS - 1,
+        crops: [{ type: "rice", gridX: 8, gridY: 8, plantedAt: 1_000 }],
+      },
+    });
+
+    const crop = planted.state.crops[0];
+    expect(getCropGrowthStage(crop, 1_000 + CROP_GREEN_STAGE_MS)).toBe("green");
+    expect(getCropGrowthStage(crop, 1_000 + CROP_MATURE_STAGE_MS)).toBe("mature");
+
+    const harvested = performCropAction(
+      planted.state,
+      "harvest",
+      "wheat",
+      8,
+      8,
+      1_000 + CROP_MATURE_STAGE_MS,
+    );
+    expect(harvested).toMatchObject({
+      outcome: "harvested",
+      cropType: "rice",
+      state: { rice: 1, riceSeeds: INITIAL_RICE_SEEDS + 1, crops: [] },
     });
   });
 

@@ -10,7 +10,7 @@ import {
   isCropMature,
   type CropGrowthStage,
 } from "../../game/systems/CropSystem";
-import type { Crop } from "../../game/types/Crop";
+import { getCropDefinition, type Crop } from "../../game/types/Crop";
 import { useGameStore } from "../../store/gameStore";
 import { gridToWorld } from "../../utils/grid";
 import {
@@ -79,7 +79,7 @@ function SeedMounds({ cropType }: { cropType: Crop["type"] }): JSX.Element {
         <mesh key={offset} position={[offset, 0.025, 0]} castShadow>
           <sphereGeometry args={[0.055, 8, 6]} />
           <meshStandardMaterial
-            color={cropType === "wheat" ? "#d7bd72" : "#b9915f"}
+            color={getCropDefinition(cropType).seedColor}
             roughness={0.9}
           />
         </mesh>
@@ -164,12 +164,70 @@ function TomatoVine({ stage }: { stage: CropGrowthStage }): JSX.Element {
   );
 }
 
+const RICE_CLUMPS = [
+  { x: -0.19, z: -0.11, scale: 0.92 },
+  { x: 0.03, z: -0.18, scale: 1.05 },
+  { x: 0.2, z: -0.03, scale: 0.9 },
+  { x: -0.08, z: 0.14, scale: 1.02 },
+  { x: 0.16, z: 0.18, scale: 0.88 },
+] as const;
+
+const RICE_LEAVES = [
+  { x: -0.05, z: 0, height: 0.34, rotation: -0.26 },
+  { x: 0, z: 0.02, height: 0.42, rotation: -0.08 },
+  { x: 0.05, z: 0, height: 0.36, rotation: 0.24 },
+  { x: -0.01, z: 0.04, height: 0.3, rotation: 0.42 },
+] as const;
+
+function RicePlant({ stage }: { stage: CropGrowthStage }): JSX.Element {
+  const mature = stage === "mature";
+  return (
+    <group name={mature ? "収穫できる米" : "成長中の米"}>
+      {RICE_CLUMPS.map((clump) => (
+        <group
+          key={`${clump.x}:${clump.z}`}
+          position={[clump.x, 0.09, clump.z]}
+          scale={clump.scale}
+        >
+          {RICE_LEAVES.map((leaf) => (
+            <mesh
+              key={`${leaf.x}:${leaf.z}:${leaf.rotation}`}
+              position={[leaf.x, leaf.height / 2, leaf.z]}
+              rotation-z={leaf.rotation}
+              castShadow
+            >
+              <coneGeometry args={[0.034, leaf.height, 5]} />
+              <meshStandardMaterial
+                color={mature ? "#7da957" : "#5f9e55"}
+                roughness={0.88}
+              />
+            </mesh>
+          ))}
+          {mature && (
+            <group position={[0.08, 0.4, 0]} rotation-z={0.34}>
+              <mesh castShadow>
+                <capsuleGeometry args={[0.035, 0.17, 4, 6]} />
+                <meshStandardMaterial color="#d4bc67" roughness={0.82} />
+              </mesh>
+              <mesh position={[0.01, 0.13, 0]} scale={[0.75, 0.16, 0.7]}>
+                <sphereGeometry args={[0.07, 8, 6]} />
+                <meshStandardMaterial color="#e1ca7a" roughness={0.82} />
+              </mesh>
+            </group>
+          )}
+        </group>
+      ))}
+      {mature && <ReadyRing color="#d6bd68" />}
+    </group>
+  );
+}
+
 function CropPlant({ crop }: { crop: Crop }): JSX.Element {
   const stage = useGrowthStage(crop);
   if (stage === "seed") return <SeedMounds cropType={crop.type} />;
-  return crop.type === "wheat"
-    ? <WheatPlant stage={stage} />
-    : <TomatoVine stage={stage} />;
+  if (crop.type === "wheat") return <WheatPlant stage={stage} />;
+  if (crop.type === "tomato") return <TomatoVine stage={stage} />;
+  return <RicePlant stage={stage} />;
 }
 
 export function CropRenderer(): JSX.Element {

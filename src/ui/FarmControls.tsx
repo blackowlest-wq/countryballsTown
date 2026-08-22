@@ -1,11 +1,8 @@
 import { useGameStore } from "../store/gameStore";
 import { getCropName } from "../game/systems/CropSystem";
-import type { CropType } from "../game/types/Crop";
+import { getCropDefinition, type CropType } from "../game/types/Crop";
 
-const cropOptions: Array<{ type: CropType; icon: string }> = [
-  { type: "wheat", icon: "🌾" },
-  { type: "tomato", icon: "🍅" },
-];
+const cropOptions: CropType[] = ["wheat", "tomato", "rice"];
 
 export function FarmControls(): JSX.Element | null {
   const interactionMode = useGameStore((store) => store.interactionMode);
@@ -17,9 +14,11 @@ export function FarmControls(): JSX.Element | null {
   return (
     <section className="farm-controls" aria-label="作物の操作">
       <div className="crop-inventory" role="group" aria-label="種を選ぶ">
-        {cropOptions.map(({ type, icon }) => {
-          const seeds = type === "wheat" ? game.wheatSeeds : game.tomatoSeeds;
-          const harvested = type === "wheat" ? game.wheat : game.tomatoes;
+        {cropOptions.map((type) => {
+          const definition = getCropDefinition(type);
+          const { icon } = definition;
+          const seeds = game[definition.seedKey];
+          const harvested = game[definition.harvestKey];
           return (
             <button
               key={type}

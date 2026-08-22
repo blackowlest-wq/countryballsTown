@@ -6,7 +6,11 @@ import {
 } from "../constants/gameConstants";
 import { getBuildingDefinition } from "../data/buildings";
 import type { BuildingInstance } from "../types/Building";
-import type { Crop, CropType } from "../types/Crop";
+import {
+  getCropDefinition,
+  type Crop,
+  type CropType,
+} from "../types/Crop";
 import type { GameState } from "../types/Village";
 import { isGridPositionInside } from "../../utils/grid";
 
@@ -30,7 +34,7 @@ export interface CropActionResult {
 }
 
 export function getCropName(cropType: CropType): string {
-  return cropType === "wheat" ? "小麦" : "トマト";
+  return getCropDefinition(cropType).name;
 }
 
 export function isCellInField(
@@ -63,7 +67,7 @@ export function isCropMature(crop: Crop, now: number): boolean {
 }
 
 function isCropType(value: unknown): value is CropType {
-  return value === "wheat" || value === "tomato";
+  return value === "wheat" || value === "tomato" || value === "rice";
 }
 
 export function normalizeCrops(value: unknown, fallbackType?: CropType): Crop[] {
@@ -98,7 +102,7 @@ export function normalizeCrops(value: unknown, fallbackType?: CropType): Crop[] 
 }
 
 function getSeedCount(state: GameState, cropType: CropType): number {
-  return cropType === "wheat" ? state.wheatSeeds : state.tomatoSeeds;
+  return state[getCropDefinition(cropType).seedKey];
 }
 
 function plantCrop(
@@ -108,27 +112,20 @@ function plantCrop(
   gridY: number,
   now: number,
 ): GameState {
+  const definition = getCropDefinition(cropType);
   return {
     ...state,
-    wheatSeeds: cropType === "wheat" ? state.wheatSeeds - 1 : state.wheatSeeds,
-    tomatoSeeds: cropType === "tomato" ? state.tomatoSeeds - 1 : state.tomatoSeeds,
+    [definition.seedKey]: state[definition.seedKey] - 1,
     crops: [...state.crops, { type: cropType, gridX, gridY, plantedAt: now }],
   };
 }
 
 function harvestCrop(state: GameState, crop: Crop): GameState {
+  const definition = getCropDefinition(crop.type);
   return {
     ...state,
-    wheat: crop.type === "wheat" ? state.wheat + CROP_HARVEST_AMOUNT : state.wheat,
-    wheatSeeds: crop.type === "wheat"
-      ? state.wheatSeeds + CROP_SEEDS_PER_HARVEST
-      : state.wheatSeeds,
-    tomatoes: crop.type === "tomato"
-      ? state.tomatoes + CROP_HARVEST_AMOUNT
-      : state.tomatoes,
-    tomatoSeeds: crop.type === "tomato"
-      ? state.tomatoSeeds + CROP_SEEDS_PER_HARVEST
-      : state.tomatoSeeds,
+    [definition.harvestKey]: state[definition.harvestKey] + CROP_HARVEST_AMOUNT,
+    [definition.seedKey]: state[definition.seedKey] + CROP_SEEDS_PER_HARVEST,
     crops: state.crops.filter((candidate) => candidate !== crop),
   };
 }

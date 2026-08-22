@@ -4,6 +4,8 @@ export interface GameState {
   wheat: number;
   tomatoSeeds: number;
   tomatoes: number;
+  riceSeeds: number;
+  rice: number;
   crops: import("./Crop").Crop[];
   eggs: number;
   milk: number;
