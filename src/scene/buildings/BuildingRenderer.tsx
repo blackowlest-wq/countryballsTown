@@ -129,8 +129,6 @@ function BuildingInstanceRenderer({
   const openMilkFactoryPanel = useGameStore((store) => store.openMilkFactoryPanel);
   const openPorkFactoryPanel = useGameStore((store) => store.openPorkFactoryPanel);
   const openWheatFactoryPanel = useGameStore((store) => store.openWheatFactoryPanel);
-  const openBakeryPanel = useGameStore((store) => store.openBakeryPanel);
-  const openRiceShopPanel = useGameStore((store) => store.openRiceShopPanel);
   const collectCowMilk = useGameStore((store) => store.collectCowMilk);
   const collectPigPork = useGameStore((store) => store.collectPigPork);
   const collectChickenEggs = useGameStore((store) => store.collectChickenEggs);
@@ -143,8 +141,6 @@ function BuildingInstanceRenderer({
   const isMilkFactory = instance.buildingId === "milk-factory";
   const isPorkFactory = instance.buildingId === "pork-factory";
   const isWheatFactory = instance.buildingId === "wheat-factory";
-  const isBakery = instance.buildingId === "bakery";
-  const isRiceShop = instance.buildingId === "rice-shop";
   const milkFactoryProduction = useGameStore((store) => store.game.milkFactoryProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
@@ -196,14 +192,6 @@ function BuildingInstanceRenderer({
         }
         if (isWheatFactory && !wheatFactoryProduction?.productType) {
           openWheatFactoryPanel(instance.id);
-          return;
-        }
-        if (isBakery) {
-          openBakeryPanel(instance.id);
-          return;
-        }
-        if (isRiceShop) {
-          openRiceShopPanel(instance.id);
           return;
         }
         selectBuilding(selectionSource);
