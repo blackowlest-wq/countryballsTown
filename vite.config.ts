@@ -11,6 +11,7 @@ export default defineConfig({
         "favicon.ico",
         "favicon.svg",
         "apple-touch-icon-180x180.png",
+        "audio/kaerimichi_no_ramune.mp3",
       ],
       manifest: {
         id: "/",

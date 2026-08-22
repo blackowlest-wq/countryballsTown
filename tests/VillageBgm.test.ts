@@ -1,59 +1,28 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { VillageBgm } from "../src/audio/VillageBgm";
+import { VillageBgm, VILLAGE_BGM_SOURCE } from "../src/audio/VillageBgm";
 
-class FakeAudioParam {
-  public value = 0;
-  public readonly rampTargets: number[] = [];
+class FakeAudioElement {
+  public readonly src: string;
+  public loop = false;
+  public preload = "";
+  public volume = 1;
+  public currentTime = 0;
+  public paused = true;
+  public playCalls = 0;
+  public pauseCalls = 0;
 
-  public cancelScheduledValues(_startTime: number): void {}
-
-  public setValueAtTime(value: number, _startTime: number): void {
-    this.value = value;
+  public constructor(src: string) {
+    this.src = src;
   }
 
-  public exponentialRampToValueAtTime(value: number, _endTime: number): void {
-    this.value = value;
-    this.rampTargets.push(value);
-  }
-}
-
-class FakeGainNode {
-  public readonly gain = new FakeAudioParam();
-
-  public connect(_destination: unknown): void {}
-}
-
-class FakeOscillatorNode {
-  public type: OscillatorType = "sine";
-  public readonly frequency = new FakeAudioParam();
-
-  public connect(_destination: unknown): void {}
-  public start(_when: number): void {}
-  public stop(_when: number): void {}
-}
-
-class FakeAudioContext {
-  public readonly currentTime = 0;
-  public readonly destination = {};
-  public readonly gains: FakeGainNode[] = [];
-  public state: AudioContextState = "running";
-
-  public createGain(): FakeGainNode {
-    const gain = new FakeGainNode();
-    this.gains.push(gain);
-    return gain;
+  public async play(): Promise<void> {
+    this.paused = false;
+    this.playCalls += 1;
   }
 
-  public createOscillator(): FakeOscillatorNode {
-    return new FakeOscillatorNode();
-  }
-
-  public async resume(): Promise<void> {
-    this.state = "running";
-  }
-
-  public async close(): Promise<void> {
-    this.state = "closed";
+  public pause(): void {
+    this.paused = true;
+    this.pauseCalls += 1;
   }
 }
 
@@ -62,23 +31,33 @@ afterEach(() => {
 });
 
 describe("VillageBgm", () => {
-  it("開始時にマスター音量を従来の約2倍へ上げる", async () => {
-    const context = new FakeAudioContext();
-    const AudioContextConstructor = class {
-      public constructor() {
-        return context;
+  it("指定したMP3をループ再生し、停止時に先頭へ戻す", async () => {
+    const audioHolder: { current: FakeAudioElement | null } = { current: null };
+    const AudioConstructor = class {
+      public constructor(src: string) {
+        audioHolder.current = new FakeAudioElement(src);
+        return audioHolder.current;
       }
-    } as unknown as typeof AudioContext;
+    } as unknown as typeof Audio;
 
-    vi.stubGlobal("window", {
-      AudioContext: AudioContextConstructor,
-      setInterval: vi.fn(() => 1),
-      clearInterval: vi.fn(),
-    });
+    vi.stubGlobal("window", { Audio: AudioConstructor });
 
     const bgm = new VillageBgm();
     expect(await bgm.start()).toBe(true);
-    expect(context.gains[0]?.gain.rampTargets).toContain(0.36);
+    const audio = audioHolder.current;
+    expect(audio).not.toBeNull();
+    if (!audio) throw new Error("Audio element was not created");
+    expect(audio.src).toBe(VILLAGE_BGM_SOURCE);
+    expect(audio.loop).toBe(true);
+    expect(audio.preload).toBe("auto");
+    expect(audio.volume).toBeCloseTo(0.36);
+    expect(audio.playCalls).toBe(1);
+
+    audio.currentTime = 42;
+    bgm.stop();
+    expect(audio.paused).toBe(true);
+    expect(audio.currentTime).toBe(0);
+    expect(audio.pauseCalls).toBe(1);
     bgm.dispose();
   });
 });
