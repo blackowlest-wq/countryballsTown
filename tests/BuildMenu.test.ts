@@ -67,4 +67,43 @@ describe("BuildMenu", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("家畜が5頭いると家畜の建築ボタンを無効にする", async () => {
+    const initial = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...initial,
+        villageLevel: 3,
+        unlockedBuildings: [...playerBuildingIds],
+        buildings: [
+          { id: "cow-1", buildingId: "cow", gridX: 1, gridY: 1 },
+          { id: "pig-1", buildingId: "pig", gridX: 3, gridY: 1 },
+          { id: "chicken-1", buildingId: "chicken", gridX: 5, gridY: 1 },
+          { id: "cow-2", buildingId: "cow", gridX: 7, gridY: 1 },
+          { id: "pig-2", buildingId: "pig", gridX: 9, gridY: 1 },
+        ],
+      },
+      isBuildMenuOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(BuildMenu)));
+    const natureTab = [...container.querySelectorAll('[role="tab"]')]
+      .find((tab) => tab.textContent?.includes("自然"));
+    await act(async () => {
+      natureTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("家畜: 5 / 5");
+    for (const name of ["牛", "豚", "鶏"]) {
+      const button = [...container.querySelectorAll("button")]
+        .find((candidate) => candidate.textContent?.includes(name));
+      expect(button).toBeDefined();
+      expect((button as HTMLButtonElement).disabled).toBe(true);
+    }
+
+    await act(async () => root.unmount());
+  });
 });

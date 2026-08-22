@@ -3,6 +3,8 @@ import {
   buildingCategoryDefinitions,
   buildingDefinitions,
   getBuildingDefinition,
+  isLivestockBuildingId,
+  MAX_LIVESTOCK_COUNT,
   playerBuildingIds,
 } from "../game/data/buildings";
 import type { BuildingCategory } from "../game/types/Building";
@@ -18,6 +20,8 @@ export function BuildMenu(): JSX.Element | null {
   const cancelInteraction = useGameStore((store) => store.cancelInteraction);
   if (!isOpen) return null;
 
+  const livestockCount = game.buildings.filter((building) => isLivestockBuildingId(building.buildingId)).length;
+  const livestockLimitReached = livestockCount >= MAX_LIVESTOCK_COUNT;
   const available = playerBuildingIds
     .filter((buildingId) => game.unlockedBuildings.includes(buildingId))
     .map((buildingId) => getBuildingDefinition(buildingId))
@@ -38,7 +42,7 @@ export function BuildMenu(): JSX.Element | null {
         </div>
         <button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="閉じる">×</button>
       </div>
-      <p className="panel-hint">カテゴリと建築物を選んで、村の好きなセルをクリック</p>
+      <p className="panel-hint">カテゴリと建築物を選んで、村の好きなセルをクリック。家畜: {livestockCount} / {MAX_LIVESTOCK_COUNT}</p>
       <div className="building-category-tabs" role="tablist" aria-label="建築カテゴリ">
         {buildingCategoryDefinitions.map((definition) => (
           <button
@@ -72,6 +76,7 @@ export function BuildMenu(): JSX.Element | null {
             key={building.id}
             type="button"
             className={`building-option ${interactionMode === "build" ? "is-selectable" : ""}`}
+            disabled={isLivestockBuildingId(building.id) && livestockLimitReached}
             onClick={() => beginBuild(building.id)}
           >
             <span

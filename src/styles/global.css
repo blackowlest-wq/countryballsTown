@@ -118,6 +118,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-category-empty { margin: 6px 0 2px; padding: 16px 12px; color: var(--muted); text-align: center; background: rgba(255,255,255,.38); border: 1px dashed #dfd2be; border-radius: 14px; font-size: 11px; font-weight: 800; }
 .building-option { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 10px; color: var(--ink); text-align: left; background: rgba(255,255,255,.55); border: 1px solid #efe3ce; border-radius: 15px; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
 .building-option:hover { background: #fffdf6; border-color: #b3d28f; transform: translateY(-2px); }
+.building-option:disabled, .building-option:disabled:hover { color: #aaa294; background: #eee7da; border-color: #ddd6c9; cursor: not-allowed; opacity: .62; transform: none; }
 .building-icon { display: grid; width: 40px; height: 40px; place-items: center; color: #fff; background: #82b66a; border-radius: 13px; font-size: 23px; }
 .building-icon-building { background: #d97263; }
 .building-icon-nature { background: #82b66a; }

@@ -8,6 +8,14 @@ export const buildingCategoryDefinitions: BuildingCategoryDefinition[] = [
   { id: "nature", name: "自然", icon: "🌿" },
 ];
 
+export const livestockBuildingIds = ["cow", "pig", "chicken"] as const;
+export const MAX_LIVESTOCK_COUNT = 5;
+const livestockBuildingIdSet: ReadonlySet<string> = new Set(livestockBuildingIds);
+
+export function isLivestockBuildingId(buildingId: string): boolean {
+  return livestockBuildingIdSet.has(buildingId);
+}
+
 export const buildingDefinitions: BuildingDefinition[] = [
   {
     id: "house",

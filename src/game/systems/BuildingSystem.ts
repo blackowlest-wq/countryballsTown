@@ -1,6 +1,10 @@
 import { GRID_SIZE } from "../constants/gameConstants";
 import { createBuildingCollection } from "../core/BuildingCollection";
-import { getBuildingDefinition } from "../data/buildings";
+import {
+  getBuildingDefinition,
+  isLivestockBuildingId,
+  MAX_LIVESTOCK_COUNT,
+} from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type { GameState } from "../types/Village";
 import { registerCowProduction, removeCowProduction } from "./CowSystem";
@@ -29,7 +33,8 @@ export type BuildingOperationReason =
   | "duplicate-id"
   | "not-movable"
   | "not-removable"
-  | "field-not-empty";
+  | "field-not-empty"
+  | "livestock-limit";
 
 export interface BuildingOperationResult {
   success: boolean;
@@ -100,6 +105,13 @@ function checkPlacement(
   if (!definition) return { ok: false, reason: "unknown-building" };
   if (!excludeId && !state.unlockedBuildings.includes(buildingId)) {
     return { ok: false, reason: "locked" };
+  }
+  if (
+    !excludeId &&
+    isLivestockBuildingId(buildingId) &&
+    buildings.filter((building) => isLivestockBuildingId(building.buildingId)).length >= MAX_LIVESTOCK_COUNT
+  ) {
+    return { ok: false, reason: "livestock-limit" };
   }
   if (!isWithinGrid(definition, gridX, gridY)) {
     return { ok: false, reason: "out-of-bounds" };
@@ -269,6 +281,8 @@ export function getBuildingOperationMessage(reason?: BuildingOperationReason): s
       return "この建物は撤去できません。";
     case "field-not-empty":
       return "作物が育っている畑は移動・撤去できません。";
+    case "livestock-limit":
+      return `家畜は合計${MAX_LIVESTOCK_COUNT}頭まで設置できます。`;
     case "not-found":
       return "建物が見つかりません。";
     case "duplicate-id":

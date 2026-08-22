@@ -5,6 +5,7 @@ import {
   placeBuilding,
   removeBuilding,
 } from "../src/game/systems/BuildingSystem";
+import type { GameState } from "../src/game/types/Village";
 
 describe("BuildingSystem", () => {
   it("空きセルへ建物を配置し、コインを消費する", () => {
@@ -143,6 +144,31 @@ describe("BuildingSystem", () => {
     const removed = removeBuilding(placed.state, "chicken-test");
     expect(removed.success).toBe(true);
     expect(removed.state.chickenProductions).toEqual([]);
+  });
+
+  it("牛・豚・鶏は合計5頭まで配置でき、上限到達後も既存の家畜は移動できる", () => {
+    let state: GameState = {
+      ...createInitialGameState(0),
+      coins: 1_000,
+      buildings: [],
+    };
+    const livestock = ["cow", "pig", "chicken", "cow", "pig"] as const;
+    livestock.forEach((buildingId, index) => {
+      const result = placeBuilding(state, buildingId, index * 2, 0, `${buildingId}-${index}`, 0);
+      expect(result.success).toBe(true);
+      state = result.state;
+    });
+
+    const blocked = placeBuilding(state, "chicken", 10, 0, "chicken-limit", 0);
+    expect(blocked).toMatchObject({
+      success: false,
+      reason: "livestock-limit",
+      state,
+    });
+
+    const moved = moveBuilding(state, "cow-0", 12, 12);
+    expect(moved.success).toBe(true);
+    expect(moved.building).toMatchObject({ gridX: 12, gridY: 12 });
   });
 
   it("豚肉工場を配置すると未設定の生産情報が登録され、撤去すると消える", () => {
