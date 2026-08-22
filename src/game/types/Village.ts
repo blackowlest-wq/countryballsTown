@@ -23,6 +23,7 @@ export interface GameState {
   hamSandwiches: number;
   onigiri: number;
   omurice: number;
+  fishInventory: import("./Fish").FishInventory;
   currentMap: import("./Map").MapId;
   cowProductions: import("./Cow").CowProduction[];
   pigProductions: import("./Pig").PigProduction[];

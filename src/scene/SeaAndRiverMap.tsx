@@ -6,10 +6,30 @@ import {
   getRiverPathPoints,
   SEA_START_X,
 } from "../game/systems/MapSystem";
+import { useGameStore } from "../store/gameStore";
 import { gridToWorld } from "../utils/grid";
 
 const SEA_COLOR = "#70c6df";
 const RIVER_COLOR = "#80cfe1";
+
+function FishingMarker(): JSX.Element {
+  return (
+    <group name="海釣りマーク" position={[0.7, 0.92, 0]}>
+      <mesh castShadow>
+        <sphereGeometry args={[0.22, 16, 10]} />
+        <meshStandardMaterial color="#fffaf0" roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 0.03, 0.19]}>
+        <boxGeometry args={[0.045, 0.13, 0.025]} />
+        <meshBasicMaterial color="#e7a038" />
+      </mesh>
+      <mesh position={[0, -0.07, 0.19]}>
+        <sphereGeometry args={[0.034, 8, 6]} />
+        <meshBasicMaterial color="#e7a038" />
+      </mesh>
+    </group>
+  );
+}
 
 function createRiverGeometry(): BufferGeometry {
   const path = getRiverPathPoints();
@@ -57,6 +77,7 @@ function createRiverGeometry(): BufferGeometry {
 
 export function SeaAndRiverMap(): JSX.Element {
   const riverGeometry = useMemo(createRiverGeometry, []);
+  const openFishingPrompt = useGameStore((store) => store.openFishingPrompt);
   const seaStart = gridToWorld({ x: SEA_START_X, z: GRID_SIZE / 2 }).x;
   const seaWidth = GRID_SIZE / 2 - seaStart;
   const seaCenter = seaStart + seaWidth / 2;
@@ -112,7 +133,22 @@ export function SeaAndRiverMap(): JSX.Element {
 
       <group name="桟橋">
         {[4.5, 12.5].map((gridZ) => (
-          <group key={gridZ} position={[seaStart - 0.15, 0.08, gridToWorld({ x: 0, z: gridZ }).z]}>
+          <group
+            key={gridZ}
+            position={[seaStart - 0.15, 0.08, gridToWorld({ x: 0, z: gridZ }).z]}
+            onClick={(event) => {
+              event.stopPropagation();
+              openFishingPrompt();
+            }}
+            onPointerOver={(event) => {
+              event.stopPropagation();
+              document.body.style.cursor = "pointer";
+            }}
+            onPointerOut={(event) => {
+              event.stopPropagation();
+              document.body.style.cursor = "default";
+            }}
+          >
             <mesh position={[0.7, 0, 0]} receiveShadow>
               <boxGeometry args={[1.65, 0.12, 0.55]} />
               <meshStandardMaterial color="#a9784f" roughness={0.9} />
@@ -123,6 +159,7 @@ export function SeaAndRiverMap(): JSX.Element {
                 <meshStandardMaterial color="#7d573d" roughness={1} />
               </mesh>
             ))}
+            <FishingMarker />
           </group>
         ))}
       </group>

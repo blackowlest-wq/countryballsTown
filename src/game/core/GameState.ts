@@ -7,6 +7,7 @@ import {
 } from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
+import { createInitialFishInventory } from "../data/fish";
 import { syncEncyclopediaCollection } from "../systems/EncyclopediaSystem";
 
 export function createInitialGameState(now = Date.now()): GameState {
@@ -35,6 +36,7 @@ export function createInitialGameState(now = Date.now()): GameState {
     hamSandwiches: 0,
     onigiri: 0,
     omurice: 0,
+    fishInventory: createInitialFishInventory(),
     currentMap: "village",
     cowProductions: [],
     pigProductions: [],

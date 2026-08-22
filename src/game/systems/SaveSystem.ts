@@ -15,6 +15,7 @@ import { getLocalDateKey } from "../../utils/date";
 import { normalizeChickenProductions } from "./ChickenSystem";
 import { normalizeCowProductions } from "./CowSystem";
 import { isCellInField, normalizeCrops } from "./CropSystem";
+import { normalizeFishInventory } from "../data/fish";
 import { isMapId } from "./MapSystem";
 import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
 import { normalizePigProductions } from "./PigSystem";
@@ -87,7 +88,13 @@ export function saveGameState(
       buildings,
       now,
     );
-    const normalizedState = syncEncyclopediaCollection({ ...state, buildings, crops });
+    const fishInventory = normalizeFishInventory(state.fishInventory);
+    const normalizedState = syncEncyclopediaCollection({
+      ...state,
+      buildings,
+      crops,
+      fishInventory,
+    });
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
       normalizedState as GameState & LegacyCropState
     );
@@ -101,6 +108,7 @@ export function saveGameState(
       pigProductions,
       porkFactoryProductions,
       wheatFactoryProductions,
+      fishInventory: normalizedState.fishInventory,
       encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
       lastSavedAt: now,
     }));
@@ -242,6 +250,7 @@ export function loadGameState(
         typeof parsed.omurice === "number" && Number.isFinite(parsed.omurice)
           ? Math.max(0, Math.floor(parsed.omurice))
           : 0,
+      fishInventory: normalizeFishInventory(parsed.fishInventory),
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
       chickenProductions: normalizeChickenProductions(parsed.chickenProductions, buildings, now),
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),

@@ -37,6 +37,12 @@ describe("SaveSystem", () => {
       sausage: 4,
       bacon: 1,
       pizzas: 2,
+      fishInventory: {
+        sardine: 3,
+        mackerel: 2,
+        "sea-bream": 1,
+        tuna: 4,
+      },
       crops: [
         { type: "wheat" as const, gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato" as const, gridX: 10, gridY: 10, plantedAt: 60 },
@@ -83,6 +89,12 @@ describe("SaveSystem", () => {
       sausage: 4,
       bacon: 1,
       pizzas: 2,
+      fishInventory: {
+        sardine: 3,
+        mackerel: 2,
+        "sea-bream": 1,
+        tuna: 4,
+      },
       crops: [
         { type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato", gridX: 10, gridY: 10, plantedAt: 60 },

@@ -62,6 +62,7 @@ import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import { syncEncyclopediaCollection } from "../game/systems/EncyclopediaSystem";
+import { normalizeFishInventory } from "../game/data/fish";
 import {
   getCropName,
   performCropAction,
@@ -73,6 +74,7 @@ import type { MilkFactoryProductType } from "../game/types/MilkFactory";
 import type { PorkFactoryProductType } from "../game/types/PorkFactory";
 import type { WheatFactoryProductType } from "../game/types/WheatFactory";
 import type { CraftingProductType } from "../game/types/Crafting";
+import type { FishType } from "../game/types/Fish";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
 import type { MapId } from "../game/types/Map";
 import type { GameState } from "../game/types/Village";
@@ -96,12 +98,19 @@ interface GameStore {
   isBuildMenuOpen: boolean;
   isResidentPanelOpen: boolean;
   isEncyclopediaOpen: boolean;
+  isFishingPromptOpen: boolean;
+  isFishingGameOpen: boolean;
   notice: string | null;
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
   setResidentPanelOpen: (open: boolean) => void;
   openEncyclopedia: () => void;
   closeEncyclopedia: () => void;
+  openFishingPrompt: () => void;
+  closeFishingPrompt: () => void;
+  startFishingGame: () => void;
+  closeFishingGame: () => void;
+  recordFishCatch: (fishType: FishType) => void;
   travelToMap: (mapId: MapId, now?: number) => void;
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
@@ -196,6 +205,7 @@ function normalizeGameState(state: GameState): GameState {
     buildings,
     Date.now(),
   );
+  const fishInventory = normalizeFishInventory(state.fishInventory);
   const encyclopediaState = syncEncyclopediaCollection({ ...state, buildings });
   return buildings === state.buildings &&
     cowProductions === state.cowProductions &&
@@ -204,6 +214,7 @@ function normalizeGameState(state: GameState): GameState {
     chickenProductions === state.chickenProductions &&
     porkFactoryProductions === state.porkFactoryProductions &&
     wheatFactoryProductions === state.wheatFactoryProductions &&
+    fishInventory === state.fishInventory &&
     encyclopediaState.encyclopediaCollectedIds === state.encyclopediaCollectedIds
     ? state
     : {
@@ -215,6 +226,7 @@ function normalizeGameState(state: GameState): GameState {
       chickenProductions,
       porkFactoryProductions,
       wheatFactoryProductions,
+      fishInventory,
       encyclopediaCollectedIds: encyclopediaState.encyclopediaCollectedIds,
     };
 }
@@ -258,6 +270,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
   isBuildMenuOpen: false,
   isResidentPanelOpen: false,
   isEncyclopediaOpen: false,
+  isFishingPromptOpen: false,
+  isFishingGameOpen: false,
   notice: null,
 
   tick: (deltaMs, now) => {
@@ -309,10 +323,20 @@ export const useGameStore = create<GameStore>((setState, get) => {
   },
 
   setBuildMenuOpen: (open) => set(open
-    ? { isBuildMenuOpen: true, isEncyclopediaOpen: false }
+    ? {
+      isBuildMenuOpen: true,
+      isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
+    }
     : { isBuildMenuOpen: false }),
   setResidentPanelOpen: (open) => set(open
-    ? { isResidentPanelOpen: true, isEncyclopediaOpen: false }
+    ? {
+      isResidentPanelOpen: true,
+      isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
+    }
     : { isResidentPanelOpen: false }),
 
   openEncyclopedia: () => set({
@@ -328,10 +352,52 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isBuildMenuOpen: false,
     isResidentPanelOpen: false,
     isEncyclopediaOpen: true,
+    isFishingPromptOpen: false,
+    isFishingGameOpen: false,
     notice: null,
   }),
 
   closeEncyclopedia: () => set({ isEncyclopediaOpen: false }),
+
+  openFishingPrompt: () => set({
+    interactionMode: "inspect",
+    selectedBuildingId: null,
+    milkFactoryPanelBuildingId: null,
+    porkFactoryPanelBuildingId: null,
+    wheatFactoryPanelBuildingId: null,
+    pizzaShopPanelBuildingId: null,
+    bakeryPanelBuildingId: null,
+    riceShopPanelBuildingId: null,
+    selectedResidentId: null,
+    isBuildMenuOpen: false,
+    isResidentPanelOpen: false,
+    isEncyclopediaOpen: false,
+    isFishingPromptOpen: true,
+    isFishingGameOpen: false,
+    notice: null,
+  }),
+
+  closeFishingPrompt: () => set({ isFishingPromptOpen: false }),
+
+  startFishingGame: () => set({
+    isFishingPromptOpen: false,
+    isFishingGameOpen: true,
+    notice: null,
+  }),
+
+  closeFishingGame: () => set({ isFishingGameOpen: false }),
+
+  recordFishCatch: (fishType) => {
+    const current = get();
+    const fishInventory = {
+      ...current.game.fishInventory,
+      [fishType]: (current.game.fishInventory?.[fishType] ?? 0) + 1,
+    };
+    set({
+      game: persist({ ...current.game, fishInventory }),
+      notice: null,
+    });
+  },
 
   travelToMap: (mapId, now = Date.now()) => {
     const current = get();
@@ -350,6 +416,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
       selectedResidentId: null,
       notice: mapId === "sea-and-river" ? "海と川へ移動しました。" : "村へ戻りました。",
     });
@@ -369,6 +437,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
       notice: null,
     }),
 
@@ -384,6 +454,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       riceShopPanelBuildingId: null,
       isBuildMenuOpen: false,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
       notice: "移動先のセルをクリックしてください。",
     }),
 
@@ -401,6 +473,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
       notice: "種を選んで畑をタップしてください。成熟した作物は村画面でタップすると収穫できます。",
     }),
 
@@ -421,6 +495,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       riceShopPanelBuildingId: null,
       notice: null,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
     }),
 
   interactCrop: (gridX, gridY, now = Date.now()) => {
@@ -822,6 +898,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
         selectedResidentId: null,
         isResidentPanelOpen: false,
         isEncyclopediaOpen: false,
+        isFishingPromptOpen: false,
+        isFishingGameOpen: false,
       });
       return;
     }
@@ -841,6 +919,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
         selectedResidentId: null,
         isResidentPanelOpen: false,
         isEncyclopediaOpen: false,
+        isFishingPromptOpen: false,
+        isFishingGameOpen: false,
       });
       return;
     }
@@ -860,6 +940,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       selectedResidentId: null,
       isResidentPanelOpen: false,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
     });
   },
 
@@ -894,6 +976,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
       notice: "新しい村を始めました。",
     }),
   };

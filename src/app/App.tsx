@@ -15,6 +15,8 @@ import { BakeryPanel } from "../ui/BakeryPanel";
 import { RiceShopPanel } from "../ui/RiceShopPanel";
 import { ResidentPanel } from "../ui/ResidentPanel";
 import { EncyclopediaPanel } from "../ui/EncyclopediaPanel";
+import { FishingPromptPanel } from "../ui/FishingPromptPanel";
+import { FishingGamePanel } from "../ui/FishingGamePanel";
 import { VillageScene } from "../scene/VillageScene";
 
 export function App(): JSX.Element {
@@ -43,6 +45,8 @@ export function App(): JSX.Element {
       <BakeryPanel />
       <RiceShopPanel />
       <EncyclopediaPanel />
+      <FishingPromptPanel />
+      <FishingGamePanel />
       <FarmControls />
       <div className="interaction-hint">
         <span className="hint-hand">✦</span>
