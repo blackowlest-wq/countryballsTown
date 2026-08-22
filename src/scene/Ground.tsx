@@ -6,6 +6,7 @@ import { worldToGrid } from "../utils/grid";
 import {
   beginCropGesture,
   endCropGesture,
+  shouldStartCropGesture,
 } from "./crops/cropGesture";
 
 type CropGestureMode = "plant" | "harvest";
@@ -43,7 +44,12 @@ export function Ground(): JSX.Element {
         if (interactionMode !== "farm" && interactionMode !== "inspect") return;
         const cell = worldToGrid(event.point.x, event.point.z);
         const startsWithHarvest = hasMatureCropAt(cell.x, cell.z);
-        if (interactionMode !== "farm" && !startsWithHarvest) return;
+        if (!shouldStartCropGesture(
+          interactionMode,
+          useGameStore.getState().game.buildings,
+          { x: cell.x, z: cell.z },
+          startsWithHarvest,
+        )) return;
         event.stopPropagation();
         activePointers.current.add(event.pointerId);
         visitedCells.current.set(event.pointerId, new Set());
