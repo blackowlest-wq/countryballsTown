@@ -119,11 +119,6 @@ export function FishingGamePanel(): JSX.Element | null {
           <div className={`fishing-bobber fishing-bobber-${phase}`} aria-hidden={phase !== "bite"}>
             {phase === "bite" ? "!" : "🔴"}
           </div>
-          {phase === "bite" && (
-            <button className="fishing-bite-button" type="button" onClick={handleBite} aria-label="魚が食いついたのでタップ">
-              ！
-            </button>
-          )}
           {phase === "gauge" && (
             <div className="fishing-gauge-wrap">
               <div className="fishing-gauge" aria-label="魚釣りゲージ">
@@ -134,9 +129,6 @@ export function FishingGamePanel(): JSX.Element | null {
                 <span className="fishing-gauge-marker" style={{ left: markerPosition }} />
               </div>
               <div className="fishing-gauge-direction" aria-hidden="true">↔</div>
-              <button className="primary-button fishing-stop-button" type="button" onClick={handleStopGauge}>
-                ここで止める
-              </button>
             </div>
           )}
         </div>
@@ -157,12 +149,29 @@ export function FishingGamePanel(): JSX.Element | null {
           {phase === "escaped" && <small>もう一度、桟橋から挑戦できます。</small>}
         </div>
 
-        {(phase === "caught" || phase === "escaped") && (
-          <div className="panel-actions fishing-result-actions">
-            <button className="primary-button" type="button" onClick={startRound}>もう一度釣る</button>
-            <button className="subtle-button" type="button" onClick={close}>閉じる</button>
-          </div>
-        )}
+        <div className="fishing-action-slot">
+          {phase === "bite" && (
+            <button
+              className="primary-button fishing-action-button fishing-bite-button"
+              type="button"
+              onClick={handleBite}
+              aria-label="魚が食いついたのでタップ"
+            >
+              ！ タップ！
+            </button>
+          )}
+          {phase === "gauge" && (
+            <button className="primary-button fishing-action-button" type="button" onClick={handleStopGauge}>
+              ここで止める
+            </button>
+          )}
+          {(phase === "caught" || phase === "escaped") && (
+            <div className="panel-actions fishing-result-actions">
+              <button className="primary-button fishing-action-button" type="button" onClick={startRound}>もう一度釣る</button>
+              <button className="subtle-button fishing-action-button" type="button" onClick={close}>閉じる</button>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

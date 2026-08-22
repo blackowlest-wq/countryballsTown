@@ -62,20 +62,27 @@ describe("fishing panels", () => {
 
     await act(async () => root.render(createElement(FishingGamePanel)));
     await act(async () => vi.advanceTimersByTime(1_200));
-    expect(container.querySelector('[aria-label="魚が食いついたのでタップ"]')).not.toBeNull();
+    const actionSlot = container.querySelector(".fishing-action-slot");
+    const biteButton = container.querySelector('[aria-label="魚が食いついたのでタップ"]');
+    expect(actionSlot).not.toBeNull();
+    expect(biteButton?.closest(".fishing-action-slot")).toBe(actionSlot);
 
     await act(async () => {
-      container.querySelector<HTMLButtonElement>('[aria-label="魚が食いついたのでタップ"]')
+      biteButton
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
+    const stopButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("ここで止める"));
+    expect(stopButton?.closest(".fishing-action-slot")).toBe(actionSlot);
     await act(async () => {
-      [...container.querySelectorAll("button")]
-        .find((button) => button.textContent?.includes("ここで止める"))
-        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      stopButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(container.textContent).toContain("魚を釣り上げました！");
     expect(useGameStore.getState().game.fishInventory.sardine).toBe(1);
+    const retryButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("もう一度釣る"));
+    expect(retryButton?.closest(".fishing-action-slot")).toBe(actionSlot);
     await act(async () => root.unmount());
   });
 });
