@@ -1,3 +1,5 @@
+import type { CraftingProductType } from "./Crafting";
+
 export type BuildingCategory = "building" | "nature";
 export type ResidentCollision = "blocking" | "passable";
 
@@ -16,7 +18,9 @@ export interface VisitorServiceDefinition {
   queueCapacity: number;
   saleCoins: number;
   doorOffset?: number;
-  product?: "pizza";
+  /** A legacy single-product entry kept for existing saved definitions. */
+  product?: CraftingProductType;
+  products?: readonly CraftingProductType[];
 }
 
 export interface BuildingDefinition {

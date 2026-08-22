@@ -1,11 +1,5 @@
-import {
-  PIZZA_BACON_COST,
-  PIZZA_CHEESE_COST,
-  PIZZA_PRODUCT_AMOUNT,
-  PIZZA_TOMATO_COST,
-  PIZZA_WHEAT_COST,
-} from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
+import { craftProduct, getCraftingMaxCraftable } from "./CraftingSystem";
 
 export type PizzaCraftOutcome =
   | "crafted"
@@ -26,43 +20,21 @@ export interface PizzaRecipeCost {
 }
 
 export const PIZZA_RECIPE: PizzaRecipeCost = {
-  bacon: PIZZA_BACON_COST,
-  cheese: PIZZA_CHEESE_COST,
-  tomatoes: PIZZA_TOMATO_COST,
-  wheat: PIZZA_WHEAT_COST,
+  bacon: 1,
+  cheese: 1,
+  tomatoes: 1,
+  wheat: 2,
 };
 
 export function getPizzaMaxCraftable(state: Pick<GameState, keyof PizzaRecipeCost>): number {
-  return Math.max(
-    0,
-    Math.min(
-      Math.floor(state.bacon / PIZZA_RECIPE.bacon),
-      Math.floor(state.cheese / PIZZA_RECIPE.cheese),
-      Math.floor(state.tomatoes / PIZZA_RECIPE.tomatoes),
-      Math.floor(state.wheat / PIZZA_RECIPE.wheat),
-    ),
-  );
+  return getCraftingMaxCraftable(state as GameState, "pizza");
 }
 
 export function craftPizza(state: GameState, quantity: number): PizzaCraftResult {
-  const normalizedQuantity = Number.isFinite(quantity) ? Math.floor(quantity) : 0;
-  if (normalizedQuantity <= 0) {
-    return { state, outcome: "invalid-quantity", quantity: normalizedQuantity };
-  }
-  if (normalizedQuantity > getPizzaMaxCraftable(state)) {
-    return { state, outcome: "not-enough-materials", quantity: normalizedQuantity };
-  }
-
+  const result = craftProduct(state, "pizza", quantity);
   return {
-    state: {
-      ...state,
-      bacon: state.bacon - normalizedQuantity * PIZZA_RECIPE.bacon,
-      cheese: state.cheese - normalizedQuantity * PIZZA_RECIPE.cheese,
-      tomatoes: state.tomatoes - normalizedQuantity * PIZZA_RECIPE.tomatoes,
-      wheat: state.wheat - normalizedQuantity * PIZZA_RECIPE.wheat,
-      pizzas: state.pizzas + normalizedQuantity * PIZZA_PRODUCT_AMOUNT,
-    },
-    outcome: "crafted",
-    quantity: normalizedQuantity,
+    state: result.state,
+    outcome: result.outcome === "unknown-product" ? "invalid-quantity" : result.outcome,
+    quantity: result.quantity,
   };
 }

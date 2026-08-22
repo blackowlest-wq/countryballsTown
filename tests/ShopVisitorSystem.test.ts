@@ -15,6 +15,13 @@ const pizzaShop: BuildingInstance = {
   gridY: 8,
 };
 
+const bakery: BuildingInstance = {
+  id: "bakery-test",
+  buildingId: "bakery",
+  gridX: 8,
+  gridY: 8,
+};
+
 function stateWithPizzaShop(building = pizzaShop, pizzas = 3): GameState {
   return {
     ...createInitialGameState(0),
@@ -182,5 +189,38 @@ describe("ShopVisitorSystem", () => {
       () => 0,
     );
     expect(exited.simulation.visitors).toHaveLength(0);
+  });
+
+  it("パン屋は在庫のあるパン商品を来訪客へ販売する", () => {
+    const state = {
+      ...createInitialGameState(0),
+      buildings: [bakery],
+      bread: 1,
+      hotDogs: 1,
+    };
+    const spawned = advanceShopVisitors(
+      state,
+      dueSimulation(),
+      0,
+      0,
+      () => 0,
+    ).simulation;
+    const arrived = advanceShopVisitors(
+      state,
+      { ...spawned, nextArrivalAt: Number.POSITIVE_INFINITY },
+      20_000,
+      20_000,
+      () => 0,
+    ).simulation;
+    const purchased = advanceShopVisitors(
+      state,
+      arrived,
+      0,
+      20_000 + SHOP_VISITOR_SERVICE_MS,
+      () => 0,
+    );
+
+    expect(purchased.productsSold).toEqual({ bread: 1 });
+    expect(purchased.coinsEarned).toBe(3);
   });
 });

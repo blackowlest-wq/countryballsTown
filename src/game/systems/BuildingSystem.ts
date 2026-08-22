@@ -14,6 +14,10 @@ import {
   registerPorkFactoryProduction,
   removePorkFactoryProduction,
 } from "./PorkFactorySystem";
+import {
+  registerWheatFactoryProduction,
+  removeWheatFactoryProduction,
+} from "./WheatFactorySystem";
 
 export type BuildingOperationReason =
   | "unknown-building"
@@ -164,6 +168,8 @@ export function placeBuilding(
           ? registerMilkFactoryProduction(placedState, building.id)
           : buildingId === "pork-factory"
             ? registerPorkFactoryProduction(placedState, building.id)
+            : buildingId === "wheat-factory"
+              ? registerWheatFactoryProduction(placedState, building.id)
             : placedState;
   return {
     success: true,
@@ -237,6 +243,8 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
             ? removeMilkFactoryProduction(removedState, existing.id)
             : existing.buildingId === "pork-factory"
               ? removePorkFactoryProduction(removedState, existing.id)
+              : existing.buildingId === "wheat-factory"
+                ? removeWheatFactoryProduction(removedState, existing.id)
               : removedState,
   };
 }

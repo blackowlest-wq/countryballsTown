@@ -96,6 +96,31 @@ export function FarmControls(): JSX.Element | null {
               <span>ピザ</span>
               <strong>{game.pizzas.toLocaleString("ja-JP")}</strong>
             </span>
+            <span className="processing-stock-item" aria-label={`小麦粉 ${game.wheatFlour}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🌾</span>
+              <span>小麦粉</span>
+              <strong>{game.wheatFlour.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`パン ${game.bread}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🍞</span>
+              <span>パン</span>
+              <strong>{game.bread.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`ホットドック ${game.hotDogs}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🌭</span>
+              <span>ホットドック</span>
+              <strong>{game.hotDogs.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`クロワッサン ${game.croissants}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🥐</span>
+              <span>クロワッサン</span>
+              <strong>{game.croissants.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`ハムサンド ${game.hamSandwiches}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🥪</span>
+              <span>ハムサンド</span>
+              <strong>{game.hamSandwiches.toLocaleString("ja-JP")}</strong>
+            </span>
           </div>
         </div>
       </div>

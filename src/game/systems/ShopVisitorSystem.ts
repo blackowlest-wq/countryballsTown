@@ -9,7 +9,14 @@ import {
   SHOP_VISITOR_WALK_SPEED,
 } from "../constants/gameConstants";
 import { getBuildingDefinition } from "../data/buildings";
+import {
+  getCraftedProductStock,
+} from "./CraftingSystem";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
+import type {
+  CraftingProductSales,
+  CraftingProductType,
+} from "../types/Crafting";
 import type { GridPosition } from "../types/GridPosition";
 import type { ShopVisitor, ShopVisitorSimulation } from "../types/ShopVisitor";
 import type { GameState } from "../types/Village";
@@ -32,6 +39,8 @@ interface QueueLayout {
 export interface ShopVisitorAdvanceResult {
   simulation: ShopVisitorSimulation;
   coinsEarned: number;
+  productsSold: CraftingProductSales;
+  /** Kept as a compatibility projection for existing pizza shop callers. */
   pizzasSold: number;
 }
 
@@ -67,13 +76,36 @@ function getActiveShops(state: Pick<GameState, "buildings">): ActiveShop[] {
   });
 }
 
+function getShopProductTypes(shop: ActiveShop): readonly CraftingProductType[] {
+  const service = shop.definition.visitorService;
+  if (service?.products && service.products.length > 0) return service.products;
+  return service?.product ? [service.product] : [];
+}
+
 function getShopProductStock(
   shop: ActiveShop,
-  state: Pick<GameState, "pizzas">,
-  pizzasSold: number,
+  state: GameState,
+  productsSold: CraftingProductSales,
 ): number | null {
-  if (shop.definition.visitorService?.product !== "pizza") return null;
-  return Math.max(0, state.pizzas - pizzasSold);
+  const products = getShopProductTypes(shop);
+  if (products.length === 0) return null;
+  return products.reduce(
+    (stock, productType) => stock + Math.max(
+      0,
+      getCraftedProductStock(state, productType) - (productsSold[productType] ?? 0),
+    ),
+    0,
+  );
+}
+
+function getAvailableShopProduct(
+  shop: ActiveShop,
+  state: GameState,
+  productsSold: CraftingProductSales,
+): CraftingProductType | null {
+  return getShopProductTypes(shop).find((productType) =>
+    getCraftedProductStock(state, productType) - (productsSold[productType] ?? 0) > 0,
+  ) ?? null;
 }
 
 function getShopFocus(shop: ActiveShop): GridPosition {
@@ -246,7 +278,7 @@ export function createShopVisitorSimulation(now = Date.now()): ShopVisitorSimula
 }
 
 export function advanceShopVisitors(
-  state: Pick<GameState, "buildings" | "pizzas">,
+  state: GameState,
   simulation: ShopVisitorSimulation,
   deltaMs: number,
   now: number,
@@ -255,17 +287,19 @@ export function advanceShopVisitors(
   const shops = getActiveShops(state);
   const shopsById = new Map(shops.map((shop) => [shop.building.id, shop]));
   let coinsEarned = 0;
-  let pizzasSold = 0;
+  const productsSold: CraftingProductSales = {};
   let visitors = simulation.visitors.map((visitor) => {
     if (visitor.phase === "leaving") return visitor;
     const shop = shopsById.get(visitor.shopBuildingId);
     if (!shop) return beginLeaving(visitor);
     if (visitor.phase === "buying" && (visitor.serviceUntil ?? Number.POSITIVE_INFINITY) <= now) {
-      const productStock = getShopProductStock(shop, state, pizzasSold);
+      const productStock = getShopProductStock(shop, state, productsSold);
       if (productStock !== null && productStock <= 0) {
         return beginLeaving(visitor);
       }
-      if (productStock !== null) pizzasSold += 1;
+      const productType = getAvailableShopProduct(shop, state, productsSold);
+      if (productStock !== null && !productType) return beginLeaving(visitor);
+      if (productType) productsSold[productType] = (productsSold[productType] ?? 0) + 1;
       coinsEarned += shop.definition.visitorService?.saleCoins ?? 0;
       const layout = getQueueLayout(shop, shop.definition.visitorService?.queueCapacity ?? 1);
       return beginLeaving(visitor, getMapEdgePosition(layout, 1.25));
@@ -277,7 +311,7 @@ export function advanceShopVisitors(
     let queue = visitors
       .filter((visitor) => visitor.shopBuildingId === shop.building.id && visitor.phase !== "leaving")
       .sort((left, right) => left.joinedAt - right.joinedAt || left.id.localeCompare(right.id));
-    const productStock = getShopProductStock(shop, state, pizzasSold);
+    const productStock = getShopProductStock(shop, state, productsSold);
     const queueCapacity = shop.definition.visitorService?.queueCapacity ?? 0;
     const availableQueueCapacity = productStock === null
       ? queueCapacity
@@ -348,7 +382,7 @@ export function advanceShopVisitors(
       const occupancy = visitors.filter(
         (visitor) => visitor.shopBuildingId === shop.building.id && visitor.phase !== "leaving",
       ).length;
-      const productStock = getShopProductStock(shop, state, pizzasSold);
+      const productStock = getShopProductStock(shop, state, productsSold);
       const queueCapacity = shop.definition.visitorService?.queueCapacity ?? 0;
       const availableQueueCapacity = productStock === null
         ? queueCapacity
@@ -375,6 +409,7 @@ export function advanceShopVisitors(
   return {
     simulation: { visitors, nextArrivalAt, nextSequence },
     coinsEarned,
-    pizzasSold,
+    productsSold,
+    pizzasSold: productsSold.pizza ?? 0,
   };
 }

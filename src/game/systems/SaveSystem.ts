@@ -18,6 +18,7 @@ import { isMapId } from "./MapSystem";
 import { normalizeMilkFactoryProductions } from "./MilkFactorySystem";
 import { normalizePigProductions } from "./PigSystem";
 import { normalizePorkFactoryProductions } from "./PorkFactorySystem";
+import { normalizeWheatFactoryProductions } from "./WheatFactorySystem";
 
 interface LegacyCropState {
   wheatCrops?: unknown;
@@ -79,6 +80,11 @@ export function saveGameState(
       buildings,
       now,
     );
+    const wheatFactoryProductions = normalizeWheatFactoryProductions(
+      state.wheatFactoryProductions,
+      buildings,
+      now,
+    );
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
       state as GameState & LegacyCropState
     );
@@ -91,6 +97,7 @@ export function saveGameState(
       milkFactoryProductions,
       pigProductions,
       porkFactoryProductions,
+      wheatFactoryProductions,
       lastSavedAt: now,
     }));
   } catch {
@@ -169,6 +176,10 @@ export function loadGameState(
         typeof parsed.pork === "number" && Number.isFinite(parsed.pork)
           ? Math.max(0, Math.floor(parsed.pork))
           : 0,
+      wheatFlour:
+        typeof parsed.wheatFlour === "number" && Number.isFinite(parsed.wheatFlour)
+          ? Math.max(0, Math.floor(parsed.wheatFlour))
+          : 0,
       butter:
         typeof parsed.butter === "number" && Number.isFinite(parsed.butter)
           ? Math.max(0, Math.floor(parsed.butter))
@@ -193,6 +204,22 @@ export function loadGameState(
         typeof parsed.pizzas === "number" && Number.isFinite(parsed.pizzas)
           ? Math.max(0, Math.floor(parsed.pizzas))
           : 0,
+      bread:
+        typeof parsed.bread === "number" && Number.isFinite(parsed.bread)
+          ? Math.max(0, Math.floor(parsed.bread))
+          : 0,
+      hotDogs:
+        typeof parsed.hotDogs === "number" && Number.isFinite(parsed.hotDogs)
+          ? Math.max(0, Math.floor(parsed.hotDogs))
+          : 0,
+      croissants:
+        typeof parsed.croissants === "number" && Number.isFinite(parsed.croissants)
+          ? Math.max(0, Math.floor(parsed.croissants))
+          : 0,
+      hamSandwiches:
+        typeof parsed.hamSandwiches === "number" && Number.isFinite(parsed.hamSandwiches)
+          ? Math.max(0, Math.floor(parsed.hamSandwiches))
+          : 0,
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
       chickenProductions: normalizeChickenProductions(parsed.chickenProductions, buildings, now),
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),
@@ -204,6 +231,11 @@ export function loadGameState(
       pigProductions: normalizePigProductions(parsed.pigProductions, buildings, now),
       porkFactoryProductions: normalizePorkFactoryProductions(
         parsed.porkFactoryProductions,
+        buildings,
+        now,
+      ),
+      wheatFactoryProductions: normalizeWheatFactoryProductions(
+        parsed.wheatFactoryProductions,
         buildings,
         now,
       ),

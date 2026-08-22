@@ -102,6 +102,19 @@ export const buildingDefinitions: BuildingDefinition[] = [
     removable: true,
   },
   {
+    id: "wheat-factory",
+    name: "小麦工場",
+    width: 1,
+    height: 1,
+    cost: 80,
+    category: "building",
+    menuIcon: "🏭",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.25, z: 0.25 },
+    description: "小麦から小麦粉を作る工場。",
+    removable: true,
+  },
+  {
     id: "tree",
     name: "木",
     width: 1,
@@ -227,6 +240,26 @@ export const buildingDefinitions: BuildingDefinition[] = [
     description: "イタリアの住民が働く小さなピザ屋。",
     removable: true,
   },
+  {
+    id: "bakery",
+    name: "パン屋",
+    width: 3,
+    height: 2,
+    cost: 150,
+    category: "building",
+    menuIcon: "🍞",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.7, z: 0.7 },
+    interactionType: "bakery",
+    visitorService: {
+      queueCapacity: 3,
+      saleCoins: 3,
+      doorOffset: 0.45,
+      products: ["bread", "hot-dog", "croissant", "ham-sandwich"],
+    },
+    description: "パンやパンを使った商品を作り、来訪客に販売する店。",
+    removable: true,
+  },
 ];
 
 export const buildingsById = Object.fromEntries(
@@ -243,6 +276,7 @@ export const playerBuildingIds = [
   "road",
   "milk-factory",
   "pork-factory",
+  "wheat-factory",
   "cow",
   "pig",
   "chicken",
@@ -252,4 +286,5 @@ export const playerBuildingIds = [
   "onsen",
   "torii",
   "pizza-shop",
+  "bakery",
 ];
