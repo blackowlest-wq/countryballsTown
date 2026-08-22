@@ -138,10 +138,27 @@ export function FishingGamePanel(): JSX.Element | null {
           <div className="fishing-cloud fishing-cloud-left" aria-hidden="true" />
           <div className="fishing-cloud fishing-cloud-right" aria-hidden="true" />
           <div className="fishing-water-line" aria-hidden="true" />
-          <div className="fishing-rod" aria-hidden="true">╲</div>
-          <div className="fishing-line" aria-hidden="true" />
-          <div className={`fishing-bobber fishing-bobber-${phase}`} aria-hidden={phase !== "bite"}>
-            {phase === "bite" ? "!" : "🔴"}
+          <svg
+            className="fishing-stage-art"
+            viewBox="0 0 100 278"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path className="fishing-rod" d="M -5 35 L 47.5 131" />
+            <path className="fishing-rod-tip" d="M 45.5 127 L 47.5 131" />
+            <path
+              className="fishing-line"
+              d="M 47.5 131 C 47.5 148 46.8 164 49 178 C 50 187 51 196 50.5 207"
+            />
+          </svg>
+          <div className="fishing-ripples" aria-hidden="true">
+            <span />
+            <span />
+          </div>
+          <div className={`fishing-bobber fishing-bobber-${phase}`} aria-hidden="true">
+            <span className="fishing-bobber-body" />
+            <span className="fishing-bobber-top" />
+            {phase === "bite" && <span className="fishing-bobber-alert">!</span>}
           </div>
           {phase === "gauge" && (
             <div className="fishing-gauge-wrap">

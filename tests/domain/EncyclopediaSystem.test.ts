@@ -20,6 +20,7 @@ describe("encyclopedia system", () => {
     expect(encyclopediaCategories.map((category) => category.name)).toEqual([
       "建物",
       "自然",
+      "魚",
       "作物",
       "畜産物",
       "加工品",
@@ -27,6 +28,7 @@ describe("encyclopedia system", () => {
     ]);
     expect(encyclopediaEntries).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: "building:house", name: "家", category: "building" }),
+      expect.objectContaining({ id: "fish:tuna", name: "マグロ", category: "fish" }),
       expect.objectContaining({ id: "crop:rice", name: "米", category: "crop" }),
       expect.objectContaining({ id: "processed:wheat-flour", name: "小麦粉", category: "processed" }),
       expect.objectContaining({ id: "food:omurice", name: "オムライス", category: "food" }),
@@ -37,6 +39,12 @@ describe("encyclopedia system", () => {
     const initial = createInitialGameState(0);
     const collected = syncEncyclopediaCollection({
       ...initial,
+      fishInventory: {
+        sardine: 0,
+        mackerel: 0,
+        "sea-bream": 0,
+        tuna: 1,
+      },
       wheat: 1,
       butter: 1,
       pizzas: 1,
@@ -44,6 +52,7 @@ describe("encyclopedia system", () => {
 
     expect(collected.encyclopediaCollectedIds).toEqual(expect.arrayContaining([
       "building:house",
+      "fish:tuna",
       "crop:wheat",
       "processed:butter",
       "food:pizza",
@@ -52,12 +61,18 @@ describe("encyclopedia system", () => {
     const afterConsumption = syncEncyclopediaCollection({
       ...collected,
       buildings: collected.buildings.filter((building) => building.buildingId !== "house"),
+      fishInventory: {
+        sardine: 0,
+        mackerel: 0,
+        "sea-bream": 0,
+        tuna: 0,
+      },
       wheat: 0,
       butter: 0,
       pizzas: 0,
     });
     expect(afterConsumption.encyclopediaCollectedIds).toEqual(
-      expect.arrayContaining(["building:house", "crop:wheat", "processed:butter", "food:pizza"]),
+      expect.arrayContaining(["building:house", "fish:tuna", "crop:wheat", "processed:butter", "food:pizza"]),
     );
   });
 
@@ -65,11 +80,19 @@ describe("encyclopedia system", () => {
     const storage = memoryStorage();
     const collected = syncEncyclopediaCollection({
       ...createInitialGameState(0),
+      fishInventory: {
+        sardine: 0,
+        mackerel: 0,
+        "sea-bream": 0,
+        tuna: 1,
+      },
       omurice: 1,
     });
     saveGameState({ ...collected, omurice: 0 }, storage);
 
     expect(loadGameState(storage, 100).encyclopediaCollectedIds)
       .toContain("food:omurice");
+    expect(loadGameState(storage, 100).encyclopediaCollectedIds)
+      .toContain("fish:tuna");
   });
 });

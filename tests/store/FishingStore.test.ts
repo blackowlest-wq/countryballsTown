@@ -43,5 +43,6 @@ describe("fishing store interaction", () => {
       "sea-bream": 0,
       tuna: 2,
     });
+    expect(useGameStore.getState().game.encyclopediaCollectedIds).toContain("fish:tuna");
   });
 });

@@ -1,14 +1,17 @@
 import { buildingDefinitions } from "./buildings";
+import { fishDefinitions } from "./fish";
 import {
   CRAFTING_PRODUCT_TYPES,
   CRAFTING_RECIPES,
   type CraftingProductType,
 } from "../types/Crafting";
 import { cropDefinitions, type CropType } from "../types/Crop";
+import type { FishType } from "../types/Fish";
 
 export type EncyclopediaCategoryId =
   | "building"
   | "nature"
+  | "fish"
   | "crop"
   | "livestock"
   | "processed"
@@ -31,6 +34,7 @@ export interface EncyclopediaEntry {
 export const encyclopediaCategories: readonly EncyclopediaCategory[] = [
   { id: "building", name: "建物", icon: "🏠" },
   { id: "nature", name: "自然", icon: "🌿" },
+  { id: "fish", name: "魚", icon: "🐟" },
   { id: "crop", name: "作物", icon: "🌱" },
   { id: "livestock", name: "畜産物", icon: "🥚" },
   { id: "processed", name: "加工品", icon: "🏭" },
@@ -129,6 +133,16 @@ function createCropEntries(): EncyclopediaEntry[] {
   });
 }
 
+function createFishEntries(): EncyclopediaEntry[] {
+  return fishDefinitions.map((fish) => ({
+    id: getFishEncyclopediaId(fish.type),
+    category: "fish",
+    name: fish.name,
+    icon: fish.icon,
+    description: fish.description,
+  }));
+}
+
 function createFoodEntries(): EncyclopediaEntry[] {
   return CRAFTING_PRODUCT_TYPES.map((productType: CraftingProductType) => {
     const recipe = CRAFTING_RECIPES[productType];
@@ -144,6 +158,7 @@ function createFoodEntries(): EncyclopediaEntry[] {
 
 export const encyclopediaEntries: readonly EncyclopediaEntry[] = [
   ...createBuildingEntries(),
+  ...createFishEntries(),
   ...createCropEntries(),
   ...livestockEntries,
   ...processedEntries,
@@ -156,6 +171,10 @@ export function getBuildingEncyclopediaId(buildingId: string): string {
 
 export function getCropEncyclopediaId(cropType: CropType): string {
   return `crop:${cropType}`;
+}
+
+export function getFishEncyclopediaId(fishType: FishType): string {
+  return `fish:${fishType}`;
 }
 
 export function getLivestockEncyclopediaId(resource: "milk" | "pork" | "eggs"): string {

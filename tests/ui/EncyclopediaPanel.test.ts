@@ -49,6 +49,12 @@ describe("EncyclopediaPanel", () => {
   it("収集済みの要素に星を表示し、分類を切り替えられる", async () => {
     const game = syncEncyclopediaCollection({
       ...createInitialGameState(0),
+      fishInventory: {
+        sardine: 0,
+        mackerel: 0,
+        "sea-bream": 0,
+        tuna: 1,
+      },
       wheatFlour: 1,
       pizzas: 1,
       encyclopediaCollectedIds: [],
@@ -71,6 +77,15 @@ describe("EncyclopediaPanel", () => {
     });
     expect(container.textContent).toContain("小麦粉");
     expect(container.querySelector('[data-entry="processed:wheat-flour"]')?.textContent ?? "")
+      .toContain("☆");
+
+    await act(async () => {
+      [...container.querySelectorAll("button")]
+        .find((button) => button.textContent?.includes("魚"))
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.textContent).toContain("マグロ");
+    expect(container.querySelector('[data-entry="fish:tuna"]')?.textContent ?? "")
       .toContain("☆");
     await act(async () => root.unmount());
   });

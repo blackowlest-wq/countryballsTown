@@ -2,10 +2,13 @@ import {
   encyclopediaEntries,
   getBuildingEncyclopediaId,
   getCropEncyclopediaId,
+  getFishEncyclopediaId,
   getFoodEncyclopediaId,
   getLivestockEncyclopediaId,
   getProcessedEncyclopediaId,
 } from "../data/encyclopedia";
+import { fishDefinitions } from "../data/fish";
+import type { FishType } from "../types/Fish";
 import type { GameState } from "../types/Village";
 
 const encyclopediaEntryIds = new Set(encyclopediaEntries.map((entry) => entry.id));
@@ -32,6 +35,9 @@ const positiveInventoryEntries: ReadonlyArray<[keyof GameState, string]> = [
   ["omurice", getFoodEncyclopediaId("omurice")],
 ];
 
+const fishInventoryEntries: ReadonlyArray<readonly [FishType, string]> =
+  fishDefinitions.map((fish) => [fish.type, getFishEncyclopediaId(fish.type)] as const);
+
 export function normalizeEncyclopediaCollectedIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
@@ -56,6 +62,9 @@ export function syncEncyclopediaCollection(state: GameState): GameState {
   for (const [key, entryId] of positiveInventoryEntries) {
     const value = state[key];
     if (typeof value === "number" && value > 0) collected.add(entryId);
+  }
+  for (const [fishType, entryId] of fishInventoryEntries) {
+    if (state.fishInventory[fishType] > 0) collected.add(entryId);
   }
 
   const encyclopediaCollectedIds = encyclopediaEntries

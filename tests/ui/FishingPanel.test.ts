@@ -60,6 +60,11 @@ describe("fishing panels", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(FishingGamePanel)));
+    expect(container.querySelector(".fishing-stage-art .fishing-rod")).not.toBeNull();
+    expect(container.querySelector(".fishing-stage-art .fishing-line")).not.toBeNull();
+    expect(container.querySelector(".fishing-bobber-top")).not.toBeNull();
+    expect(container.querySelector(".fishing-bobber-body")).not.toBeNull();
+    expect(container.querySelector(".fishing-ripples")).not.toBeNull();
     await act(async () => vi.advanceTimersByTime(1_200));
     const actionSlot = container.querySelector(".fishing-action-slot");
     const biteButton = container.querySelector('[aria-label="魚が食いついたのでタップ"]');
