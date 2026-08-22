@@ -9,6 +9,11 @@
     "lint": "eslint .",
     "secrets:scan": "gitleaks git --redact --exit-code 1 .",
     "test": "vitest run --config vitest.config.ts",
+    "test:domain": "vitest run --config vitest.config.ts --project domain",
+    "test:store": "vitest run --config vitest.config.ts --project store",
+    "test:ui": "vitest run --config vitest.config.ts --project ui",
+    "test:related": "vitest related --run --config vitest.config.ts",
+    "test:layout": "node scripts/check-test-layout.mjs",
     "test:watch": "vitest --config vitest.config.ts",
     "preview": "vite preview"
   },
@@ -32,6 +37,6 @@
     "typescript-eslint": "^8.18.0",
     "vite": "^6.0.7",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.9"
   }
 }

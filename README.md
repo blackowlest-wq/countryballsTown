@@ -9,14 +9,25 @@ npm install
 npm run dev
 ```
 
-テストとproduction buildは次のコマンドで実行できます。
+テストは責務別に分けて実行できます。全テストとproduction buildは次のコマンドで実行できます。
 
 ```bash
 npm test
+npm run test:domain
+npm run test:store
+npm run test:ui
 npm run lint
 npm run build
 npm run secrets:scan
 ```
+
+変更したソースに関係するテストだけを確認する場合は、次のように実行します。
+
+```bash
+npm run test:related -- src/ui/FishingGamePanel.tsx
+```
+
+テストの分類と選択基準は [`docs/testing.md`](docs/testing.md)、コードの責務と依存方向は [`docs/architecture.md`](docs/architecture.md) を参照してください。
 
 `secrets:scan` は Gitleaks でGit履歴の秘密情報（APIキー・トークンなど）を検査します。Windowsでは次のコマンドでGitleaksを導入できます。
 
