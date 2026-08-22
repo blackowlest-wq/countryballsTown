@@ -231,6 +231,14 @@ export function loadGameState(
         typeof parsed.hamSandwiches === "number" && Number.isFinite(parsed.hamSandwiches)
           ? Math.max(0, Math.floor(parsed.hamSandwiches))
           : 0,
+      onigiri:
+        typeof parsed.onigiri === "number" && Number.isFinite(parsed.onigiri)
+          ? Math.max(0, Math.floor(parsed.onigiri))
+          : 0,
+      omurice:
+        typeof parsed.omurice === "number" && Number.isFinite(parsed.omurice)
+          ? Math.max(0, Math.floor(parsed.omurice))
+          : 0,
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
       chickenProductions: normalizeChickenProductions(parsed.chickenProductions, buildings, now),
       cowProductions: normalizeCowProductions(parsed.cowProductions, buildings, now),

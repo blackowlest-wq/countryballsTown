@@ -21,6 +21,8 @@ export interface GameState {
   hotDogs: number;
   croissants: number;
   hamSandwiches: number;
+  onigiri: number;
+  omurice: number;
   currentMap: import("./Map").MapId;
   cowProductions: import("./Cow").CowProduction[];
   pigProductions: import("./Pig").PigProduction[];

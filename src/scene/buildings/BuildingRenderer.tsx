@@ -15,6 +15,7 @@ import { MilkFactory } from "./MilkFactory";
 import { PorkFactory } from "./PorkFactory";
 import { WheatFactory } from "./WheatFactory";
 import { Bakery } from "./Bakery";
+import { RiceShop } from "./RiceShop";
 import { Field } from "./Field";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
@@ -38,6 +39,7 @@ const buildingRenderers: Record<string, ComponentType> = {
   road: Road,
   "pizza-shop": PizzaShop,
   bakery: Bakery,
+  "rice-shop": RiceShop,
 };
 
 interface BuildingInstanceRendererProps {
@@ -128,6 +130,7 @@ function BuildingInstanceRenderer({
   const openPorkFactoryPanel = useGameStore((store) => store.openPorkFactoryPanel);
   const openWheatFactoryPanel = useGameStore((store) => store.openWheatFactoryPanel);
   const openBakeryPanel = useGameStore((store) => store.openBakeryPanel);
+  const openRiceShopPanel = useGameStore((store) => store.openRiceShopPanel);
   const collectCowMilk = useGameStore((store) => store.collectCowMilk);
   const collectPigPork = useGameStore((store) => store.collectPigPork);
   const collectChickenEggs = useGameStore((store) => store.collectChickenEggs);
@@ -141,6 +144,7 @@ function BuildingInstanceRenderer({
   const isPorkFactory = instance.buildingId === "pork-factory";
   const isWheatFactory = instance.buildingId === "wheat-factory";
   const isBakery = instance.buildingId === "bakery";
+  const isRiceShop = instance.buildingId === "rice-shop";
   const milkFactoryProduction = useGameStore((store) => store.game.milkFactoryProductions.find(
     (production) => production.buildingInstanceId === instance.id,
   ));
@@ -196,6 +200,10 @@ function BuildingInstanceRenderer({
         }
         if (isBakery) {
           openBakeryPanel(instance.id);
+          return;
+        }
+        if (isRiceShop) {
+          openRiceShopPanel(instance.id);
           return;
         }
         selectBuilding(selectionSource);

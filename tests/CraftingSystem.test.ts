@@ -53,4 +53,24 @@ describe("CraftingSystem", () => {
     expect(result.outcome).toBe("not-enough-materials");
     expect(result.state).toBe(state);
   });
+
+  it("ごはん屋のおにぎりとオムライスを米と材料から作れる", () => {
+    const state = {
+      ...createInitialGameState(0),
+      rice: 4,
+      tomatoes: 1,
+      eggs: 2,
+    };
+
+    expect(craftProduct(state, "onigiri", 1).state).toMatchObject({
+      rice: 3,
+      onigiri: 1,
+    });
+    expect(craftProduct(state, "omurice", 1).state).toMatchObject({
+      rice: 2,
+      tomatoes: 0,
+      eggs: 0,
+      omurice: 1,
+    });
+  });
 });

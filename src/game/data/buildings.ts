@@ -260,6 +260,27 @@ export const buildingDefinitions: BuildingDefinition[] = [
     description: "パンやパンを使った商品を作り、来訪客に販売する店。",
     removable: true,
   },
+  {
+    id: "rice-shop",
+    name: "ごはん屋",
+    width: 3,
+    height: 2,
+    cost: 150,
+    category: "building",
+    menuIcon: "🍙",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.7, z: 0.7 },
+    countryId: "japan",
+    interactionType: "rice-shop",
+    visitorService: {
+      queueCapacity: 3,
+      saleCoins: 0.3,
+      doorOffset: 0.45,
+      products: ["onigiri", "omurice"],
+    },
+    description: "おにぎりやオムライスを作り、来訪客に販売するごはん屋。",
+    removable: true,
+  },
 ];
 
 export const buildingsById = Object.fromEntries(
@@ -287,4 +308,5 @@ export const playerBuildingIds = [
   "torii",
   "pizza-shop",
   "bakery",
+  "rice-shop",
 ];

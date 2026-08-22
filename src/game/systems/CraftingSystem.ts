@@ -73,6 +73,8 @@ export function getCraftingIngredientName(ingredient: CraftingIngredientKey): st
       return "卵";
     case "ham":
       return "ハム";
+    case "rice":
+      return "米";
   }
 }
 
@@ -94,6 +96,8 @@ export function getCraftingIngredientIcon(ingredient: CraftingIngredientKey): st
       return "🥚";
     case "ham":
       return "🍖";
+    case "rice":
+      return "🍚";
   }
 }
 

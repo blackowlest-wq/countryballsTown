@@ -47,6 +47,7 @@ import {
   getCraftingProductName,
 } from "../game/systems/CraftingSystem";
 import { BAKERY_PRODUCT_TYPES } from "../game/systems/BakerySystem";
+import { RICE_SHOP_PRODUCT_TYPES } from "../game/systems/RiceShopSystem";
 import { advanceResidents } from "../game/systems/ResidentSystem";
 import {
   advanceShopVisitors,
@@ -89,6 +90,7 @@ interface GameStore {
   wheatFactoryPanelBuildingId: string | null;
   pizzaShopPanelBuildingId: string | null;
   bakeryPanelBuildingId: string | null;
+  riceShopPanelBuildingId: string | null;
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
   isResidentPanelOpen: boolean;
@@ -143,6 +145,8 @@ interface GameStore {
   closePizzaShopPanel: () => void;
   openBakeryPanel: (buildingInstanceId: string) => void;
   closeBakeryPanel: () => void;
+  openRiceShopPanel: (buildingInstanceId: string) => void;
+  closeRiceShopPanel: () => void;
   craftShopProduct: (
     buildingInstanceId: string,
     productType: CraftingProductType,
@@ -242,6 +246,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   wheatFactoryPanelBuildingId: null,
   pizzaShopPanelBuildingId: null,
   bakeryPanelBuildingId: null,
+  riceShopPanelBuildingId: null,
   selectedResidentId: null,
   isBuildMenuOpen: false,
   isResidentPanelOpen: false,
@@ -309,6 +314,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
       selectedResidentId: null,
@@ -325,6 +331,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -340,6 +347,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       isBuildMenuOpen: false,
       notice: "移動先のセルをクリックしてください。",
     }),
@@ -353,6 +361,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -373,6 +382,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       notice: null,
     }),
 
@@ -544,6 +554,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -567,6 +578,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       notice: `${getMilkFactoryProductName(productType)}の生産を始めました！`,
     });
     return true;
@@ -585,6 +597,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -607,6 +620,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       notice: `${getPorkFactoryProductName(productType)}の生産を始めました！`,
     });
     return true;
@@ -625,6 +639,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: buildingInstanceId,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -648,6 +663,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       notice: `${getWheatFactoryProductName(productType)}の生産を始めました！`,
     });
     return true;
@@ -666,6 +682,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: buildingInstanceId,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -688,6 +705,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: buildingInstanceId,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
@@ -697,6 +715,29 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   closeBakeryPanel: () => set({ bakeryPanelBuildingId: null }),
 
+  openRiceShopPanel: (buildingInstanceId) => {
+    const current = get();
+    if (!current.game.buildings.some(
+      (building) => building.id === buildingInstanceId && building.buildingId === "rice-shop",
+    )) return;
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      porkFactoryPanelBuildingId: null,
+      wheatFactoryPanelBuildingId: null,
+      pizzaShopPanelBuildingId: null,
+      bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: buildingInstanceId,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      notice: null,
+    });
+  },
+
+  closeRiceShopPanel: () => set({ riceShopPanelBuildingId: null }),
+
   craftShopProduct: (buildingInstanceId, productType, quantity) => {
     const current = get();
     const building = current.game.buildings.find((candidate) => candidate.id === buildingInstanceId);
@@ -704,6 +745,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       ? ["pizza"] as const
       : building?.buildingId === "bakery"
         ? BAKERY_PRODUCT_TYPES
+        : building?.buildingId === "rice-shop"
+          ? RICE_SHOP_PRODUCT_TYPES
         : [] as const;
     if (!building || !allowedProducts.includes(productType)) return false;
     const result = craftProduct(current.game, productType, quantity);
@@ -720,6 +763,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       notice: `${getCraftingProductName(productType)}を${result.quantity}${unit}作りました！`,
     });
     return true;
@@ -737,6 +781,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         wheatFactoryPanelBuildingId: null,
         pizzaShopPanelBuildingId: null,
         bakeryPanelBuildingId: null,
+        riceShopPanelBuildingId: null,
         selectedResidentId: null,
         isResidentPanelOpen: false,
       });
@@ -754,6 +799,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         wheatFactoryPanelBuildingId: null,
         pizzaShopPanelBuildingId: null,
         bakeryPanelBuildingId: null,
+        riceShopPanelBuildingId: null,
         selectedResidentId: null,
         isResidentPanelOpen: false,
       });
@@ -771,6 +817,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       isResidentPanelOpen: false,
     });
@@ -785,6 +832,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       isResidentPanelOpen: residentId !== null,
     }),
 
@@ -803,6 +851,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       wheatFactoryPanelBuildingId: null,
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
       selectedResidentId: null,
       notice: "新しい村を始めました。",
     }),

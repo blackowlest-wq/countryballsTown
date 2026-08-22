@@ -120,6 +120,16 @@ export function FarmControls(): JSX.Element | null {
               <span>ハムサンド</span>
               <strong>{game.hamSandwiches.toLocaleString("ja-JP")}</strong>
             </span>
+            <span className="processing-stock-item" aria-label={`おにぎり ${game.onigiri}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🍙</span>
+              <span>おにぎり</span>
+              <strong>{game.onigiri.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`オムライス ${game.omurice}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🍳</span>
+              <span>オムライス</span>
+              <strong>{game.omurice.toLocaleString("ja-JP")}</strong>
+            </span>
           </div>
         </div>
       </div>

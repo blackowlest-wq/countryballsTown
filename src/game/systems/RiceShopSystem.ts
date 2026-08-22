@@ -2,28 +2,26 @@ import type { CraftingProductType } from "../types/Crafting";
 import type { GameState } from "../types/Village";
 import { craftProduct, getCraftingMaxCraftable } from "./CraftingSystem";
 
-export const BAKERY_PRODUCT_TYPES: readonly CraftingProductType[] = [
-  "bread",
-  "hot-dog",
-  "croissant",
-  "ham-sandwich",
+export const RICE_SHOP_PRODUCT_TYPES: readonly CraftingProductType[] = [
+  "onigiri",
+  "omurice",
 ];
 
-export function getBakeryMaxCraftable(
+export function getRiceShopMaxCraftable(
   state: GameState,
   productType: CraftingProductType,
 ): number {
-  return BAKERY_PRODUCT_TYPES.includes(productType)
+  return RICE_SHOP_PRODUCT_TYPES.includes(productType)
     ? getCraftingMaxCraftable(state, productType)
     : 0;
 }
 
-export function craftBakeryProduct(
+export function craftRiceShopProduct(
   state: GameState,
   productType: CraftingProductType,
   quantity: number,
 ) {
-  if (!BAKERY_PRODUCT_TYPES.includes(productType)) {
+  if (!RICE_SHOP_PRODUCT_TYPES.includes(productType)) {
     return {
       state,
       outcome: "unknown-product" as const,

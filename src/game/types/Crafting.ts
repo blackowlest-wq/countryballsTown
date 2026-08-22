@@ -3,7 +3,9 @@ export type CraftingProductType =
   | "bread"
   | "hot-dog"
   | "croissant"
-  | "ham-sandwich";
+  | "ham-sandwich"
+  | "onigiri"
+  | "omurice";
 
 export type CraftingIngredientKey =
   | "bacon"
@@ -13,14 +15,17 @@ export type CraftingIngredientKey =
   | "sausage"
   | "butter"
   | "eggs"
-  | "ham";
+  | "ham"
+  | "rice";
 
 export type CraftingOutputKey =
   | "pizzas"
   | "bread"
   | "hotDogs"
   | "croissants"
-  | "hamSandwiches";
+  | "hamSandwiches"
+  | "onigiri"
+  | "omurice";
 
 export interface CraftingRecipe {
   productType: CraftingProductType;
@@ -37,6 +42,8 @@ export const CRAFTING_PRODUCT_TYPES: readonly CraftingProductType[] = [
   "hot-dog",
   "croissant",
   "ham-sandwich",
+  "onigiri",
+  "omurice",
 ];
 
 export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
@@ -93,6 +100,26 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
       wheat: 1,
       eggs: 1,
       ham: 1,
+    },
+  },
+  onigiri: {
+    productType: "onigiri",
+    name: "おにぎり",
+    icon: "🍙",
+    outputKey: "onigiri",
+    outputAmount: 1,
+    ingredients: { rice: 1 },
+  },
+  omurice: {
+    productType: "omurice",
+    name: "オムライス",
+    icon: "🍳",
+    outputKey: "omurice",
+    outputAmount: 1,
+    ingredients: {
+      rice: 2,
+      tomatoes: 1,
+      eggs: 2,
     },
   },
 };

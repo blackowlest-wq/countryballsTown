@@ -32,6 +32,8 @@ export function createInitialGameState(now = Date.now()): GameState {
     hotDogs: 0,
     croissants: 0,
     hamSandwiches: 0,
+    onigiri: 0,
+    omurice: 0,
     currentMap: "village",
     cowProductions: [],
     pigProductions: [],

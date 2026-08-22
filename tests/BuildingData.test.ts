@@ -112,4 +112,20 @@ describe("building definitions", () => {
       category: "nature",
     });
   });
+
+  it("ごはん屋を日本の複数商品店舗として定義する", () => {
+    expect(playerBuildingIds).toContain("rice-shop");
+    expect(getBuildingDefinition("rice-shop")).toMatchObject({
+      name: "ごはん屋",
+      width: 3,
+      height: 2,
+      category: "building",
+      countryId: "japan",
+      visitorService: {
+        queueCapacity: 3,
+        saleCoins: 0.3,
+        products: ["onigiri", "omurice"],
+      },
+    });
+  });
 });
