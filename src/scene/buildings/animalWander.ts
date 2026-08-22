@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
 import type { Group } from "three";
 import { GRID_SIZE } from "../../game/constants/gameConstants";
 
@@ -30,6 +31,7 @@ const WANDER_MAX_STEP = 4.2;
 const FENCE_COLLISION_HALF_SIZE = 0.46;
 const ANIMAL_FENCE_COLLISION_HALF_SIZE = FENCE_COLLISION_HALF_SIZE + ANIMAL_WANDER_FENCE_CLEARANCE;
 const PATH_SAMPLE_DISTANCE = 0.15;
+const MAX_WANDER_FRAME_DELTA_SECONDS = 0.25;
 const WORLD_MIN = -GRID_SIZE / 2 + ANIMAL_WANDER_MAP_MARGIN;
 const WORLD_MAX = GRID_SIZE / 2 - ANIMAL_WANDER_MAP_MARGIN;
 
@@ -174,10 +176,49 @@ export function useAnimalWander(
   origin: AnimalWanderOrigin = { x: 0, z: 0 },
   fences: readonly AnimalWanderFence[] = [],
 ): void {
+  const activeElapsedTime = useRef(0);
+  const previousClockElapsedTime = useRef<number | null>(null);
+  const paused = useRef(false);
+
+  useEffect(() => {
+    const pause = (): void => {
+      paused.current = true;
+      previousClockElapsedTime.current = null;
+    };
+    const resume = (): void => {
+      paused.current = false;
+      previousClockElapsedTime.current = null;
+    };
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === "hidden") pause();
+      else resume();
+    };
+
+    window.addEventListener("pagehide", pause);
+    window.addEventListener("pageshow", resume);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (document.visibilityState === "hidden") pause();
+
+    return () => {
+      window.removeEventListener("pagehide", pause);
+      window.removeEventListener("pageshow", resume);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   useFrame(({ clock }) => {
     const animal = group.current;
     if (!animal) return;
-    const transform = getAnimalWanderTransform(clock.elapsedTime, seed, origin, fences);
+    const currentClockElapsedTime = clock.elapsedTime;
+    const previousClockTime = previousClockElapsedTime.current;
+    previousClockElapsedTime.current = currentClockElapsedTime;
+    if (previousClockTime !== null && !paused.current) {
+      const frameDelta = Math.max(0, currentClockElapsedTime - previousClockTime);
+      activeElapsedTime.current += Math.min(frameDelta, MAX_WANDER_FRAME_DELTA_SECONDS);
+    }
+    if (paused.current) return;
+
+    const transform = getAnimalWanderTransform(activeElapsedTime.current, seed, origin, fences);
     animal.position.x = transform.x;
     animal.position.z = transform.z;
     animal.rotation.y = transform.rotationY;
