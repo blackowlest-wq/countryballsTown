@@ -12,6 +12,7 @@ export type CraftingIngredientKey =
   | "cheese"
   | "tomatoes"
   | "wheat"
+  | "wheatFlour"
   | "sausage"
   | "butter"
   | "eggs"
@@ -57,7 +58,7 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
       bacon: 1,
       cheese: 1,
       tomatoes: 1,
-      wheat: 2,
+      wheatFlour: 2,
     },
   },
   bread: {
@@ -66,7 +67,7 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
     icon: "🍞",
     outputKey: "bread",
     outputAmount: 1,
-    ingredients: { wheat: 1 },
+    ingredients: { wheatFlour: 1 },
   },
   "hot-dog": {
     productType: "hot-dog",
@@ -75,7 +76,7 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
     outputKey: "hotDogs",
     outputAmount: 1,
     ingredients: {
-      wheat: 1,
+      wheatFlour: 1,
       sausage: 1,
     },
   },
@@ -86,7 +87,7 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
     outputKey: "croissants",
     outputAmount: 1,
     ingredients: {
-      wheat: 2,
+      wheatFlour: 2,
       butter: 1,
     },
   },
@@ -97,7 +98,7 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
     outputKey: "hamSandwiches",
     outputAmount: 1,
     ingredients: {
-      wheat: 1,
+      wheatFlour: 1,
       eggs: 1,
       ham: 1,
     },

@@ -27,7 +27,7 @@ describe("BakeryPanel", () => {
       game: {
         ...createInitialGameState(0),
         buildings: [{ id: "bakery-test", buildingId: "bakery", gridX: 8, gridY: 8 }],
-        wheat: 2,
+        wheatFlour: 2,
         butter: 1,
       },
       bakeryPanelBuildingId: "bakery-test",
@@ -56,7 +56,7 @@ describe("BakeryPanel", () => {
     });
 
     expect(useGameStore.getState().game).toMatchObject({
-      wheat: 0,
+      wheatFlour: 0,
       butter: 0,
       croissants: 1,
     });

@@ -38,7 +38,7 @@ const recipes: Record<CraftingProductType, CraftingRecipe> = {
       bacon: PIZZA_BACON_COST,
       cheese: PIZZA_CHEESE_COST,
       tomatoes: PIZZA_TOMATO_COST,
-      wheat: PIZZA_WHEAT_COST,
+      wheatFlour: PIZZA_WHEAT_COST,
     },
   },
 };
@@ -65,6 +65,8 @@ export function getCraftingIngredientName(ingredient: CraftingIngredientKey): st
       return "トマト";
     case "wheat":
       return "小麦";
+    case "wheatFlour":
+      return "小麦粉";
     case "sausage":
       return "ソーセージ";
     case "butter":
@@ -88,6 +90,8 @@ export function getCraftingIngredientIcon(ingredient: CraftingIngredientKey): st
       return "🍅";
     case "wheat":
       return "🌾";
+    case "wheatFlour":
+      return "🥣";
     case "sausage":
       return "🌭";
     case "butter":

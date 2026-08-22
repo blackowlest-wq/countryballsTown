@@ -30,7 +30,7 @@ describe("PizzaShopPanel", () => {
         bacon: 2,
         cheese: 2,
         tomatoes: 2,
-        wheat: 4,
+        wheatFlour: 4,
       },
       pizzaShopPanelBuildingId: "pizza-shop-test",
     });
@@ -44,7 +44,7 @@ describe("PizzaShopPanel", () => {
     expect(container.textContent).toContain("ベーコン");
     expect(container.textContent).toContain("チーズ");
     expect(container.textContent).toContain("トマト");
-    expect(container.textContent).toContain("小麦");
+    expect(container.textContent).toContain("小麦粉");
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>(".pizza-shop-panel .full-button")
@@ -61,7 +61,7 @@ describe("PizzaShopPanel", () => {
       bacon: 1,
       cheese: 1,
       tomatoes: 1,
-      wheat: 2,
+      wheatFlour: 2,
       pizzas: 1,
     });
     await act(async () => root.unmount());
@@ -75,7 +75,7 @@ describe("PizzaShopPanel", () => {
         bacon: 30,
         cheese: 30,
         tomatoes: 30,
-        wheat: 60,
+        wheatFlour: 60,
       },
       pizzaShopPanelBuildingId: "pizza-shop-test",
     });

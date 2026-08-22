@@ -9,18 +9,18 @@ describe("PizzaSystem", () => {
       bacon: 5,
       cheese: 4,
       tomatoes: 3,
-      wheat: 9,
+      wheatFlour: 9,
     };
     expect(getPizzaMaxCraftable(state)).toBe(3);
   });
 
-  it("ベーコン1、チーズ1、トマト1、小麦2を消費してピザを作る", () => {
+  it("ベーコン1、チーズ1、トマト1、小麦粉2を消費してピザを作る", () => {
     const state = {
       ...createInitialGameState(0),
       bacon: 3,
       cheese: 3,
       tomatoes: 3,
-      wheat: 6,
+      wheatFlour: 6,
     };
     const result = craftPizza(state, 2);
     expect(result).toMatchObject({ outcome: "crafted", quantity: 2 });
@@ -28,7 +28,7 @@ describe("PizzaSystem", () => {
       bacon: 1,
       cheese: 1,
       tomatoes: 1,
-      wheat: 2,
+      wheatFlour: 2,
       pizzas: 2,
     });
   });
@@ -39,7 +39,7 @@ describe("PizzaSystem", () => {
       bacon: 1,
       cheese: 1,
       tomatoes: 1,
-      wheat: 1,
+      wheatFlour: 1,
     };
     expect(craftPizza(state, 1)).toMatchObject({ outcome: "not-enough-materials", state });
     expect(craftPizza(state, 0)).toMatchObject({ outcome: "invalid-quantity", state });

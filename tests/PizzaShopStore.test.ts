@@ -21,7 +21,7 @@ describe("pizza shop store interaction", () => {
       bacon: 3,
       cheese: 3,
       tomatoes: 3,
-      wheat: 6,
+      wheatFlour: 6,
       unlockedBuildings: [...createInitialGameState(0).unlockedBuildings, "pizza-shop"],
     };
     const placed = placeBuilding(initial, "pizza-shop", 12, 12, "pizza-shop-test");
@@ -36,7 +36,7 @@ describe("pizza shop store interaction", () => {
       bacon: 1,
       cheese: 1,
       tomatoes: 1,
-      wheat: 2,
+      wheatFlour: 2,
       pizzas: 2,
     });
     expect(useGameStore.getState().notice).toBe("ピザを2枚作りました！");

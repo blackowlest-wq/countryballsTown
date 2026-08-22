@@ -18,14 +18,14 @@ describe("bakery store interaction", () => {
       game: {
         ...createInitialGameState(0),
         buildings: [{ id: "bakery-test", buildingId: "bakery", gridX: 8, gridY: 8 }],
-        wheat: 1,
+        wheatFlour: 1,
         sausage: 1,
       },
     });
 
     expect(useGameStore.getState().craftShopProduct("bakery-test", "hot-dog", 1)).toBe(true);
     expect(useGameStore.getState().game).toMatchObject({
-      wheat: 0,
+      wheatFlour: 0,
       sausage: 0,
       hotDogs: 1,
     });

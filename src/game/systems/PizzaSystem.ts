@@ -16,14 +16,14 @@ export interface PizzaRecipeCost {
   bacon: number;
   cheese: number;
   tomatoes: number;
-  wheat: number;
+  wheatFlour: number;
 }
 
 export const PIZZA_RECIPE: PizzaRecipeCost = {
   bacon: 1,
   cheese: 1,
   tomatoes: 1,
-  wheat: 2,
+  wheatFlour: 2,
 };
 
 export function getPizzaMaxCraftable(state: Pick<GameState, keyof PizzaRecipeCost>): number {
