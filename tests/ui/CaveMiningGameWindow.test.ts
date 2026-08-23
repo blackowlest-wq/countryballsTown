@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_WIDTH } from "../../src/game/constants/gameConstants";
+import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_VISIBLE_MAP_ROWS, CAVE_WIDTH } from "../../src/game/constants/gameConstants";
 import { createInitialCaveMiningState } from "../../src/game/systems/CaveMiningSystem";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
@@ -55,8 +55,11 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     expect(container.querySelector('[data-direction="down"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="up"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="right"]')).not.toBeNull();
-    expect(container.querySelectorAll(".cave-mining-cell")).toHaveLength(CAVE_WIDTH * (CAVE_MAX_DEPTH + 1));
+    expect(container.querySelectorAll(".cave-mining-cell")).toHaveLength(
+      CAVE_WIDTH * Math.min(CAVE_VISIBLE_MAP_ROWS, CAVE_MAX_DEPTH + 1),
+    );
     expect(container.textContent).toContain("銅");
+    expect(container.querySelector('[role="status"]')?.textContent).toContain("上下左右");
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-direction="left"]')
@@ -92,6 +95,36 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     await act(async () => root.unmount());
   });
 
+  it("何もない場所への移動ではドリルの動作モーションを出さない", async () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        caveMining: {
+          ...base.caveMining,
+          position: { x: 3, depth: 1 },
+          excavatedCells: ["3:0", "3:1"],
+        },
+      },
+      isCaveMiningGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CaveMiningGameWindow)));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-direction="up"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().game.caveMining.position).toEqual({ x: 3, depth: 0 });
+    expect(container.querySelector(".cave-mining-window.is-digging")).toBeNull();
+
+    await act(async () => root.unmount());
+  });
+
   it("燃料が0なら購入ボタンを表示し、補給できる", async () => {
     useGameStore.setState({
       game: {
@@ -110,6 +143,9 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     const purchaseButton = [...container.querySelectorAll("button")]
       .find((button) => button.textContent?.includes("燃料を購入"));
     expect(purchaseButton).toBeDefined();
+    const stats = container.querySelector(".cave-mining-stats");
+    const purchasePanel = container.querySelector(".cave-fuel-purchase");
+    expect(stats && purchasePanel && Boolean(stats.compareDocumentPosition(purchasePanel) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
 
     await act(async () => {
       purchaseButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));

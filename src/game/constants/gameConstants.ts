@@ -31,6 +31,7 @@ export const PIZZA_PRODUCT_AMOUNT = 1;
 export const FISHING_ROD_COST = 1_000;
 export const CAVE_WIDTH = 7;
 export const CAVE_MAX_DEPTH = 15;
+export const CAVE_VISIBLE_MAP_ROWS = 9;
 export const CAVE_INITIAL_FUEL = 10;
 export const CAVE_INITIAL_FUEL_TANK_CAPACITY = 10;
 export const CAVE_FUEL_TANK_CAPACITY_PER_LEVEL = 5;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CAVE_MAX_DEPTH,
+  CAVE_VISIBLE_MAP_ROWS,
   CAVE_WIDTH,
   CAVE_ROCK_BREAKING_POWER_PER_FUEL,
   CAVE_FUEL_PURCHASE_AMOUNT,
@@ -31,6 +32,16 @@ const directions: ReadonlyArray<{ direction: DigDirection; label: string; icon: 
   { direction: "down", label: "下へ掘る", icon: "↓" },
   { direction: "right", label: "右へ掘る", icon: "→" },
 ];
+
+function getVisibleDepths(currentDepth: number): number[] {
+  const rowCount = Math.min(CAVE_VISIBLE_MAP_ROWS, CAVE_MAX_DEPTH + 1);
+  const maxStart = CAVE_MAX_DEPTH - rowCount + 1;
+  const startDepth = Math.min(
+    maxStart,
+    Math.max(0, currentDepth - Math.floor(rowCount / 2)),
+  );
+  return Array.from({ length: rowCount }, (_, index) => startDepth + index);
+}
 
 const upgrades: ReadonlyArray<{
   kind: CaveUpgradeKind;
@@ -85,11 +96,14 @@ export function CaveMiningGameWindow(): JSX.Element | null {
   const miningCapacity = getMiningCapacity(mining);
   const miningTotal = getMiningInventoryTotal(game.miningInventory);
   const currentCell = getCaveCell(mining.position, mining.layoutSeed);
+  const visibleDepths = getVisibleDepths(mining.position.depth);
+  const displayNotice = notice ?? "上下左右のボタンで地面を掘り進めます。";
 
   const handleDig = (direction: DigDirection): void => {
     if (isDigging) return;
+    const outcome = digCave(direction);
+    if (outcome !== "damaged" && outcome !== "dug") return;
     setIsDigging(true);
-    digCave(direction);
     digTimerRef.current = window.setTimeout(() => {
       digTimerRef.current = null;
       setIsDigging(false);
@@ -118,7 +132,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           </div>
         </div>
         <p className="panel-hint">上下左右へ掘り進み、見つけた採掘物を図鑑と材料に加えます。リセットすると新しい地層になります。</p>
-        {notice && <p className="cave-mining-notice" role="status">{notice}</p>}
+        <p className="cave-mining-notice" role="status">{displayNotice}</p>
 
         <div className="cave-mining-stats" aria-label="採掘ステータス">
           <div className="cave-mining-stat fuel-stat">
@@ -135,14 +149,33 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           </div>
         </div>
 
+        {mining.fuel === 0 ? (
+          <div className="cave-fuel-purchase">
+            <div>
+              <strong>燃料切れ</strong>
+              <small>{CAVE_FUEL_PURCHASE_AMOUNT}燃料を🪙{CAVE_FUEL_PURCHASE_COST}で購入できます。</small>
+            </div>
+            <button
+              type="button"
+              className="primary-button"
+              disabled={isDigging || game.coins < CAVE_FUEL_PURCHASE_COST}
+              onClick={purchaseFuel}
+            >
+              燃料を購入
+            </button>
+          </div>
+        ) : (
+          <p className="cave-mining-footnote cave-mining-fuel-hint">燃料は削岩5ごとに1消費します。燃料が0になると購入できます。</p>
+        )}
+
         <div className="cave-mining-board" aria-label="採掘盤面">
           <div className="cave-mining-board-depths" aria-hidden="true">
-            {Array.from({ length: CAVE_MAX_DEPTH + 1 }, (_, depth) => (
+            {visibleDepths.map((depth) => (
               <span key={depth}>{depth}</span>
             ))}
           </div>
           <div className="cave-mining-grid">
-            {Array.from({ length: CAVE_MAX_DEPTH + 1 }, (_, depth) => (
+            {visibleDepths.map((depth) => (
               Array.from({ length: CAVE_WIDTH }, (_, x) => {
                 const position = { x, depth };
                 const isExcavated = isCaveCellExcavated(mining, position);
@@ -231,25 +264,6 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             })}
           </div>
         </div>
-
-        {mining.fuel === 0 ? (
-          <div className="cave-fuel-purchase">
-            <div>
-              <strong>燃料切れ</strong>
-              <small>{CAVE_FUEL_PURCHASE_AMOUNT}燃料を🪙{CAVE_FUEL_PURCHASE_COST}で購入できます。</small>
-            </div>
-            <button
-              type="button"
-              className="primary-button"
-              disabled={isDigging || game.coins < CAVE_FUEL_PURCHASE_COST}
-              onClick={purchaseFuel}
-            >
-              燃料を購入
-            </button>
-          </div>
-        ) : (
-          <p className="cave-mining-footnote">燃料は削岩5ごとに1消費します。燃料が0になると購入できます。</p>
-        )}
 
         <div className="cave-mining-inventory" aria-label="採掘物一覧">
           <div className="cave-mining-section-heading">

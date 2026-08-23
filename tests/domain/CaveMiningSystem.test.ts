@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_ROCK_BREAKING_POWER_PER_FUEL } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
+import { getMiningResourceDefinition } from "../../src/game/data/mining";
 import {
   createInitialCaveMiningState,
   getCaveCellDamage,
@@ -105,6 +106,16 @@ describe("CaveMiningSystem", () => {
     expect(getCaveDigDamage(1, 2)).toBe(2);
     expect(getCaveDigDamage(2, 2)).toBe(CAVE_ROCK_BREAKING_POWER_PER_FUEL);
     expect(getCaveDigDamage(1, 6)).toBe(1);
+  });
+
+  it("鉱物の硬度は銅・鉄・金・ダイヤモンドの順に上がる", () => {
+    const hardnesses = ["copper", "iron", "gold", "diamond"]
+      .map((resourceType) => getMiningResourceDefinition(resourceType as "copper" | "iron" | "gold" | "diamond").hardness);
+
+    expect(hardnesses).toEqual([1, 2, 3, 4]);
+    expect(hardnesses[0]).toBeLessThan(hardnesses[1]);
+    expect(hardnesses[1]).toBeLessThan(hardnesses[2]);
+    expect(hardnesses[2]).toBeLessThan(hardnesses[3]);
   });
 
   it("ドリルをコインで強化すると硬い岩を掘れる", () => {
