@@ -22,9 +22,14 @@ afterEach(() => {
 });
 
 describe("地面採掘ゲームの2Dウィンドウ", () => {
-  it("洞窟の起動ボタンから別ウィンドウを開き、下や横へ掘れる", async () => {
+  it("洞窟の起動ボタンから別ウィンドウを開き、上下左右へ掘れる", async () => {
+    const base = createInitialGameState(0);
     useGameStore.setState({
-      game: { ...createInitialGameState(0), currentMap: "cave" },
+      game: {
+        ...base,
+        currentMap: "cave",
+        caveMining: { ...base.caveMining, cellDamage: { "2:0": 6 } },
+      },
     });
     const container = document.createElement("div");
     document.body.append(container);
@@ -48,8 +53,10 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     expect(container.querySelector('[role="dialog"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="left"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="down"]')).not.toBeNull();
+    expect(container.querySelector('[data-direction="up"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="right"]')).not.toBeNull();
     expect(container.querySelectorAll(".cave-mining-cell")).toHaveLength(CAVE_WIDTH * (CAVE_MAX_DEPTH + 1));
+    expect(container.textContent).toContain("銅");
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-direction="left"]')
@@ -62,7 +69,7 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     await act(async () => root.unmount());
   });
 
-  it("固くて掘れない地面の理由をウィンドウ内に表示する", async () => {
+  it("硬い地面も掘れるが、削岩効率が下がることを表示する", async () => {
     useGameStore.setState({
       game: { ...createInitialGameState(0), currentMap: "cave" },
       isCaveMiningGameOpen: true,
@@ -78,9 +85,9 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     });
 
     expect(container.querySelector('[role="status"]')?.textContent)
-      .toContain("この地面は固くて掘れません");
+      .toContain("地面を削りました");
     expect(container.querySelector('[role="status"]')?.textContent)
-      .toContain("必要なドリル硬度は2、現在は1");
+      .toContain("2/14");
 
     await act(async () => root.unmount());
   });
@@ -109,6 +116,39 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     });
     expect(useGameStore.getState().game.caveMining.fuel).toBe(5);
     expect(container.textContent).toContain("燃料は削岩5ごとに1消費");
+
+    await act(async () => root.unmount());
+  });
+
+  it("採掘リセットボタンで現在の地層を初期化する", async () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        caveMining: {
+          ...base.caveMining,
+          position: { x: 2, depth: 0 },
+          excavatedCells: ["3:0", "2:0"],
+          cellDamage: { "4:0": 4 },
+        },
+      },
+      isCaveMiningGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CaveMiningGameWindow)));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-action="reset-cave"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().game.caveMining.position).toEqual({ x: 3, depth: 0 });
+    expect(useGameStore.getState().game.caveMining.excavatedCells).toEqual(["3:0"]);
+    expect(useGameStore.getState().game.caveMining.cellDamage).toEqual({});
+    expect(container.querySelector('[role="status"]')?.textContent).toContain("新しい地層");
 
     await act(async () => root.unmount());
   });

@@ -12,7 +12,7 @@ export function CaveMiningLauncher(): JSX.Element | null {
       <span className="cave-mining-launcher-icon"><CaveDrillIcon /></span>
       <span className="cave-mining-launcher-copy">
         <strong>地面採掘ゲーム</strong>
-        <small>洞窟を下や横に掘り進もう</small>
+        <small>洞窟を上下左右に掘り進もう</small>
       </span>
       <button type="button" className="primary-button" onClick={openGame}>
         開く

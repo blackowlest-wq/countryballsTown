@@ -15,7 +15,9 @@ import {
   getFuelTankCapacity,
   getMiningCapacity,
   getMiningInventoryTotal,
+  getRevealedCaveResourceType,
   getTargetPosition,
+  isCaveCellCracked,
   isCaveCellExcavated,
   type CaveUpgradeKind,
 } from "../game/systems/CaveMiningSystem";
@@ -24,6 +26,7 @@ import { useGameStore } from "../store/gameStore";
 import { CaveDrillIcon } from "./CaveDrillIcon";
 
 const directions: ReadonlyArray<{ direction: DigDirection; label: string; icon: string }> = [
+  { direction: "up", label: "上へ掘る", icon: "↑" },
   { direction: "left", label: "左へ掘る", icon: "←" },
   { direction: "down", label: "下へ掘る", icon: "↓" },
   { direction: "right", label: "右へ掘る", icon: "→" },
@@ -34,7 +37,7 @@ const upgrades: ReadonlyArray<{
   label: string;
   description: string;
 }> = [
-  { kind: "drill", label: "ドリル硬度", description: "硬い岩を掘れる" },
+  { kind: "drill", label: "ドリル硬度", description: "硬い岩を効率よく掘る" },
   { kind: "fuel-tank", label: "燃料タンク", description: "最大燃料が増える" },
   { kind: "mining-capacity", label: "採掘物容量", description: "持ち帰れる数が増える" },
 ];
@@ -45,10 +48,16 @@ function getCellLabel(
   isExcavated: boolean,
   isCurrent: boolean,
   resourceName?: string,
+  isCracked = false,
 ): string {
-  if (isCurrent) return `現在地 深さ${depth}`;
+  if (isCurrent) return resourceName
+    ? `現在地 深さ${depth} ${resourceName}を採掘済み`
+    : `現在地 深さ${depth}`;
   if (isExcavated && resourceName) return `${resourceName}を採掘済み 深さ${depth}`;
+  if (resourceName && isCracked) return `${resourceName}が埋まっている岩盤 深さ${depth} ヒビあり`;
+  if (resourceName) return `${resourceName}が埋まっている岩盤 深さ${depth}`;
   if (isExcavated) return `掘削済み x${x} 深さ${depth}`;
+  if (isCracked) return `ヒビの入った岩盤 x${x} 深さ${depth}`;
   return `岩盤 x${x} 深さ${depth}`;
 }
 
@@ -57,6 +66,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
   const game = useGameStore((store) => store.game);
   const close = useGameStore((store) => store.closeCaveMiningGame);
   const digCave = useGameStore((store) => store.digCave);
+  const resetCaveMining = useGameStore((store) => store.resetCaveMining);
   const purchaseFuel = useGameStore((store) => store.purchaseCaveFuel);
   const upgradeCave = useGameStore((store) => store.upgradeCave);
   const notice = useGameStore((store) => store.notice);
@@ -74,7 +84,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
   const drillHardness = getDrillHardness(mining);
   const miningCapacity = getMiningCapacity(mining);
   const miningTotal = getMiningInventoryTotal(game.miningInventory);
-  const currentCell = getCaveCell(mining.position);
+  const currentCell = getCaveCell(mining.position, mining.layoutSeed);
 
   const handleDig = (direction: DigDirection): void => {
     if (isDigging) return;
@@ -94,9 +104,20 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             <p className="eyebrow">GROUND MINING GAME</p>
             <h2>地面採掘ゲーム</h2>
           </div>
-          <button className="icon-button" type="button" onClick={close} aria-label="地面採掘ゲームを閉じる">×</button>
+          <div className="cave-mining-window-actions">
+            <button
+              type="button"
+              className="secondary-button cave-reset-button"
+              data-action="reset-cave"
+              onClick={resetCaveMining}
+              disabled={isDigging}
+            >
+              採掘リセット
+            </button>
+            <button className="icon-button" type="button" onClick={close} aria-label="地面採掘ゲームを閉じる">×</button>
+          </div>
         </div>
-        <p className="panel-hint">下や横へ掘り進み、見つけた採掘物を図鑑と材料に加えます。</p>
+        <p className="panel-hint">上下左右へ掘り進み、見つけた採掘物を図鑑と材料に加えます。リセットすると新しい地層になります。</p>
         {notice && <p className="cave-mining-notice" role="status">{notice}</p>}
 
         <div className="cave-mining-stats" aria-label="採掘ステータス">
@@ -124,19 +145,32 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             {Array.from({ length: CAVE_MAX_DEPTH + 1 }, (_, depth) => (
               Array.from({ length: CAVE_WIDTH }, (_, x) => {
                 const position = { x, depth };
-                const cell = getCaveCell(position)!;
                 const isExcavated = isCaveCellExcavated(mining, position);
                 const isCurrent = mining.position.x === x && mining.position.depth === depth;
-                const resourceName = isExcavated && cell.resourceType
-                  ? getMiningResourceDefinition(cell.resourceType).name
+                const visibleResourceType = getRevealedCaveResourceType(mining, position);
+                const resourceDefinition = visibleResourceType
+                  ? getMiningResourceDefinition(visibleResourceType)
                   : undefined;
+                const resourceName = resourceDefinition?.name;
+                const isCracked = isCaveCellCracked(mining, position);
                 return (
                   <span
                     key={getCaveCellKey(position)}
-                    className={`cave-mining-cell ${isExcavated ? "is-excavated" : "is-rock"} ${isCurrent ? "is-current" : ""}`}
-                    aria-label={getCellLabel(x, depth, isExcavated, isCurrent, resourceName)}
+                    className={`cave-mining-cell ${isExcavated ? "is-excavated" : "is-rock"} ${isCurrent ? "is-current" : ""} ${isCracked ? "is-cracked" : ""} ${resourceDefinition && !isExcavated ? "is-resource-revealed" : ""}`}
+                    aria-label={getCellLabel(x, depth, isExcavated, isCurrent, resourceName, isCracked)}
+                    title={resourceName ? `${resourceName}${isExcavated ? "（採掘済み）" : "（埋蔵）"}` : undefined}
                   >
-                    {isCurrent ? <CaveDrillIcon /> : isExcavated ? (cell.resourceType ? getMiningResourceDefinition(cell.resourceType).icon : "·") : "🪨"}
+                    {isCurrent
+                      ? <CaveDrillIcon />
+                      : isExcavated
+                        ? (resourceDefinition ? resourceDefinition.icon : "·")
+                        : resourceDefinition
+                          ? <span className="cave-cell-buried-resource">
+                            <span aria-hidden="true">{resourceDefinition.icon}</span>
+                            <small>{resourceDefinition.name}</small>
+                          </span>
+                          : "🪨"}
+                    {isCracked && <span className="cave-cell-crack" aria-hidden="true" />}
                   </span>
                 );
               })
@@ -147,7 +181,8 @@ export function CaveMiningGameWindow(): JSX.Element | null {
         <div className="cave-mining-current" aria-label="現在の採掘位置">
           <span>深さ {mining.position.depth}</span>
           <span>現在地の地面の硬度 {currentCell?.hardness ?? "-"}</span>
-          <span>削岩 {CAVE_ROCK_BREAKING_POWER_PER_FUEL} / 燃料1</span>
+          <span>削岩最大 {CAVE_ROCK_BREAKING_POWER_PER_FUEL} / 燃料1</span>
+          <span>硬い地面ほど削岩効率が下がります</span>
         </div>
 
         <div className="cave-mining-actions" aria-label="掘る方向">

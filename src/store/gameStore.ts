@@ -72,8 +72,8 @@ import {
 } from "../game/systems/FishingSystem";
 import {
   digCave as digCaveSystem,
-  getDrillHardness,
   purchaseCaveFuel as purchaseCaveFuelSystem,
+  resetCaveMining as resetCaveMiningSystem,
   upgradeCave as upgradeCaveSystem,
   type CaveDigOutcome,
   type CaveUpgradeKind,
@@ -121,6 +121,7 @@ interface GameStore {
   openCaveMiningGame: () => boolean;
   closeCaveMiningGame: () => void;
   digCave: (direction: DigDirection) => CaveDigOutcome | null;
+  resetCaveMining: () => boolean;
   purchaseCaveFuel: () => boolean;
   upgradeCave: (kind: CaveUpgradeKind) => boolean;
   travelToMap: (mapId: MapId, now?: number) => void;
@@ -407,6 +408,16 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   closeCaveMiningGame: () => set({ isCaveMiningGameOpen: false }),
 
+  resetCaveMining: () => {
+    const current = get();
+    if (current.game.currentMap !== "cave" || !current.isCaveMiningGameOpen) return false;
+    set({
+      game: persist(resetCaveMiningSystem(current.game)),
+      notice: "新しい地層を用意しました。強化・材料・図鑑はそのままです。",
+    });
+    return true;
+  },
+
   digCave: (direction) => {
     const current = get();
     if (current.game.currentMap !== "cave" || !current.isCaveMiningGameOpen) return null;
@@ -416,9 +427,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         ? "燃料が切れています。燃料を購入して補給してください。"
         : result.outcome === "capacity-full"
           ? "採掘物がいっぱいです。採掘物容量を強化してください。"
-          : result.outcome === "too-hard"
-            ? `この地面は固くて掘れません。必要なドリル硬度は${result.targetHardness}、現在は${getDrillHardness(current.game.caveMining)}です。ドリル硬度を強化してください。`
-            : "ここから先には掘れる地面がありません。";
+          : "ここから先には掘れる地面がありません。";
       set({ notice });
       return result.outcome;
     }
@@ -431,7 +440,9 @@ export const useGameStore = create<GameStore>((setState, get) => {
         ? `${resourceName}を1個見つけました！`
         : result.outcome === "moved"
           ? null
-          : "削岩5で岩を掘り進みました。",
+          : result.isCracked
+            ? `地面を削りました（${result.cellDamage}/${result.cellDurability}）。ヒビが入りました。`
+            : `地面を削りました（${result.cellDamage}/${result.cellDurability}）。`,
     });
     return result.outcome;
   },

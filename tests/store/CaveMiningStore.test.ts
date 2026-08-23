@@ -32,16 +32,64 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().isCaveMiningGameOpen).toBe(false);
   });
 
-  it("採掘操作の結果を保存し、通知する", () => {
+  it("採掘操作のダメージ蓄積と採掘結果を保存し、通知する", () => {
     useGameStore.setState({
       game: { ...createInitialGameState(0), currentMap: "cave" },
       isCaveMiningGameOpen: true,
     });
 
+    expect(useGameStore.getState().digCave("left")).toBe("damaged");
+    expect(useGameStore.getState().game.miningInventory.copper).toBe(0);
+    expect(useGameStore.getState().notice).toContain("地面を削りました");
+    expect(useGameStore.getState().digCave("left")).toBe("damaged");
+    expect(useGameStore.getState().notice).toContain("ヒビが入りました");
     expect(useGameStore.getState().digCave("left")).toBe("dug");
     expect(useGameStore.getState().game.miningInventory.copper).toBe(1);
-    expect(useGameStore.getState().game.caveMining.fuel).toBe(9);
+    expect(useGameStore.getState().game.caveMining.fuel).toBe(7);
     expect(useGameStore.getState().notice).toBe("銅を1個見つけました！");
+  });
+
+  it("ゲームを開き直しても採掘状態をリセットしない", () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        caveMining: {
+          ...base.caveMining,
+          position: { x: 2, depth: 0 },
+          excavatedCells: ["3:0", "2:0"],
+          cellDamage: { "4:0": 4 },
+        },
+      },
+    });
+
+    expect(useGameStore.getState().openCaveMiningGame()).toBe(true);
+    expect(useGameStore.getState().game.caveMining.position).toEqual({ x: 2, depth: 0 });
+    expect(useGameStore.getState().game.caveMining.cellDamage).toEqual({ "4:0": 4 });
+  });
+
+  it("採掘リセットボタンのStore操作で位置・配置・ダメージを初期化する", () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        caveMining: {
+          ...base.caveMining,
+          layoutSeed: 123,
+          position: { x: 2, depth: 0 },
+          excavatedCells: ["3:0", "2:0"],
+          cellDamage: { "4:0": 4 },
+        },
+      },
+      isCaveMiningGameOpen: true,
+    });
+
+    expect(useGameStore.getState().resetCaveMining()).toBe(true);
+    expect(useGameStore.getState().game.caveMining.position).toEqual({ x: 3, depth: 0 });
+    expect(useGameStore.getState().game.caveMining.excavatedCells).toEqual(["3:0"]);
+    expect(useGameStore.getState().game.caveMining.cellDamage).toEqual({});
   });
 
   it("燃料切れ後の購入と強化をStoreから実行できる", () => {

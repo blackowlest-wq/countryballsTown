@@ -1,4 +1,7 @@
 import {
+  CAVE_CELL_BASE_DURABILITY,
+  CAVE_CELL_DURABILITY_PER_DEPTH,
+  CAVE_CELL_DURABILITY_PER_HARDNESS,
   CAVE_DRILL_HARDNESS_PER_LEVEL,
   CAVE_FUEL_PURCHASE_AMOUNT,
   CAVE_FUEL_PURCHASE_COST,
@@ -9,6 +12,7 @@ import {
   CAVE_INITIAL_MINING_CAPACITY,
   CAVE_MAX_DEPTH,
   CAVE_MINING_CAPACITY_PER_LEVEL,
+  CAVE_RESOURCE_REVEAL_RADIUS,
   CAVE_ROCK_BREAKING_POWER_PER_FUEL,
   CAVE_UPGRADE_BASE_COST,
   CAVE_WIDTH,
@@ -26,6 +30,7 @@ import type {
 } from "../types/Mining";
 import type { GameState } from "../types/Village";
 
+export const CAVE_DEFAULT_LAYOUT_SEED = 0x51a7c0de;
 export const CAVE_START_POSITION: CavePosition = { x: Math.floor(CAVE_WIDTH / 2), depth: 0 };
 
 interface CaveLayoutCell {
@@ -36,10 +41,11 @@ interface CaveLayoutCell {
 export interface CaveCell {
   position: CavePosition;
   hardness: number;
+  durability: number;
   resourceType: MiningResourceType | null;
 }
 
-const caveLayout: Readonly<Record<string, CaveLayoutCell>> = {
+const defaultCaveLayout: Readonly<Record<string, CaveLayoutCell>> = {
   "2:0": { resourceType: "copper" },
   "4:0": { resourceType: "fossil" },
   "3:1": { resourceType: "iron" },
@@ -63,11 +69,32 @@ const caveLayout: Readonly<Record<string, CaveLayoutCell>> = {
   "3:15": { hardness: 6, resourceType: "diamond" },
 };
 
+const randomResourceTypes: readonly MiningResourceType[] = [
+  "copper",
+  "iron",
+  "gold",
+  "diamond",
+  "fossil",
+  "crystal",
+  "amber",
+  "ancient-relic",
+  "glowing-mushroom",
+];
+
+const guaranteedResourcePools: Readonly<Record<string, readonly MiningResourceType[]>> = {
+  "2:0": ["copper", "iron", "crystal"],
+  "4:0": ["fossil", "copper", "glowing-mushroom"],
+  "3:1": ["iron", "fossil", "crystal"],
+  "2:1": ["glowing-mushroom", "crystal", "fossil"],
+  "4:1": ["crystal", "iron", "amber"],
+  "3:5": ["gold", "amber", "diamond"],
+};
+
 export type CaveDigOutcome =
+  | "damaged"
   | "dug"
   | "moved"
   | "no-fuel"
-  | "too-hard"
   | "capacity-full"
   | "boundary";
 
@@ -77,8 +104,13 @@ export interface CaveDigResult {
   outcome: CaveDigOutcome;
   target?: CavePosition;
   targetHardness?: number;
+  cellDurability?: number;
+  cellDamage?: number;
+  damageDealt: number;
+  isCracked: boolean;
   resourceType?: MiningResourceType;
   fuelConsumed: number;
+  /** Maximum breaking power represented by one fuel. */
   rockBreakingPower: number;
 }
 
@@ -99,20 +131,30 @@ export interface CaveFuelPurchaseResult {
   reason?: CaveFuelPurchaseFailureReason;
 }
 
-export function createInitialCaveMiningState(): CaveMiningState {
+export function createInitialCaveMiningState(
+  layoutSeed = CAVE_DEFAULT_LAYOUT_SEED,
+): CaveMiningState {
   return {
     fuel: CAVE_INITIAL_FUEL,
     fuelTankLevel: 0,
     drillLevel: 0,
     miningCapacityLevel: 0,
+    layoutSeed,
     position: { ...CAVE_START_POSITION },
     excavatedCells: [getCaveCellKey(CAVE_START_POSITION)],
+    cellDamage: {},
   };
 }
 
 function asNonNegativeInteger(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value)
     ? Math.max(0, Math.floor(value))
+    : fallback;
+}
+
+function asSeed(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? (Math.max(0, Math.floor(value)) >>> 0)
     : fallback;
 }
 
@@ -148,40 +190,125 @@ function parseCaveCellKey(value: string): CavePosition | null {
   return isCavePosition(position) ? position : null;
 }
 
-export function normalizeCaveMiningState(value: unknown): CaveMiningState {
-  const initial = createInitialCaveMiningState();
-  const candidate = value && typeof value === "object"
-    ? value as Partial<CaveMiningState>
-    : {};
-  const fuelTankLevel = asNonNegativeInteger(candidate.fuelTankLevel, initial.fuelTankLevel);
-  const drillLevel = asNonNegativeInteger(candidate.drillLevel, initial.drillLevel);
-  const miningCapacityLevel = asNonNegativeInteger(
-    candidate.miningCapacityLevel,
-    initial.miningCapacityLevel,
-  );
-  const fuelTankCapacity = getFuelTankCapacity({ fuelTankLevel });
-  const position = isCavePosition(candidate.position)
-    ? { ...candidate.position }
-    : { ...initial.position };
-  const excavatedCells = Array.isArray(candidate.excavatedCells)
-    ? candidate.excavatedCells
-      .filter((cellKey): cellKey is string => typeof cellKey === "string")
-      .map(parseCaveCellKey)
-      .filter((cell): cell is CavePosition => cell !== null)
-      .map(getCaveCellKey)
-    : [];
-  const uniqueExcavatedCells = [...new Set([
-    getCaveCellKey(CAVE_START_POSITION),
-    ...excavatedCells,
-  ])];
+function getCellRandom(seed: number, position: CavePosition, salt: number): number {
+  let value = (
+    seed ^
+    Math.imul(position.x + 1, 0x9e3779b1) ^
+    Math.imul(position.depth + 1, 0x85ebca77) ^
+    Math.imul(salt + 1, 0xc2b2ae3d)
+  ) >>> 0;
+  value = Math.imul(value ^ (value >>> 16), 0x85ebca6b) >>> 0;
+  value = Math.imul(value ^ (value >>> 13), 0xc2b2ae35) >>> 0;
+  return ((value ^ (value >>> 16)) >>> 0) / 0x1_0000_0000;
+}
+
+function getRandomLayoutCell(position: CavePosition, layoutSeed: number): CaveLayoutCell {
+  if (getCaveCellKey(position) === getCaveCellKey(CAVE_START_POSITION)) return {};
+
+  const guaranteedPool = guaranteedResourcePools[getCaveCellKey(position)];
+  if (guaranteedPool) {
+    const resourceType = guaranteedPool[
+      Math.floor(getCellRandom(layoutSeed, position, 1) * guaranteedPool.length)
+    ];
+    return { resourceType };
+  }
+
+  const resourceChance = 0.08 + Math.min(0.1, position.depth / CAVE_MAX_DEPTH * 0.1);
+  if (getCellRandom(layoutSeed, position, 2) >= resourceChance) return {};
   return {
-    fuel: clampInteger(candidate.fuel, 0, fuelTankCapacity, Math.min(initial.fuel, fuelTankCapacity)),
-    fuelTankLevel,
-    drillLevel,
-    miningCapacityLevel,
-    position,
-    excavatedCells: uniqueExcavatedCells,
+    resourceType: randomResourceTypes[
+      Math.floor(getCellRandom(layoutSeed, position, 3) * randomResourceTypes.length)
+    ],
   };
+}
+
+function getLayoutCell(position: CavePosition, layoutSeed: number): CaveLayoutCell | undefined {
+  if (layoutSeed === CAVE_DEFAULT_LAYOUT_SEED) return defaultCaveLayout[getCaveCellKey(position)];
+  return getRandomLayoutCell(position, layoutSeed);
+}
+
+function getTerrainHardness(position: CavePosition, layoutSeed: number): number {
+  const depthHardness = Math.min(6, 1 + Math.floor(position.depth / 2));
+  if (layoutSeed === CAVE_DEFAULT_LAYOUT_SEED) return depthHardness;
+  return Math.min(
+    6,
+    depthHardness + (getCellRandom(layoutSeed, position, 4) >= 0.78 ? 1 : 0),
+  );
+}
+
+function getCellDurability(depth: number, hardness: number): number {
+  return CAVE_CELL_BASE_DURABILITY
+    + depth * CAVE_CELL_DURABILITY_PER_DEPTH
+    + hardness * CAVE_CELL_DURABILITY_PER_HARDNESS;
+}
+
+export function getCaveCell(position: CavePosition, layoutSeed = CAVE_DEFAULT_LAYOUT_SEED): CaveCell | null {
+  if (!isCavePosition(position)) return null;
+  const layoutCell = getLayoutCell(position, layoutSeed);
+  const resourceType = layoutCell?.resourceType ?? null;
+  const resourceHardness = resourceType
+    ? getMiningResourceDefinition(resourceType).hardness
+    : 0;
+  const hardness = Math.min(
+    6,
+    layoutCell?.hardness ?? Math.max(getTerrainHardness(position, layoutSeed), resourceHardness),
+  );
+  return {
+    position: { ...position },
+    hardness,
+    durability: getCellDurability(position.depth, hardness),
+    resourceType,
+  };
+}
+
+export function getCaveCellDamage(
+  state: Pick<CaveMiningState, "cellDamage" | "layoutSeed">,
+  position: CavePosition,
+): number {
+  const cell = getCaveCell(position, state.layoutSeed);
+  if (!cell) return 0;
+  return Math.min(cell.durability, Math.max(0, state.cellDamage[getCaveCellKey(position)] ?? 0));
+}
+
+export function getCaveCellDamageRatio(
+  state: Pick<CaveMiningState, "cellDamage" | "layoutSeed">,
+  position: CavePosition,
+): number {
+  const cell = getCaveCell(position, state.layoutSeed);
+  return cell ? getCaveCellDamage(state, position) / cell.durability : 0;
+}
+
+export function isCaveCellExcavated(state: CaveMiningState, position: CavePosition): boolean {
+  return state.excavatedCells.includes(getCaveCellKey(position));
+}
+
+export function isCaveCellCracked(state: CaveMiningState, position: CavePosition): boolean {
+  return !isCaveCellExcavated(state, position)
+    && getCaveCellDamageRatio(state, position) >= 0.5;
+}
+
+function isWithinResourceRevealRadius(source: CavePosition, target: CavePosition): boolean {
+  return Math.max(
+    Math.abs(source.x - target.x),
+    Math.abs(source.depth - target.depth),
+  ) <= CAVE_RESOURCE_REVEAL_RADIUS;
+}
+
+export function isCaveResourceRevealed(state: CaveMiningState, position: CavePosition): boolean {
+  return state.excavatedCells.some((cellKey) => {
+    const excavatedPosition = parseCaveCellKey(cellKey);
+    return excavatedPosition !== null && isWithinResourceRevealRadius(excavatedPosition, position);
+  });
+}
+
+export function getRevealedCaveResourceType(
+  state: CaveMiningState,
+  position: CavePosition,
+): MiningResourceType | null {
+  const cell = getCaveCell(position, state.layoutSeed);
+  return cell?.resourceType && isCaveResourceRevealed(state, position)
+    ? cell.resourceType
+    : null;
 }
 
 export function getFuelTankCapacity(
@@ -221,23 +348,85 @@ export function getCaveUpgradeCost(
   return CAVE_UPGRADE_BASE_COST * (2 ** level);
 }
 
-export function getCaveCell(position: CavePosition): CaveCell | null {
-  if (!isCavePosition(position)) return null;
-  const layoutCell = caveLayout[getCaveCellKey(position)];
-  const resourceType = layoutCell?.resourceType ?? null;
-  const resourceHardness = resourceType
-    ? getMiningResourceDefinition(resourceType).hardness
-    : undefined;
-  const baseHardness = Math.min(6, 1 + Math.floor(position.depth / 2));
+export function getCaveDigDamage(drillHardness: number, targetHardness: number): number {
+  const efficiency = Math.min(1, Math.max(0, drillHardness / Math.max(1, targetHardness)));
+  return Math.max(1, Math.floor(CAVE_ROCK_BREAKING_POWER_PER_FUEL * efficiency));
+}
+
+export function normalizeCaveMiningState(value: unknown): CaveMiningState {
+  const initial = createInitialCaveMiningState();
+  const candidate = value && typeof value === "object"
+    ? value as Partial<CaveMiningState>
+    : {};
+  const fuelTankLevel = asNonNegativeInteger(candidate.fuelTankLevel, initial.fuelTankLevel);
+  const drillLevel = asNonNegativeInteger(candidate.drillLevel, initial.drillLevel);
+  const miningCapacityLevel = asNonNegativeInteger(
+    candidate.miningCapacityLevel,
+    initial.miningCapacityLevel,
+  );
+  const layoutSeed = asSeed(candidate.layoutSeed, initial.layoutSeed);
+  const fuelTankCapacity = getFuelTankCapacity({ fuelTankLevel });
+  const position = isCavePosition(candidate.position)
+    ? { ...candidate.position }
+    : { ...initial.position };
+  const excavatedCells = Array.isArray(candidate.excavatedCells)
+    ? candidate.excavatedCells
+      .filter((cellKey): cellKey is string => typeof cellKey === "string")
+      .map(parseCaveCellKey)
+      .filter((cell): cell is CavePosition => cell !== null)
+      .map(getCaveCellKey)
+    : [];
+  const uniqueExcavatedCells = [...new Set([
+    getCaveCellKey(CAVE_START_POSITION),
+    ...excavatedCells,
+  ])];
+  const excavatedSet = new Set(uniqueExcavatedCells);
+  const cellDamage: Record<string, number> = {};
+  if (candidate.cellDamage && typeof candidate.cellDamage === "object") {
+    for (const [cellKey, rawDamage] of Object.entries(candidate.cellDamage)) {
+      const cellPosition = parseCaveCellKey(cellKey);
+      if (!cellPosition || excavatedSet.has(getCaveCellKey(cellPosition))) continue;
+      const cell = getCaveCell(cellPosition, layoutSeed);
+      const damage = clampInteger(rawDamage, 0, Math.max(0, (cell?.durability ?? 1) - 1), 0);
+      if (damage > 0) cellDamage[getCaveCellKey(cellPosition)] = damage;
+    }
+  }
   return {
-    position: { ...position },
-    hardness: layoutCell?.hardness ?? resourceHardness ?? baseHardness,
-    resourceType,
+    fuel: clampInteger(candidate.fuel, 0, fuelTankCapacity, Math.min(initial.fuel, fuelTankCapacity)),
+    fuelTankLevel,
+    drillLevel,
+    miningCapacityLevel,
+    layoutSeed,
+    position,
+    excavatedCells: uniqueExcavatedCells,
+    cellDamage,
   };
 }
 
-export function isCaveCellExcavated(state: CaveMiningState, position: CavePosition): boolean {
-  return state.excavatedCells.includes(getCaveCellKey(position));
+export function createCaveLayoutSeed(
+  random: () => number = Math.random,
+  previousSeed?: number,
+): number {
+  const sampled = random();
+  const normalized = Number.isFinite(sampled)
+    ? Math.max(0, Math.min(0.999999999, sampled))
+    : 0.5;
+  let seed = Math.floor(normalized * 0x1_0000_0000) >>> 0;
+  if (seed === CAVE_DEFAULT_LAYOUT_SEED || seed === previousSeed) seed = (seed + 1) >>> 0;
+  return seed;
+}
+
+export function resetCaveMining(state: GameState, random: () => number = Math.random): GameState {
+  return {
+    ...state,
+    caveMining: {
+      ...state.caveMining,
+      layoutSeed: createCaveLayoutSeed(random, state.caveMining.layoutSeed),
+      position: { ...CAVE_START_POSITION },
+      excavatedCells: [getCaveCellKey(CAVE_START_POSITION)],
+      cellDamage: {},
+    },
+  };
 }
 
 export function getTargetPosition(
@@ -248,22 +437,28 @@ export function getTargetPosition(
     ? { x: position.x - 1, depth: position.depth }
     : direction === "right"
       ? { x: position.x + 1, depth: position.depth }
-      : { x: position.x, depth: position.depth + 1 };
+      : direction === "up"
+        ? { x: position.x, depth: position.depth - 1 }
+        : { x: position.x, depth: position.depth + 1 };
   return isCavePosition(target) ? target : null;
 }
 
 function getFailureResult(
   state: GameState,
-  outcome: Exclude<CaveDigOutcome, "dug" | "moved">,
+  outcome: Exclude<CaveDigOutcome, "damaged" | "dug" | "moved">,
   target?: CavePosition,
-  targetHardness?: number,
+  targetCell?: CaveCell | null,
 ): CaveDigResult {
   return {
     ok: false,
     state,
     outcome,
     target,
-    targetHardness,
+    targetHardness: targetCell?.hardness,
+    cellDurability: targetCell?.durability,
+    cellDamage: target ? getCaveCellDamage(state.caveMining, target) : undefined,
+    damageDealt: 0,
+    isCracked: target ? isCaveCellCracked(state.caveMining, target) : false,
     fuelConsumed: 0,
     rockBreakingPower: 0,
   };
@@ -273,7 +468,7 @@ export function digCave(state: GameState, direction: DigDirection): CaveDigResul
   const miningState = state.caveMining;
   const target = getTargetPosition(miningState.position, direction);
   if (!target) return getFailureResult(state, "boundary");
-  const targetCell = getCaveCell(target);
+  const targetCell = getCaveCell(target, miningState.layoutSeed);
   if (!targetCell) return getFailureResult(state, "boundary", target);
   if (isCaveCellExcavated(miningState, target)) {
     return {
@@ -288,37 +483,56 @@ export function digCave(state: GameState, direction: DigDirection): CaveDigResul
       outcome: "moved",
       target,
       targetHardness: targetCell.hardness,
+      cellDurability: targetCell.durability,
+      cellDamage: 0,
+      damageDealt: 0,
+      isCracked: false,
       fuelConsumed: 0,
       rockBreakingPower: 0,
     };
   }
-  if (miningState.fuel < 1) return getFailureResult(state, "no-fuel", target, targetCell.hardness);
-  if (getMiningInventoryTotal(state.miningInventory) >= getMiningCapacity(miningState)) {
-    return getFailureResult(state, "capacity-full", target, targetCell.hardness);
+  if (miningState.fuel < 1) {
+    return getFailureResult(state, "no-fuel", target, targetCell);
   }
-  if (getDrillHardness(miningState) < targetCell.hardness) {
-    return getFailureResult(state, "too-hard", target, targetCell.hardness);
+  if (getMiningInventoryTotal(state.miningInventory) >= getMiningCapacity(miningState)) {
+    return getFailureResult(state, "capacity-full", target, targetCell);
   }
 
+  const cellKey = getCaveCellKey(target);
+  const previousDamage = getCaveCellDamage(miningState, target);
+  const damageDealt = getCaveDigDamage(getDrillHardness(miningState), targetCell.hardness);
+  const cellDamage = Math.min(targetCell.durability, previousDamage + damageDealt);
+  const isDug = cellDamage >= targetCell.durability;
+  const nextCellDamage = { ...miningState.cellDamage };
+  if (isDug) delete nextCellDamage[cellKey];
+  else nextCellDamage[cellKey] = cellDamage;
+
   const nextInventory = normalizeMiningInventory(state.miningInventory);
-  if (targetCell.resourceType) nextInventory[targetCell.resourceType] += 1;
+  if (isDug && targetCell.resourceType) nextInventory[targetCell.resourceType] += 1;
   const nextMiningState: CaveMiningState = {
     ...miningState,
     fuel: miningState.fuel - 1,
-    position: { ...target },
-    excavatedCells: [...miningState.excavatedCells, getCaveCellKey(target)],
+    position: isDug ? { ...target } : { ...miningState.position },
+    excavatedCells: isDug
+      ? [...miningState.excavatedCells, cellKey]
+      : miningState.excavatedCells,
+    cellDamage: nextCellDamage,
   };
   return {
     ok: true,
     state: {
       ...state,
-      miningInventory: nextInventory,
+      miningInventory: isDug ? nextInventory : state.miningInventory,
       caveMining: nextMiningState,
     },
-    outcome: "dug",
+    outcome: isDug ? "dug" : "damaged",
     target,
     targetHardness: targetCell.hardness,
-    resourceType: targetCell.resourceType ?? undefined,
+    cellDurability: targetCell.durability,
+    cellDamage: isDug ? 0 : cellDamage,
+    damageDealt,
+    isCracked: cellDamage >= targetCell.durability / 2,
+    resourceType: isDug ? targetCell.resourceType ?? undefined : undefined,
     fuelConsumed: 1,
     rockBreakingPower: CAVE_ROCK_BREAKING_POWER_PER_FUEL,
   };

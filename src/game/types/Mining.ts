@@ -23,8 +23,11 @@ export interface CaveMiningState {
   fuelTankLevel: number;
   drillLevel: number;
   miningCapacityLevel: number;
+  layoutSeed: number;
   position: CavePosition;
   excavatedCells: string[];
+  /** Damage is stored sparsely: untouched and fully excavated cells are absent. */
+  cellDamage: Record<string, number>;
 }
 
-export type DigDirection = "left" | "right" | "down";
+export type DigDirection = "left" | "right" | "up" | "down";

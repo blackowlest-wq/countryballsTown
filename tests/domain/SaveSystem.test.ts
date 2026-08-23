@@ -179,8 +179,10 @@ describe("SaveSystem", () => {
         fuelTankLevel: 1,
         drillLevel: 2,
         miningCapacityLevel: 1,
+        layoutSeed: 123,
         position: { x: 2, depth: 1 },
         excavatedCells: ["3:0", "2:0", "2:1"],
+        cellDamage: { "4:0": 4 },
       },
     };
 
@@ -193,8 +195,10 @@ describe("SaveSystem", () => {
         fuelTankLevel: 1,
         drillLevel: 2,
         miningCapacityLevel: 1,
+        layoutSeed: 123,
         position: { x: 2, depth: 1 },
         excavatedCells: ["3:0", "2:0", "2:1"],
+        cellDamage: { "4:0": 4 },
       },
     });
   });

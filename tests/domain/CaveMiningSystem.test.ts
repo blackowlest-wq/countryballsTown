@@ -3,6 +3,8 @@ import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_ROCK_BREAKING_POWER_PER_F
 import { createInitialGameState } from "../../src/game/core/GameState";
 import {
   createInitialCaveMiningState,
+  getCaveCellDamage,
+  getCaveDigDamage,
   digCave,
   getCaveUpgradeCost,
   getCaveCell,
@@ -10,9 +12,13 @@ import {
   getFuelTankCapacity,
   getMiningCapacity,
   getMiningInventoryTotal,
+  getRevealedCaveResourceType,
   getTargetPosition,
+  isCaveCellCracked,
+  isCaveResourceRevealed,
   normalizeCaveMiningState,
   purchaseCaveFuel,
+  resetCaveMining,
   upgradeCave,
 } from "../../src/game/systems/CaveMiningSystem";
 
@@ -27,51 +33,78 @@ describe("CaveMiningSystem", () => {
     expect(getMiningCapacity(state.caveMining)).toBe(10);
   });
 
-  it("削岩5で燃料を1消費し、浅い場所の銅を採掘する", () => {
+  it("削岩5を上限にダメージを蓄積し、半分を超えるとヒビが入る", () => {
     const state = createInitialGameState(0);
 
-    const result = digCave(state, "left");
+    const first = digCave(state, "left");
 
-    expect(result).toMatchObject({
+    expect(first).toMatchObject({
       ok: true,
-      outcome: "dug",
+      outcome: "damaged",
       fuelConsumed: 1,
       rockBreakingPower: CAVE_ROCK_BREAKING_POWER_PER_FUEL,
-      resourceType: "copper",
+      damageDealt: 5,
+      cellDamage: 5,
+      cellDurability: 11,
+      isCracked: false,
     });
-    expect(result.state.caveMining).toMatchObject({
-      fuel: 9,
-      position: { x: 2, depth: 0 },
-    });
-    expect(result.state.miningInventory.copper).toBe(1);
+    expect(first.state.caveMining).toMatchObject({ fuel: 9, position: { x: 3, depth: 0 } });
+
+    const second = digCave(first.state, "left");
+    expect(second).toMatchObject({ outcome: "damaged", fuelConsumed: 1, cellDamage: 10, isCracked: true });
+    expect(getCaveCellDamage(second.state.caveMining, { x: 2, depth: 0 })).toBe(10);
+    expect(isCaveCellCracked(second.state.caveMining, { x: 2, depth: 0 })).toBe(true);
+
+    const dug = digCave(second.state, "left");
+    expect(dug).toMatchObject({ outcome: "dug", resourceType: "copper", damageDealt: 5, cellDamage: 0 });
+    expect(dug.state.caveMining).toMatchObject({ fuel: 7, position: { x: 2, depth: 0 } });
+    expect(dug.state.miningInventory.copper).toBe(1);
+    expect(dug.state.caveMining.cellDamage).toEqual({});
   });
 
   it("掘ったセルへ戻る移動では燃料を消費しない", () => {
     const state = createInitialGameState(0);
-    const dug = digCave(state, "left");
+    const first = digCave(state, "left");
+    const second = digCave(first.state, "left");
+    const dug = digCave(second.state, "left");
 
     const result = digCave(dug.state, "right");
 
     expect(result).toMatchObject({ ok: true, outcome: "moved", fuelConsumed: 0 });
-    expect(result.state.caveMining.fuel).toBe(9);
+    expect(result.state.caveMining.fuel).toBe(7);
     expect(getMiningInventoryTotal(result.state.miningInventory)).toBe(1);
   });
 
-  it("ドリル硬度が足りない岩は燃料を使わずに止まる", () => {
+  it("ドリル硬度が足りなくても掘れるが、削岩効率が下がる", () => {
     const state = createInitialGameState(0);
 
     const result = digCave(state, "right");
 
-    expect(result).toMatchObject({ ok: false, outcome: "too-hard", targetHardness: 2 });
-    expect(result.state).toBe(state);
-    expect(state.caveMining.fuel).toBe(10);
+    expect(result).toMatchObject({
+      ok: true,
+      outcome: "damaged",
+      targetHardness: 2,
+      damageDealt: 2,
+      fuelConsumed: 1,
+      cellDamage: 2,
+    });
+    expect(result.state).not.toBe(state);
+    expect(result.state.caveMining.fuel).toBe(9);
   });
 
-  it("より深い15層目まで掘り進められ、深部にはさらに硬い地面がある", () => {
+  it("上下に移動対象を取り、深部ほど耐久値が大きい", () => {
+    expect(getTargetPosition({ x: 3, depth: 1 }, "up"))
+      .toEqual({ x: 3, depth: 0 });
+    expect(getTargetPosition({ x: 3, depth: 0 }, "up")).toBeNull();
     expect(getTargetPosition({ x: 3, depth: CAVE_MAX_DEPTH - 1 }, "down"))
       .toEqual({ x: 3, depth: CAVE_MAX_DEPTH });
     expect(getTargetPosition({ x: 3, depth: CAVE_MAX_DEPTH }, "down")).toBeNull();
     expect(getCaveCell({ x: 3, depth: 12 })).toMatchObject({ hardness: 6, resourceType: "diamond" });
+    expect(getCaveCell({ x: 3, depth: 15 })!.durability)
+      .toBeGreaterThan(getCaveCell({ x: 3, depth: 0 })!.durability);
+    expect(getCaveDigDamage(1, 2)).toBe(2);
+    expect(getCaveDigDamage(2, 2)).toBe(CAVE_ROCK_BREAKING_POWER_PER_FUEL);
+    expect(getCaveDigDamage(1, 6)).toBe(1);
   });
 
   it("ドリルをコインで強化すると硬い岩を掘れる", () => {
@@ -82,9 +115,57 @@ describe("CaveMiningSystem", () => {
     expect(getDrillHardness(upgraded.state.caveMining)).toBe(2);
     expect(digCave(upgraded.state, "right")).toMatchObject({
       ok: true,
-      resourceType: "fossil",
+      outcome: "damaged",
+      damageDealt: CAVE_ROCK_BREAKING_POWER_PER_FUEL,
       rockBreakingPower: CAVE_ROCK_BREAKING_POWER_PER_FUEL,
     });
+  });
+
+  it("採掘済みパネルから2マス以内の埋蔵物を表示する", () => {
+    const state = createInitialGameState(0).caveMining;
+
+    expect(isCaveResourceRevealed(state, { x: 1, depth: 2 })).toBe(true);
+    expect(getRevealedCaveResourceType(state, { x: 1, depth: 2 })).toBe("fossil");
+    expect(getRevealedCaveResourceType(state, { x: 3, depth: 3 })).toBeNull();
+
+    const movedState = {
+      ...state,
+      excavatedCells: [...state.excavatedCells, "3:1"],
+    };
+    expect(getRevealedCaveResourceType(movedState, { x: 3, depth: 3 })).toBe("ancient-relic");
+  });
+
+  it("採掘リセットで地形Seedと掘削状態だけを更新し、強化と材料を保持する", () => {
+    const base = createInitialGameState(0);
+    const state = {
+      ...base,
+      coins: 321,
+      miningInventory: { ...base.miningInventory, copper: 2 },
+      caveMining: {
+        ...base.caveMining,
+        drillLevel: 2,
+        fuelTankLevel: 1,
+        fuel: 3,
+        position: { x: 2, depth: 0 },
+        excavatedCells: ["3:0", "2:0"],
+        cellDamage: { "4:0": 4 },
+      },
+    };
+
+    const reset = resetCaveMining(state, () => 0.25);
+
+    expect(reset.coins).toBe(321);
+    expect(reset.miningInventory.copper).toBe(2);
+    expect(reset.caveMining).toMatchObject({
+      drillLevel: 2,
+      fuelTankLevel: 1,
+      fuel: 3,
+      position: { x: 3, depth: 0 },
+      excavatedCells: ["3:0"],
+      cellDamage: {},
+    });
+    expect(reset.caveMining.layoutSeed).not.toBe(base.caveMining.layoutSeed);
+    expect(getCaveCell({ x: 2, depth: 0 }, reset.caveMining.layoutSeed)?.resourceType).not.toBeNull();
   });
 
   it("燃料タンクと採掘物容量を別々に強化できる", () => {
@@ -138,6 +219,7 @@ describe("CaveMiningSystem", () => {
       miningCapacityLevel: 1.8,
       position: { x: 999, depth: -1 },
       excavatedCells: ["3:0", "3:0", "bad", "99:99"],
+      cellDamage: { "2:0": 5, "3:0": 99, bad: 2 },
     });
 
     expect(normalized).toMatchObject({
@@ -147,6 +229,7 @@ describe("CaveMiningSystem", () => {
       miningCapacityLevel: 1,
       position: { x: 3, depth: 0 },
       excavatedCells: ["3:0"],
+      cellDamage: { "2:0": 5 },
     });
   });
 });
