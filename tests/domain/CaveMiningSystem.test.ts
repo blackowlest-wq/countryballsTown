@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST, CAVE_ROCK_BREAKING_POWER_PER_FUEL } from "../../src/game/constants/gameConstants";
+import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_ROCK_BREAKING_POWER_PER_FUEL } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import {
   createInitialCaveMiningState,
   digCave,
   getCaveUpgradeCost,
+  getCaveCell,
   getDrillHardness,
   getFuelTankCapacity,
   getMiningCapacity,
   getMiningInventoryTotal,
+  getTargetPosition,
   normalizeCaveMiningState,
   purchaseCaveFuel,
   upgradeCave,
@@ -63,6 +65,13 @@ describe("CaveMiningSystem", () => {
     expect(result).toMatchObject({ ok: false, outcome: "too-hard", targetHardness: 2 });
     expect(result.state).toBe(state);
     expect(state.caveMining.fuel).toBe(10);
+  });
+
+  it("より深い15層目まで掘り進められ、深部にはさらに硬い地面がある", () => {
+    expect(getTargetPosition({ x: 3, depth: CAVE_MAX_DEPTH - 1 }, "down"))
+      .toEqual({ x: 3, depth: CAVE_MAX_DEPTH });
+    expect(getTargetPosition({ x: 3, depth: CAVE_MAX_DEPTH }, "down")).toBeNull();
+    expect(getCaveCell({ x: 3, depth: 12 })).toMatchObject({ hardness: 6, resourceType: "diamond" });
   });
 
   it("ドリルをコインで強化すると硬い岩を掘れる", () => {

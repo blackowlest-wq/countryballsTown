@@ -72,6 +72,7 @@ import {
 } from "../game/systems/FishingSystem";
 import {
   digCave as digCaveSystem,
+  getDrillHardness,
   purchaseCaveFuel as purchaseCaveFuelSystem,
   upgradeCave as upgradeCaveSystem,
   type CaveDigOutcome,
@@ -412,12 +413,12 @@ export const useGameStore = create<GameStore>((setState, get) => {
     const result = digCaveSystem(current.game, direction);
     if (!result.ok) {
       const notice = result.outcome === "no-fuel"
-        ? "燃料がありません。燃料切れ後に購入できます。"
+        ? "燃料が切れています。燃料を購入して補給してください。"
         : result.outcome === "capacity-full"
           ? "採掘物がいっぱいです。採掘物容量を強化してください。"
           : result.outcome === "too-hard"
-            ? `この岩は硬すぎます。必要なドリル硬度は${result.targetHardness}です。`
-            : "これ以上は掘り進めません。";
+            ? `この地面は固くて掘れません。必要なドリル硬度は${result.targetHardness}、現在は${getDrillHardness(current.game.caveMining)}です。ドリル硬度を強化してください。`
+            : "ここから先には掘れる地面がありません。";
       set({ notice });
       return result.outcome;
     }

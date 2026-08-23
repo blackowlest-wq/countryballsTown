@@ -54,6 +54,13 @@ const caveLayout: Readonly<Record<string, CaveLayoutCell>> = {
   "3:5": { resourceType: "diamond" },
   "1:6": { resourceType: "ancient-relic" },
   "5:6": { resourceType: "diamond" },
+  "3:8": { hardness: 5, resourceType: "gold" },
+  "2:9": { hardness: 5, resourceType: "ancient-relic" },
+  "4:10": { hardness: 5, resourceType: "amber" },
+  "3:12": { hardness: 6, resourceType: "diamond" },
+  "1:13": { hardness: 5, resourceType: "fossil" },
+  "5:14": { hardness: 6, resourceType: "diamond" },
+  "3:15": { hardness: 6, resourceType: "diamond" },
 };
 
 export type CaveDigOutcome =
@@ -221,7 +228,7 @@ export function getCaveCell(position: CavePosition): CaveCell | null {
   const resourceHardness = resourceType
     ? getMiningResourceDefinition(resourceType).hardness
     : undefined;
-  const baseHardness = Math.min(4, 1 + Math.floor(position.depth / 2));
+  const baseHardness = Math.min(6, 1 + Math.floor(position.depth / 2));
   return {
     position: { ...position },
     hardness: layoutCell?.hardness ?? resourceHardness ?? baseHardness,

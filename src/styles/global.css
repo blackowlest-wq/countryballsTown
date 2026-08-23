@@ -333,17 +333,23 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .cave-mining-launcher .primary-button { min-height: 34px; padding: 6px 13px; }
 .cave-mining-overlay { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; padding: 16px; background: rgba(56, 49, 61, .48); backdrop-filter: blur(4px); }
 .cave-mining-window { width: min(760px, 100%); max-height: calc(100vh - 32px); padding: 20px; overflow: auto; background: rgba(255, 250, 238, .985); border: 1px solid rgba(255,255,255,.95); border-radius: 25px; box-shadow: 0 20px 50px rgba(52, 45, 58, .35); }
+.cave-mining-notice { margin: 0 0 11px; padding: 9px 11px; color: #76552a; background: #fff0c5; border: 1px solid #efdba7; border-radius: 11px; font-size: 11px; font-weight: 900; line-height: 1.45; }
 .cave-mining-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 10px; }
 .cave-mining-stat { display: grid; gap: 3px; padding: 9px 10px; color: #8d7e6b; background: #f7efe1; border: 1px solid #eadfc9; border-radius: 12px; font-size: 10px; font-weight: 800; }
-.cave-mining-stat strong { color: var(--ink); font-size: 15px; }
+.cave-mining-stat strong { display: inline-flex; gap: 5px; align-items: center; color: var(--ink); font-size: 15px; }
 .cave-mining-stat.fuel-stat strong { color: #9a6d25; }
-.cave-mining-board { display: grid; grid-template-columns: 23px minmax(0, 1fr); gap: 5px; padding: 10px; background: #4b4650; border: 3px solid #716878; border-radius: 16px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.08); }
-.cave-mining-board-depths { display: grid; grid-template-rows: repeat(8, minmax(28px, 1fr)); align-items: center; color: #c2b4a8; text-align: center; font-size: 9px; font-weight: 900; }
-.cave-mining-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(28px, 1fr)); gap: 4px; }
+.cave-mining-board { display: grid; max-height: 360px; grid-template-columns: 23px minmax(0, 1fr); gap: 5px; align-items: start; padding: 10px; overflow: auto; background: #4b4650; border: 3px solid #716878; border-radius: 16px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.08); }
+.cave-mining-board-depths { display: grid; grid-auto-rows: 28px; grid-template-rows: none; align-items: center; color: #c2b4a8; text-align: center; font-size: 9px; font-weight: 900; }
+.cave-mining-grid { display: grid; grid-auto-rows: 28px; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: none; gap: 4px; }
 .cave-mining-cell { display: grid; min-height: 28px; place-items: center; border-radius: 7px; font-size: 16px; line-height: 1; }
 .cave-mining-cell.is-rock { color: #c8bdad; background: #655f68; box-shadow: inset 0 -3px 0 rgba(33,31,38,.18); }
 .cave-mining-cell.is-excavated { color: #918577; background: #b8a692; box-shadow: inset 0 0 0 2px rgba(255,247,220,.18); }
 .cave-mining-cell.is-current { color: #fff; background: #d48b43; box-shadow: 0 0 0 2px #ffe1a4, 0 3px 0 rgba(111,68,36,.28); }
+.cave-drill-icon { position: relative; display: inline-block; width: 22px; height: 18px; flex: 0 0 auto; transform: rotate(-18deg); }
+.cave-drill-body { position: absolute; top: 2px; right: 2px; width: 14px; height: 10px; background: #e5a13f; border: 2px solid #9b672d; border-radius: 3px 4px 4px 3px; box-shadow: inset -2px -2px 0 rgba(119, 75, 36, .17); }
+.cave-drill-grip { position: absolute; right: 5px; bottom: 0; width: 7px; height: 9px; background: #765440; border: 2px solid #513b33; border-top: 0; border-radius: 0 0 4px 4px; transform: rotate(17deg); }
+.cave-drill-bit { position: absolute; top: 5px; left: -1px; width: 10px; height: 7px; background: #b7c2c8; border: 1px solid #6f7a80; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+.cave-mining-window.is-digging .cave-mining-cell.is-current .cave-drill-icon { animation: cave-drill-dig .52s ease-in-out infinite; }
 .cave-mining-current { display: flex; flex-wrap: wrap; gap: 7px 12px; justify-content: center; padding: 8px 5px 2px; color: #8b806f; font-size: 10px; font-weight: 800; }
 .cave-mining-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
 .cave-dig-button { display: inline-flex; min-height: 42px; gap: 7px; align-items: center; justify-content: center; color: #fff; background: #7a8b69; border: 0; border-radius: 12px; box-shadow: 0 3px 0 #566548; cursor: pointer; font-size: 12px; font-weight: 900; }
@@ -377,6 +383,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 @keyframes fishing-bobber-bite { from { transform: translate(-50%, -3px) rotate(-5deg); } to { transform: translate(-50%, 4px) rotate(5deg); } }
 @keyframes fishing-ripple-pulse { 0%, 100% { transform: scaleX(.88); opacity: .42; } 50% { transform: scaleX(1.08); opacity: .8; } }
 @keyframes fishing-bite-button { from { transform: scale(1); } to { transform: scale(1.02); } }
+@keyframes cave-drill-dig { 0%, 100% { transform: translateX(0) rotate(-18deg); } 50% { transform: translateX(-5px) rotate(-25deg); } }
 
 .interaction-hint { position: absolute; right: 24px; bottom: 26px; z-index: 4; display: flex; gap: 7px; align-items: center; padding: 8px 12px; color: #718274; border-radius: 15px; font-size: 10px; font-weight: 800; opacity: .9; }
 .hint-hand { color: #e49d4d; font-size: 14px; }
@@ -416,9 +423,9 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .cave-mining-stat { padding: 7px 6px; font-size: 8px; }
   .cave-mining-stat strong { font-size: 12px; }
   .cave-mining-board { padding: 7px; }
-  .cave-mining-grid { gap: 3px; }
+  .cave-mining-grid { grid-auto-rows: 24px; gap: 3px; }
   .cave-mining-cell { min-height: 24px; font-size: 13px; }
-  .cave-mining-board-depths { grid-template-rows: repeat(8, minmax(24px, 1fr)); font-size: 8px; }
+  .cave-mining-board-depths { grid-auto-rows: 24px; grid-template-rows: none; font-size: 8px; }
   .cave-mining-upgrades { grid-template-columns: 1fr; }
   .cave-mining-inventory-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fishing-overlay { padding: 10px; }

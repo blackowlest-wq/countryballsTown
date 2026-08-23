@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   CAVE_MAX_DEPTH,
   CAVE_WIDTH,
@@ -20,6 +21,7 @@ import {
 } from "../game/systems/CaveMiningSystem";
 import type { DigDirection } from "../game/types/Mining";
 import { useGameStore } from "../store/gameStore";
+import { CaveDrillIcon } from "./CaveDrillIcon";
 
 const directions: ReadonlyArray<{ direction: DigDirection; label: string; icon: string }> = [
   { direction: "left", label: "左へ掘る", icon: "←" },
@@ -57,6 +59,14 @@ export function CaveMiningGameWindow(): JSX.Element | null {
   const digCave = useGameStore((store) => store.digCave);
   const purchaseFuel = useGameStore((store) => store.purchaseCaveFuel);
   const upgradeCave = useGameStore((store) => store.upgradeCave);
+  const notice = useGameStore((store) => store.notice);
+  const [isDigging, setIsDigging] = useState(false);
+  const digTimerRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (digTimerRef.current !== null) window.clearTimeout(digTimerRef.current);
+  }, []);
+
   if (!open) return null;
 
   const mining = game.caveMining;
@@ -66,9 +76,19 @@ export function CaveMiningGameWindow(): JSX.Element | null {
   const miningTotal = getMiningInventoryTotal(game.miningInventory);
   const currentCell = getCaveCell(mining.position);
 
+  const handleDig = (direction: DigDirection): void => {
+    if (isDigging) return;
+    setIsDigging(true);
+    digCave(direction);
+    digTimerRef.current = window.setTimeout(() => {
+      digTimerRef.current = null;
+      setIsDigging(false);
+    }, 520);
+  };
+
   return (
     <div className="cave-mining-overlay">
-      <section className="cave-mining-window" role="dialog" aria-modal="true" aria-label="地面採掘ゲーム">
+      <section className={`cave-mining-window ${isDigging ? "is-digging" : ""}`} role="dialog" aria-modal="true" aria-label="地面採掘ゲーム">
         <div className="panel-heading">
           <div>
             <p className="eyebrow">GROUND MINING GAME</p>
@@ -77,6 +97,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           <button className="icon-button" type="button" onClick={close} aria-label="地面採掘ゲームを閉じる">×</button>
         </div>
         <p className="panel-hint">下や横へ掘り進み、見つけた採掘物を図鑑と材料に加えます。</p>
+        {notice && <p className="cave-mining-notice" role="status">{notice}</p>}
 
         <div className="cave-mining-stats" aria-label="採掘ステータス">
           <div className="cave-mining-stat fuel-stat">
@@ -85,7 +106,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           </div>
           <div className="cave-mining-stat">
             <span>ドリル硬度</span>
-            <strong>⛏ {drillHardness}</strong>
+            <strong><CaveDrillIcon /> {drillHardness}</strong>
           </div>
           <div className="cave-mining-stat">
             <span>採掘物</span>
@@ -115,7 +136,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
                     className={`cave-mining-cell ${isExcavated ? "is-excavated" : "is-rock"} ${isCurrent ? "is-current" : ""}`}
                     aria-label={getCellLabel(x, depth, isExcavated, isCurrent, resourceName)}
                   >
-                    {isCurrent ? "⛏" : isExcavated ? (cell.resourceType ? getMiningResourceDefinition(cell.resourceType).icon : "·") : "🪨"}
+                    {isCurrent ? <CaveDrillIcon /> : isExcavated ? (cell.resourceType ? getMiningResourceDefinition(cell.resourceType).icon : "·") : "🪨"}
                   </span>
                 );
               })
@@ -125,7 +146,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
 
         <div className="cave-mining-current" aria-label="現在の採掘位置">
           <span>深さ {mining.position.depth}</span>
-          <span>次の岩の硬度 {currentCell?.hardness ?? "-"}</span>
+          <span>現在地の地面の硬度 {currentCell?.hardness ?? "-"}</span>
           <span>削岩 {CAVE_ROCK_BREAKING_POWER_PER_FUEL} / 燃料1</span>
         </div>
 
@@ -138,8 +159,8 @@ export function CaveMiningGameWindow(): JSX.Element | null {
                 type="button"
                 className="cave-dig-button"
                 data-direction={direction}
-                disabled={!target}
-                onClick={() => digCave(direction)}
+                disabled={!target || isDigging}
+                onClick={() => handleDig(direction)}
               >
                 <span aria-hidden="true">{icon}</span>
                 {label}
@@ -162,7 +183,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
                   type="button"
                   className="cave-upgrade-button"
                   data-upgrade={kind}
-                  disabled={game.coins < cost}
+                  disabled={isDigging || game.coins < cost}
                   onClick={() => upgradeCave(kind)}
                 >
                   <span>
@@ -185,7 +206,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             <button
               type="button"
               className="primary-button"
-              disabled={game.coins < CAVE_FUEL_PURCHASE_COST}
+              disabled={isDigging || game.coins < CAVE_FUEL_PURCHASE_COST}
               onClick={purchaseFuel}
             >
               燃料を購入

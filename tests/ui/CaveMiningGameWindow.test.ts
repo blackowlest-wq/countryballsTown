@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST } from "../../src/game/constants/gameConstants";
+import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_WIDTH } from "../../src/game/constants/gameConstants";
 import { createInitialCaveMiningState } from "../../src/game/systems/CaveMiningSystem";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
@@ -49,14 +49,38 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     expect(container.querySelector('[data-direction="left"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="down"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="right"]')).not.toBeNull();
-    expect(container.querySelectorAll(".cave-mining-cell")).toHaveLength(56);
+    expect(container.querySelectorAll(".cave-mining-cell")).toHaveLength(CAVE_WIDTH * (CAVE_MAX_DEPTH + 1));
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-direction="left"]')
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
+    expect(container.querySelector(".cave-mining-window.is-digging")).not.toBeNull();
     expect(useGameStore.getState().game.miningInventory.copper).toBe(1);
     expect(container.textContent).toContain("銅");
+
+    await act(async () => root.unmount());
+  });
+
+  it("固くて掘れない地面の理由をウィンドウ内に表示する", async () => {
+    useGameStore.setState({
+      game: { ...createInitialGameState(0), currentMap: "cave" },
+      isCaveMiningGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CaveMiningGameWindow)));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-direction="right"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.querySelector('[role="status"]')?.textContent)
+      .toContain("この地面は固くて掘れません");
+    expect(container.querySelector('[role="status"]')?.textContent)
+      .toContain("必要なドリル硬度は2、現在は1");
 
     await act(async () => root.unmount());
   });
