@@ -49,8 +49,7 @@ export function getRiverPathPoints(sampleCount = 48): RiverPathPoint[] {
 export function isMapId(value: unknown): value is MapId {
   return value === "village"
     || value === "sea-and-river"
-    || value === "cave"
-    || value === "city";
+    || value === "cave";
 }
 
 export function isMapPositionWalkable(mapId: MapId, position: GridPosition): boolean {
@@ -64,7 +63,7 @@ export function isMapPositionWalkable(mapId: MapId, position: GridPosition): boo
       position.z <= GRID_SIZE - CAVE_WALKABLE_MARGIN
     );
   }
-  return true;
+  return false;
 }
 
 export function getMapArrivalPosition(mapId: MapId, residentIndex: number): GridPosition {
@@ -74,10 +73,7 @@ export function getMapArrivalPosition(mapId: MapId, residentIndex: number): Grid
   if (mapId === "sea-and-river") {
     return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.8, z: 17.2 });
   }
-  if (mapId === "cave") {
-    return clampToMap({ x: 8.5 + (residentIndex % 4) * 0.85, z: 16.4 });
-  }
-  return clampToMap({ x: 8.7 + (residentIndex % 4) * 0.9, z: 16.8 });
+  return clampToMap({ x: 8.5 + (residentIndex % 4) * 0.85, z: 16.4 });
 }
 
 function getMapArrivalDestination(mapId: MapId, residentIndex: number): GridPosition {
@@ -87,10 +83,7 @@ function getMapArrivalDestination(mapId: MapId, residentIndex: number): GridPosi
   if (mapId === "sea-and-river") {
     return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.5, z: 15.5 });
   }
-  if (mapId === "cave") {
-    return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.55, z: 14.6 });
-  }
-  return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.55, z: 14.8 });
+  return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.55, z: 14.6 });
 }
 
 export function getMapActivityPosition(

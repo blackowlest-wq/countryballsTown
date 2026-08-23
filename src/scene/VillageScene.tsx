@@ -12,7 +12,6 @@ import { useGameStore } from "../store/gameStore";
 import type { MapId } from "../game/types/Map";
 import { SeaAndRiverMap } from "./SeaAndRiverMap";
 import { CaveMap } from "./CaveMap";
-import { CityMap } from "./CityMap";
 import { getMapDefinition } from "../game/data/maps";
 
 function SceneContents({ currentMap }: { currentMap: MapId }): JSX.Element {
@@ -21,16 +20,12 @@ function SceneContents({ currentMap }: { currentMap: MapId }): JSX.Element {
     ? "#9bd2ed"
     : currentMap === "sea-and-river"
       ? "#a8dff0"
-      : currentMap === "cave"
-        ? "#47434d"
-        : "#b8d5dc";
+      : "#47434d";
   const mapScene = currentMap === "village"
     ? <Ground />
     : currentMap === "sea-and-river"
       ? <SeaAndRiverMap />
-      : currentMap === "cave"
-        ? <CaveMap />
-        : <CityMap />;
+      : <CaveMap />;
   return (
     <>
       <color attach="background" args={[background]} />

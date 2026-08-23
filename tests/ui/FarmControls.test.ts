@@ -156,7 +156,6 @@ describe("FarmControls", () => {
     expect(useGameStore.getState().isMapTravelOpen).toBe(true);
     expect(container.querySelector('[data-map="sea-and-river"]')).not.toBeNull();
     expect(container.querySelector('[data-map="cave"]')).not.toBeNull();
-    expect(container.querySelector('[data-map="city"]')).not.toBeNull();
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-map="sea-and-river"]')

@@ -26,12 +26,6 @@ export const mapDefinitions: readonly MapDefinition[] = [
     icon: "⛰️",
     description: "静かな洞窟の中を探検できます。",
   },
-  {
-    id: "city",
-    name: "街",
-    icon: "🏙️",
-    description: "街の通りを歩いて、にぎわいを楽しめます。",
-  },
 ];
 
 export function getMapDefinition(mapId: MapId): MapDefinition {

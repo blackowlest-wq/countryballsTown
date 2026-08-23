@@ -307,14 +307,12 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000).currentMap).toBe("village");
   });
 
-  it("洞窟と街のマップを保存データから復元できる", () => {
+  it("削除された街マップを持つ旧セーブは村から再開する", () => {
     const storage = memoryStorage();
     const state = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify({ ...state, currentMap: "city" }));
 
-    for (const currentMap of ["cave", "city"] as const) {
-      saveGameState({ ...state, currentMap }, storage, 1_000);
-      expect(loadGameState(storage, 1_000).currentMap).toBe(currentMap);
-    }
+    expect(loadGameState(storage, 1_000).currentMap).toBe("village");
   });
 
   it("釣り竿情報がない旧セーブデータは未所持へ移行する", () => {

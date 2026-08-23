@@ -44,7 +44,7 @@ describe("map store interaction", () => {
     expect(useGameStore.getState().notice).toBe("村へ戻りました。");
   });
 
-  it("海と川から洞窟や街へ移動できる", () => {
+  it("海と川から洞窟へ移動できる", () => {
     useGameStore.getState().travelToMap("sea-and-river", 5_000);
     useGameStore.getState().openMapTravel();
 
@@ -55,12 +55,6 @@ describe("map store interaction", () => {
       game: { currentMap: "cave" },
       isMapTravelOpen: false,
       notice: "洞窟へ移動しました。",
-    });
-
-    useGameStore.getState().travelToMap("city", 7_000);
-    expect(useGameStore.getState()).toMatchObject({
-      game: { currentMap: "city" },
-      notice: "街へ移動しました。",
     });
   });
 });

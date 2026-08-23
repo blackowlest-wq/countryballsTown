@@ -31,7 +31,7 @@ describe("MapTravelPanel", () => {
     await act(async () => root.render(createElement(MapTravelPanel)));
 
     expect(container.textContent).toContain("現在地は海と川");
-    expect(container.querySelectorAll("[data-map]")).toHaveLength(4);
+    expect(container.querySelectorAll("[data-map]")).toHaveLength(3);
     expect(container.querySelector<HTMLButtonElement>('[data-map="sea-and-river"]')?.disabled).toBe(true);
 
     await act(async () => {
