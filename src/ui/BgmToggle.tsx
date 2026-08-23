@@ -24,6 +24,7 @@ function writeBgmPreference(enabled: boolean): void {
 export function BgmToggle(): JSX.Element {
   const bgmRef = useRef<VillageBgm | null>(null);
   const enabledRef = useRef(readBgmPreference());
+  const shouldResumeRef = useRef(false);
   const [enabled, setEnabled] = useState(enabledRef.current);
   const [available, setAvailable] = useState(true);
 
@@ -32,7 +33,11 @@ export function BgmToggle(): JSX.Element {
     if (!bgm) return;
 
     void bgm.start().then((started) => {
-      if (started) return;
+      if (started) {
+        shouldResumeRef.current = true;
+        return;
+      }
+      shouldResumeRef.current = false;
       enabledRef.current = false;
       setEnabled(false);
       setAvailable(false);
@@ -44,6 +49,22 @@ export function BgmToggle(): JSX.Element {
     const bgm = new VillageBgm();
     bgmRef.current = bgm;
 
+    const stopBgm = (): void => {
+      bgm.stop();
+    };
+
+    const restartBgm = (): void => {
+      if (enabledRef.current && shouldResumeRef.current) startBgm();
+    };
+
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === "hidden") {
+        stopBgm();
+        return;
+      }
+      restartBgm();
+    };
+
     const startOnFirstInteraction = (event: Event): void => {
       if (event.target instanceof Element && event.target.closest(".bgm-toggle")) return;
       window.removeEventListener("pointerdown", startOnFirstInteraction);
@@ -53,10 +74,18 @@ export function BgmToggle(): JSX.Element {
 
     window.addEventListener("pointerdown", startOnFirstInteraction, { once: true, passive: true });
     window.addEventListener("keydown", startOnFirstInteraction, { once: true });
+    window.addEventListener("pagehide", stopBgm);
+    window.addEventListener("beforeunload", stopBgm);
+    window.addEventListener("pageshow", restartBgm);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("pointerdown", startOnFirstInteraction);
       window.removeEventListener("keydown", startOnFirstInteraction);
+      window.removeEventListener("pagehide", stopBgm);
+      window.removeEventListener("beforeunload", stopBgm);
+      window.removeEventListener("pageshow", restartBgm);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       bgm.dispose();
       bgmRef.current = null;
     };
@@ -71,6 +100,7 @@ export function BgmToggle(): JSX.Element {
     if (nextEnabled) {
       startBgm();
     } else {
+      shouldResumeRef.current = false;
       bgmRef.current?.stop();
     }
   };

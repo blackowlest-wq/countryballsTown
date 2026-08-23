@@ -76,6 +76,7 @@ export function prepareGameStateForSave(
     buildings,
     crops,
     fishInventory,
+    hasFishingRod: state.hasFishingRod === true,
   });
   const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
     normalizedState as GameState & LegacyCropState
@@ -86,6 +87,7 @@ export function prepareGameStateForSave(
     crops,
     ...productionCollections,
     fishInventory,
+    hasFishingRod: normalizedState.hasFishingRod,
     encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
     lastSavedAt: now,
   };
@@ -246,6 +248,7 @@ export function loadGameState(
           ? Math.max(0, Math.floor(parsed.omurice))
           : 0,
       fishInventory: normalizeFishInventory(parsed.fishInventory),
+      hasFishingRod: parsed.hasFishingRod === true,
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
       ...normalizeProductionCollections({
         cowProductions: parsed.cowProductions,

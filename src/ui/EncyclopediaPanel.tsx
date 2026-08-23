@@ -5,6 +5,7 @@ import {
   type EncyclopediaCategoryId,
 } from "../game/data/encyclopedia";
 import { useGameStore } from "../store/gameStore";
+import { FishIcon } from "./FishIcon";
 
 export function EncyclopediaPanel(): JSX.Element | null {
   const open = useGameStore((store) => store.isEncyclopediaOpen);
@@ -60,7 +61,9 @@ export function EncyclopediaPanel(): JSX.Element | null {
               className={`encyclopedia-entry ${isCollected ? "is-collected" : ""}`}
               data-entry={entry.id}
             >
-              <span className="encyclopedia-entry-icon" aria-hidden="true">{entry.icon}</span>
+              <span className="encyclopedia-entry-icon" aria-hidden="true">
+                {entry.fishType ? <FishIcon fishType={entry.fishType} /> : entry.icon}
+              </span>
               <span className="encyclopedia-entry-copy">
                 <strong>{entry.name}</strong>
                 <small>{entry.description}</small>

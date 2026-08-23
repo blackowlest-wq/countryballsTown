@@ -246,6 +246,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 
 .fish-resource-pill { min-width: 104px; }
 .fish-icon { color: #4c8294; background: #dff5f7; border-color: #f5ffff; font-size: 18px; text-shadow: none; }
+.fish-icon-visual { display: block; width: 34px; height: 27px; overflow: visible; }
+.fishing-result-icon .fish-icon-visual { width: 38px; height: 30px; }
 
 .fishing-overlay { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: rgba(38, 76, 95, .34); backdrop-filter: blur(3px); }
 .fishing-modal { width: min(520px, 100%); max-height: min(720px, calc(100vh - 48px)); padding: 22px; overflow: auto; background: rgba(255, 250, 238, .98); border: 1px solid rgba(255, 255, 255, .92); border-radius: 26px; box-shadow: 0 18px 42px rgba(38, 76, 95, .26); }
@@ -253,8 +255,11 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fishing-prompt-panel .panel-heading { text-align: left; }
 .fishing-prompt-art { display: grid; min-height: 120px; margin: 13px 0 8px; place-items: center; color: #4c8294; background: linear-gradient(180deg, #c6edf3 0 47%, #70c6df 48% 100%); border: 1px solid #a8dce7; border-radius: 19px; font-size: 61px; letter-spacing: -13px; text-shadow: 0 4px 0 rgba(255,255,255,.45); }
 .fishing-prompt-copy { margin: 15px 0 5px; color: var(--ink); font-size: 17px; font-weight: 900; }
+.fishing-rod-offer { display: flex; justify-content: space-between; align-items: center; margin: 13px 0 7px; padding: 11px 14px; color: var(--ink); background: #f7efe1; border: 1px solid #eadfc9; border-radius: 13px; font-size: 13px; font-weight: 900; }
+.fishing-rod-offer strong { color: #9a6d25; }
 .fishing-prompt-hint { margin: 0 0 15px; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .fishing-prompt-panel .panel-actions { flex-direction: column; }
+.fishing-prompt-panel .primary-button:disabled { color: #aaa294; background: #ddd6c9; box-shadow: none; cursor: not-allowed; }
 
 .fishing-game-panel { display: grid; gap: 13px; }
 .fishing-stage { position: relative; min-height: 278px; overflow: hidden; background: linear-gradient(180deg, #c9eef4 0 33%, #76c9df 34% 100%); border: 1px solid #a3dce7; border-radius: 21px; isolation: isolate; }

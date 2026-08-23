@@ -17,7 +17,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
   {
     type: "mackerel",
     name: "サバ",
-    icon: "🐠",
+    icon: "🐟",
     rarity: "uncommon",
     rarityLabel: "めずらしい",
     probability: 0.3,
@@ -29,7 +29,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
   {
     type: "sea-bream",
     name: "タイ",
-    icon: "🐡",
+    icon: "🐟",
     rarity: "rare",
     rarityLabel: "レア",
     probability: 0.14,

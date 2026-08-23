@@ -24,6 +24,7 @@ export interface GameState {
   onigiri: number;
   omurice: number;
   fishInventory: import("./Fish").FishInventory;
+  hasFishingRod: boolean;
   currentMap: import("./Map").MapId;
   cowProductions: import("./Cow").CowProduction[];
   pigProductions: import("./Pig").PigProduction[];

@@ -10,6 +10,7 @@ import {
   type FishingGaugeTarget,
 } from "../game/systems/FishGameSystem";
 import { useGameStore } from "../store/gameStore";
+import { FishIcon } from "./FishIcon";
 
 type FishingPhase = "waiting" | "bite" | "gauge" | "caught" | "escaped";
 
@@ -183,7 +184,7 @@ export function FishingGamePanel(): JSX.Element | null {
           )}
           {phase === "caught" && (
             <div className="fishing-result-card">
-              <span className="fishing-result-icon" aria-hidden="true">{fish.icon}</span>
+              <span className="fishing-result-icon" aria-hidden="true"><FishIcon fishType={fish.type} /></span>
               <span><strong>{fish.name}</strong><small>{fish.rarityLabel}の魚をゲット！</small></span>
             </div>
           )}

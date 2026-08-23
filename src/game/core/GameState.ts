@@ -37,6 +37,7 @@ export function createInitialGameState(now = Date.now()): GameState {
     onigiri: 0,
     omurice: 0,
     fishInventory: createInitialFishInventory(),
+    hasFishingRod: false,
     currentMap: "village",
     cowProductions: [],
     pigProductions: [],

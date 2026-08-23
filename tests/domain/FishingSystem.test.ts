@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { fishDefinitions } from "../../src/game/data/fish";
+import { createInitialGameState } from "../../src/game/core/GameState";
+import { FISHING_ROD_COST } from "../../src/game/constants/gameConstants";
+import {
+  canPurchaseFishingRod,
+  canStartFishing,
+  purchaseFishingRod,
+} from "../../src/game/systems/FishingSystem";
 import {
   advanceFishingGauge,
   chooseFishDefinition,
@@ -38,5 +45,38 @@ describe("FishGameSystem", () => {
       .toEqual({ position: 0.95, direction: -1 });
     expect(advanceFishingGauge({ position: 0.05, direction: -1 }, 100, 1))
       .toEqual({ position: 0.05, direction: 1 });
+  });
+});
+
+describe("FishingSystem", () => {
+  it("初期状態では釣り竿がなく、釣りを始められない", () => {
+    const state = createInitialGameState(0);
+
+    expect(state.hasFishingRod).toBe(false);
+    expect(canStartFishing(state)).toBe(false);
+    expect(canPurchaseFishingRod(state)).toBe(false);
+  });
+
+  it("1000コインで釣り竿を購入し、釣りを始められる", () => {
+    const state = { ...createInitialGameState(0), coins: FISHING_ROD_COST };
+
+    const result = purchaseFishingRod(state);
+
+    expect(result).toMatchObject({ ok: true });
+    expect(result.state).toMatchObject({
+      coins: 0,
+      hasFishingRod: true,
+    });
+    expect(canStartFishing(result.state)).toBe(true);
+  });
+
+  it("コイン不足や二重購入では状態を変えない", () => {
+    const poorState = { ...createInitialGameState(0), coins: FISHING_ROD_COST - 1 };
+    const poorResult = purchaseFishingRod(poorState);
+    const ownedState = { ...createInitialGameState(0), hasFishingRod: true, coins: FISHING_ROD_COST };
+    const ownedResult = purchaseFishingRod(ownedState);
+
+    expect(poorResult).toMatchObject({ ok: false, reason: "not-enough-coins", state: poorState });
+    expect(ownedResult).toMatchObject({ ok: false, reason: "already-owned", state: ownedState });
   });
 });

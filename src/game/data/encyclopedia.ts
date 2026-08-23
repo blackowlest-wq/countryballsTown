@@ -29,6 +29,7 @@ export interface EncyclopediaEntry {
   name: string;
   icon: string;
   description: string;
+  fishType?: FishType;
 }
 
 export const encyclopediaCategories: readonly EncyclopediaCategory[] = [
@@ -140,6 +141,7 @@ function createFishEntries(): EncyclopediaEntry[] {
     name: fish.name,
     icon: fish.icon,
     description: fish.description,
+    fishType: fish.type,
   }));
 }
 

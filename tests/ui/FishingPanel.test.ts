@@ -2,6 +2,7 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { FISHING_ROD_COST } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { FishingGamePanel } from "../../src/ui/FishingGamePanel";
@@ -27,13 +28,27 @@ afterEach(() => {
 
 describe("fishing panels", () => {
   it("確認画面から2D魚釣り画面へ進める", async () => {
-    useGameStore.setState({ isFishingPromptOpen: true });
+    useGameStore.setState({
+      game: { ...createInitialGameState(0), coins: FISHING_ROD_COST },
+      isFishingPromptOpen: true,
+    });
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(FishingPromptPanel)));
-    expect(container.textContent).toContain("海の魚釣りをやりますか？");
+    expect(container.textContent).toContain("釣り竿を買う");
+
+    await act(async () => {
+      [...container.querySelectorAll("button")]
+        .find((button) => button.textContent?.includes("釣り竿を買う"))
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().game).toMatchObject({
+      coins: 0,
+      hasFishingRod: true,
+    });
 
     await act(async () => {
       [...container.querySelectorAll("button")]

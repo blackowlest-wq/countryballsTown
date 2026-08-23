@@ -63,6 +63,10 @@ import type { FishType } from "../game/types/Fish";
 import type { ShopVisitorSimulation } from "../game/types/ShopVisitor";
 import type { MapId } from "../game/types/Map";
 import type { GameState } from "../game/types/Village";
+import {
+  canStartFishing,
+  purchaseFishingRod as purchaseFishingRodSystem,
+} from "../game/systems/FishingSystem";
 
 export type InteractionMode = "inspect" | "build" | "move" | "farm";
 
@@ -93,7 +97,8 @@ interface GameStore {
   closeEncyclopedia: () => void;
   openFishingPrompt: () => void;
   closeFishingPrompt: () => void;
-  startFishingGame: () => void;
+  purchaseFishingRod: () => boolean;
+  startFishingGame: () => boolean;
   closeFishingGame: () => void;
   recordFishCatch: (fishType: FishType) => void;
   travelToMap: (mapId: MapId, now?: number) => void;
@@ -271,11 +276,30 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   closeFishingPrompt: () => set({ isFishingPromptOpen: false }),
 
-  startFishingGame: () => set({
-    isFishingPromptOpen: false,
-    isFishingGameOpen: true,
-    notice: null,
-  }),
+  purchaseFishingRod: () => {
+    const current = get();
+    const result = purchaseFishingRodSystem(current.game);
+    if (!result.ok) {
+      set({ notice: result.reason === "not-enough-coins" ? "コインが足りません。" : null });
+      return false;
+    }
+    set({ game: persist(result.state), notice: null });
+    return true;
+  },
+
+  startFishingGame: () => {
+    const current = get();
+    if (!canStartFishing(current.game)) {
+      set({ notice: "釣り竿を購入すると釣りをプレイできます。" });
+      return false;
+    }
+    set({
+      isFishingPromptOpen: false,
+      isFishingGameOpen: true,
+      notice: null,
+    });
+    return true;
+  },
 
   closeFishingGame: () => set({ isFishingGameOpen: false }),
 

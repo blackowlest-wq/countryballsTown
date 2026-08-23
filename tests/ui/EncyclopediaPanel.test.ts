@@ -87,6 +87,10 @@ describe("EncyclopediaPanel", () => {
     expect(container.textContent).toContain("マグロ");
     expect(container.querySelector('[data-entry="fish:tuna"]')?.textContent ?? "")
       .toContain("☆");
+    expect(container.querySelector('[data-entry="fish:mackerel"] .fish-icon-mackerel'))
+      .not.toBeNull();
+    expect(container.querySelector('[data-entry="fish:sea-bream"] .fish-icon-sea-bream'))
+      .not.toBeNull();
     await act(async () => root.unmount());
   });
 });

@@ -73,6 +73,7 @@ describe("SaveSystem", () => {
       ...createInitialGameState(0),
       coins: 321.4,
       villageLevel: 2,
+      hasFishingRod: true,
       wheatSeeds: 4,
       wheat: 4,
       tomatoSeeds: 3,
@@ -125,6 +126,7 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 100)).toMatchObject({
       coins: 321.4,
       villageLevel: 2,
+      hasFishingRod: true,
       wheatSeeds: 4,
       wheat: 4,
       tomatoSeeds: 3,
@@ -303,6 +305,14 @@ describe("SaveSystem", () => {
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000).currentMap).toBe("village");
+  });
+
+  it("釣り竿情報がない旧セーブデータは未所持へ移行する", () => {
+    const storage = memoryStorage();
+    const { hasFishingRod: _hasFishingRod, ...legacyState } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000).hasFishingRod).toBe(false);
   });
 
   it("加工物情報がない旧セーブデータを0個へ移行する", () => {
