@@ -87,7 +87,7 @@ describe("GameProgressSystem", () => {
       () => 0,
     );
 
-    expect(result.game).toMatchObject({ coins: 100.3, pizzas: 0 });
+    expect(result.game).toMatchObject({ coins: 103, pizzas: 0 });
     expect(result.visitorSimulation.visitors[0].phase).toBe("leaving");
     expect(result.shouldPersist).toBe(true);
   });

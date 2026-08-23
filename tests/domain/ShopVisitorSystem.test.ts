@@ -133,7 +133,7 @@ describe("ShopVisitorSystem", () => {
       () => 0,
     );
 
-    expect(purchased.coinsEarned).toBe(0.3);
+    expect(purchased.coinsEarned).toBe(3);
     expect(purchased.pizzasSold).toBe(1);
     expect(purchased.simulation.visitors[0].phase).toBe("leaving");
 
@@ -228,7 +228,7 @@ describe("ShopVisitorSystem", () => {
     );
 
     expect(purchased.productsSold).toEqual({ bread: 1 });
-    expect(purchased.coinsEarned).toBe(0.3);
+    expect(purchased.coinsEarned).toBe(3);
   });
 
   it("魚屋は在庫のある魚料理を来訪客へ販売する", () => {
@@ -260,6 +260,6 @@ describe("ShopVisitorSystem", () => {
     );
 
     expect(purchased.productsSold).toEqual({ "grilled-fish": 1 });
-    expect(purchased.coinsEarned).toBe(0.3);
+    expect(purchased.coinsEarned).toBe(3);
   });
 });

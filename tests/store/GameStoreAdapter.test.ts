@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
+import { SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
 import { createShopVisitorSimulation } from "../../src/game/systems/ShopVisitorSystem";
 import { useGameStore } from "../../src/store/gameStore";
+import type { ShopVisitor } from "../../src/game/types/ShopVisitor";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -39,6 +41,43 @@ describe("gameStore adapter", () => {
     useGameStore.getState().tick(500, 500);
 
     expect(useGameStore.getState().economyRemainderMs).toBe(900);
+  });
+
+  it("ショップ販売の売上をStoreのコインへ反映する", () => {
+    const pizzaShop = {
+      id: "pizza-shop-test",
+      buildingId: "pizza-shop",
+      gridX: 8,
+      gridY: 8,
+    } as const;
+    const visitor: ShopVisitor = {
+      id: "visitor-test",
+      shopBuildingId: pizzaShop.id,
+      color: "#6fa8dc",
+      position: { x: 10, z: 10 },
+      destination: { x: 10, z: 10 },
+      phase: "buying",
+      joinedAt: 0,
+      serviceUntil: SHOP_VISITOR_SERVICE_MS,
+    };
+    useGameStore.setState({
+      game: {
+        ...createInitialGameState(0),
+        residents: [],
+        nextResidentRequestAt: Number.POSITIVE_INFINITY,
+        buildings: [pizzaShop],
+        pizzas: 1,
+      },
+      visitorSimulation: {
+        visitors: [visitor],
+        nextArrivalAt: Number.POSITIVE_INFINITY,
+        nextSequence: 2,
+      },
+    });
+
+    useGameStore.getState().tick(0, SHOP_VISITOR_SERVICE_MS);
+
+    expect(useGameStore.getState().game).toMatchObject({ coins: 103, pizzas: 0 });
   });
 
   it("即時保存が必要なtickでは保存境界のcanonical stateをStoreへ反映する", () => {

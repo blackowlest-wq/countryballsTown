@@ -25,7 +25,7 @@ describe("building definitions", () => {
       category: "building",
       visitorService: {
         queueCapacity: 3,
-        saleCoins: 0.3,
+        saleCoins: 3,
         product: "pizza",
       },
     });
@@ -123,7 +123,7 @@ describe("building definitions", () => {
       countryId: "japan",
       visitorService: {
         queueCapacity: 3,
-        saleCoins: 0.3,
+        saleCoins: 3,
         products: ["onigiri", "omurice"],
       },
     });
@@ -139,7 +139,7 @@ describe("building definitions", () => {
       countryId: "japan",
       visitorService: {
         queueCapacity: 3,
-        saleCoins: 0.3,
+        saleCoins: 3,
         products: ["grilled-fish", "seafood-bowl"],
       },
     });
