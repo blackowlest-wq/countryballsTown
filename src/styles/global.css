@@ -325,6 +325,54 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fishing-action-button { width: 100%; min-height: 48px; }
 .fishing-result-actions { display: flex; width: 100%; flex-direction: column; gap: 8px; }
 
+.cave-mining-launcher { position: absolute; bottom: 116px; left: 24px; z-index: 8; display: flex; gap: 10px; align-items: center; width: min(360px, calc(100vw - 48px)); padding: 12px 13px; background: rgba(255, 250, 238, .95); border: 1px solid rgba(255,255,255,.86); border-radius: 18px; box-shadow: var(--shadow); backdrop-filter: blur(8px); }
+.cave-mining-launcher-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; background: #e6d8c3; border-radius: 14px; font-size: 23px; }
+.cave-mining-launcher-copy { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.cave-mining-launcher-copy strong { color: var(--ink); font-size: 13px; }
+.cave-mining-launcher-copy small { color: var(--muted); font-size: 10px; }
+.cave-mining-launcher .primary-button { min-height: 34px; padding: 6px 13px; }
+.cave-mining-overlay { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; padding: 16px; background: rgba(56, 49, 61, .48); backdrop-filter: blur(4px); }
+.cave-mining-window { width: min(760px, 100%); max-height: calc(100vh - 32px); padding: 20px; overflow: auto; background: rgba(255, 250, 238, .985); border: 1px solid rgba(255,255,255,.95); border-radius: 25px; box-shadow: 0 20px 50px rgba(52, 45, 58, .35); }
+.cave-mining-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 10px; }
+.cave-mining-stat { display: grid; gap: 3px; padding: 9px 10px; color: #8d7e6b; background: #f7efe1; border: 1px solid #eadfc9; border-radius: 12px; font-size: 10px; font-weight: 800; }
+.cave-mining-stat strong { color: var(--ink); font-size: 15px; }
+.cave-mining-stat.fuel-stat strong { color: #9a6d25; }
+.cave-mining-board { display: grid; grid-template-columns: 23px minmax(0, 1fr); gap: 5px; padding: 10px; background: #4b4650; border: 3px solid #716878; border-radius: 16px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.08); }
+.cave-mining-board-depths { display: grid; grid-template-rows: repeat(8, minmax(28px, 1fr)); align-items: center; color: #c2b4a8; text-align: center; font-size: 9px; font-weight: 900; }
+.cave-mining-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(28px, 1fr)); gap: 4px; }
+.cave-mining-cell { display: grid; min-height: 28px; place-items: center; border-radius: 7px; font-size: 16px; line-height: 1; }
+.cave-mining-cell.is-rock { color: #c8bdad; background: #655f68; box-shadow: inset 0 -3px 0 rgba(33,31,38,.18); }
+.cave-mining-cell.is-excavated { color: #918577; background: #b8a692; box-shadow: inset 0 0 0 2px rgba(255,247,220,.18); }
+.cave-mining-cell.is-current { color: #fff; background: #d48b43; box-shadow: 0 0 0 2px #ffe1a4, 0 3px 0 rgba(111,68,36,.28); }
+.cave-mining-current { display: flex; flex-wrap: wrap; gap: 7px 12px; justify-content: center; padding: 8px 5px 2px; color: #8b806f; font-size: 10px; font-weight: 800; }
+.cave-mining-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
+.cave-dig-button { display: inline-flex; min-height: 42px; gap: 7px; align-items: center; justify-content: center; color: #fff; background: #7a8b69; border: 0; border-radius: 12px; box-shadow: 0 3px 0 #566548; cursor: pointer; font-size: 12px; font-weight: 900; }
+.cave-dig-button:hover { background: #8da47a; transform: translateY(-1px); }
+.cave-dig-button span { font-size: 20px; line-height: 1; }
+.cave-dig-button:disabled { color: #b2aaa0; background: #ded7cc; box-shadow: none; cursor: not-allowed; transform: none; }
+.cave-mining-upgrade-section, .cave-mining-inventory { margin-top: 13px; padding: 10px; background: #f7efe1; border: 1px solid #eadfc9; border-radius: 13px; }
+.cave-mining-section-heading { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
+.cave-mining-section-heading strong { color: #756b5d; font-size: 12px; }
+.cave-mining-section-heading small { color: var(--muted); font-size: 9px; }
+.cave-mining-upgrades { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.cave-upgrade-button { display: flex; min-width: 0; gap: 6px; align-items: center; justify-content: space-between; padding: 8px; color: var(--ink); text-align: left; background: rgba(255,255,255,.68); border: 1px solid #eadfc9; border-radius: 10px; cursor: pointer; }
+.cave-upgrade-button:hover { background: #fffdf6; border-color: #b3d28f; }
+.cave-upgrade-button:disabled { color: #aaa294; background: #eee7da; border-color: #ddd6c9; cursor: not-allowed; opacity: .72; }
+.cave-upgrade-button > span { display: grid; min-width: 0; gap: 2px; }
+.cave-upgrade-button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.cave-upgrade-button small { color: var(--muted); font-size: 8px; white-space: nowrap; }
+.cave-upgrade-button b { flex: 0 0 auto; color: #9a6d25; font-size: 10px; }
+.cave-fuel-purchase { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 11px; padding: 10px; background: #fff0c5; border: 1px solid #efdba7; border-radius: 13px; }
+.cave-fuel-purchase > div { display: grid; gap: 3px; }
+.cave-fuel-purchase strong { color: #8c662e; font-size: 12px; }
+.cave-fuel-purchase small { color: #9b8662; font-size: 9px; }
+.cave-fuel-purchase .primary-button { min-height: 34px; white-space: nowrap; }
+.cave-mining-footnote { margin: 10px 0 0; color: var(--muted); text-align: center; font-size: 9px; font-weight: 800; }
+.cave-mining-inventory-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.cave-mining-inventory-list > span { display: inline-flex; min-width: 0; gap: 3px; align-items: center; padding: 5px; color: #756b5d; background: rgba(255,255,255,.64); border-radius: 8px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.cave-mining-inventory-list > span > span { font-size: 14px; }
+.cave-mining-inventory-list b { margin-left: auto; color: var(--ink); font-size: 11px; }
+
 @keyframes fishing-bobber-float { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 5px); } }
 @keyframes fishing-bobber-bite { from { transform: translate(-50%, -3px) rotate(-5deg); } to { transform: translate(-50%, 4px) rotate(5deg); } }
 @keyframes fishing-ripple-pulse { 0%, 100% { transform: scaleX(.88); opacity: .42; } 50% { transform: scaleX(1.08); opacity: .8; } }
@@ -361,6 +409,18 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .request-progress-row { margin-top: 7px; font-size: 9px; }
   .floating-panel { left: 10px; right: 10px; bottom: 93px; width: auto; max-height: calc(100vh - 160px); padding: 16px; border-radius: 19px; }
   .building-panel, .milk-factory-panel, .pork-factory-panel, .wheat-factory-panel, .pizza-shop-panel, .bakery-panel, .rice-shop-panel, .fish-shop-panel, .map-travel-panel, .encyclopedia-panel { left: 10px; right: 10px; width: auto; transform: none; }
+  .cave-mining-launcher { right: 10px; bottom: 91px; left: 10px; width: auto; padding: 9px; }
+  .cave-mining-overlay { padding: 10px; }
+  .cave-mining-window { max-height: calc(100vh - 20px); padding: 16px; border-radius: 20px; }
+  .cave-mining-stats { gap: 4px; }
+  .cave-mining-stat { padding: 7px 6px; font-size: 8px; }
+  .cave-mining-stat strong { font-size: 12px; }
+  .cave-mining-board { padding: 7px; }
+  .cave-mining-grid { gap: 3px; }
+  .cave-mining-cell { min-height: 24px; font-size: 13px; }
+  .cave-mining-board-depths { grid-template-rows: repeat(8, minmax(24px, 1fr)); font-size: 8px; }
+  .cave-mining-upgrades { grid-template-columns: 1fr; }
+  .cave-mining-inventory-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fishing-overlay { padding: 10px; }
   .fishing-modal { max-height: calc(100vh - 20px); padding: 16px; border-radius: 20px; }
   .fishing-stage { min-height: 245px; }

@@ -8,6 +8,8 @@ import {
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 import { createInitialFishInventory } from "../data/fish";
+import { createInitialMiningInventory } from "../data/mining";
+import { createInitialCaveMiningState } from "../systems/CaveMiningSystem";
 import { syncEncyclopediaCollection } from "../systems/EncyclopediaSystem";
 
 export function createInitialGameState(now = Date.now()): GameState {
@@ -39,6 +41,8 @@ export function createInitialGameState(now = Date.now()): GameState {
     grilledFish: 0,
     seafoodBowls: 0,
     fishInventory: createInitialFishInventory(),
+    miningInventory: createInitialMiningInventory(),
+    caveMining: createInitialCaveMiningState(),
     hasFishingRod: false,
     currentMap: "village",
     cowProductions: [],

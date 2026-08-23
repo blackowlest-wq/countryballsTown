@@ -1,5 +1,6 @@
 import { buildingDefinitions } from "./buildings";
 import { fishDefinitions } from "./fish";
+import { miningResourceDefinitions } from "./mining";
 import {
   CRAFTING_PRODUCT_TYPES,
   CRAFTING_RECIPES,
@@ -12,6 +13,10 @@ export type EncyclopediaCategoryId =
   | "building"
   | "nature"
   | "fish"
+  | "mineral"
+  | "fossil"
+  | "artifact"
+  | "cave-life"
   | "crop"
   | "livestock"
   | "processed"
@@ -36,6 +41,10 @@ export const encyclopediaCategories: readonly EncyclopediaCategory[] = [
   { id: "building", name: "建物", icon: "🏠" },
   { id: "nature", name: "自然", icon: "🌿" },
   { id: "fish", name: "魚", icon: "🐟" },
+  { id: "mineral", name: "鉱物", icon: "💎" },
+  { id: "fossil", name: "化石", icon: "🦴" },
+  { id: "artifact", name: "遺物", icon: "🏺" },
+  { id: "cave-life", name: "地下生物", icon: "🍄" },
   { id: "crop", name: "作物", icon: "🌱" },
   { id: "livestock", name: "畜産物", icon: "🥚" },
   { id: "processed", name: "加工品", icon: "🏭" },
@@ -145,6 +154,16 @@ function createFishEntries(): EncyclopediaEntry[] {
   }));
 }
 
+function createMiningEntries(): EncyclopediaEntry[] {
+  return miningResourceDefinitions.map((resource) => ({
+    id: `mining:${resource.type}`,
+    category: resource.category,
+    name: resource.name,
+    icon: resource.icon,
+    description: resource.description,
+  }));
+}
+
 function createFoodEntries(): EncyclopediaEntry[] {
   return CRAFTING_PRODUCT_TYPES.map((productType: CraftingProductType) => {
     const recipe = CRAFTING_RECIPES[productType];
@@ -161,6 +180,7 @@ function createFoodEntries(): EncyclopediaEntry[] {
 export const encyclopediaEntries: readonly EncyclopediaEntry[] = [
   ...createBuildingEntries(),
   ...createFishEntries(),
+  ...createMiningEntries(),
   ...createCropEntries(),
   ...livestockEntries,
   ...processedEntries,

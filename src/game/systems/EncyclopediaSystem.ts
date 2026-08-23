@@ -8,6 +8,7 @@ import {
   getProcessedEncyclopediaId,
 } from "../data/encyclopedia";
 import { fishDefinitions } from "../data/fish";
+import { miningResourceDefinitions } from "../data/mining";
 import type { FishType } from "../types/Fish";
 import type { GameState } from "../types/Village";
 
@@ -40,6 +41,11 @@ const positiveInventoryEntries: ReadonlyArray<[keyof GameState, string]> = [
 const fishInventoryEntries: ReadonlyArray<readonly [FishType, string]> =
   fishDefinitions.map((fish) => [fish.type, getFishEncyclopediaId(fish.type)] as const);
 
+const miningInventoryEntries = miningResourceDefinitions.map((resource) => [
+  resource.type,
+  `mining:${resource.type}`,
+] as const);
+
 export function normalizeEncyclopediaCollectedIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
@@ -67,6 +73,9 @@ export function syncEncyclopediaCollection(state: GameState): GameState {
   }
   for (const [fishType, entryId] of fishInventoryEntries) {
     if (state.fishInventory[fishType] > 0) collected.add(entryId);
+  }
+  for (const [resourceType, entryId] of miningInventoryEntries) {
+    if (state.miningInventory[resourceType] > 0) collected.add(entryId);
   }
 
   const encyclopediaCollectedIds = encyclopediaEntries

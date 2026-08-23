@@ -167,6 +167,50 @@ describe("SaveSystem", () => {
     });
   });
 
+  it("採掘物と地面採掘ゲームの進行状態を保存して復元する", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+    const original = {
+      ...state,
+      miningInventory: { ...state.miningInventory, copper: 2, fossil: 1 },
+      caveMining: {
+        ...state.caveMining,
+        fuel: 3,
+        fuelTankLevel: 1,
+        drillLevel: 2,
+        miningCapacityLevel: 1,
+        position: { x: 2, depth: 1 },
+        excavatedCells: ["3:0", "2:0", "2:1"],
+      },
+    };
+
+    saveGameState(original, storage, 1_000);
+
+    expect(loadGameState(storage, 2_000)).toMatchObject({
+      miningInventory: { copper: 2, fossil: 1 },
+      caveMining: {
+        fuel: 3,
+        fuelTankLevel: 1,
+        drillLevel: 2,
+        miningCapacityLevel: 1,
+        position: { x: 2, depth: 1 },
+        excavatedCells: ["3:0", "2:0", "2:1"],
+      },
+    });
+  });
+
+  it("採掘情報がない旧セーブデータを初期状態へ移行する", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+    const { miningInventory: _miningInventory, caveMining: _caveMining, ...legacyState } = state;
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      miningInventory: state.miningInventory,
+      caveMining: state.caveMining,
+    });
+  });
+
   it("作物情報がない旧セーブデータを移行する", () => {
     const storage = memoryStorage();
     const {

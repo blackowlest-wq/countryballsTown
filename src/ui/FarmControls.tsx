@@ -2,6 +2,8 @@ import { useGameStore } from "../store/gameStore";
 import { getCropName } from "../game/systems/CropSystem";
 import { getCropDefinition, type CropType } from "../game/types/Crop";
 import { fishDefinitions } from "../game/data/fish";
+import { miningResourceDefinitions } from "../game/data/mining";
+import { getMiningCapacity, getMiningInventoryTotal } from "../game/systems/CaveMiningSystem";
 import { FishIcon } from "./FishIcon";
 
 const cropOptions: CropType[] = ["wheat", "tomato", "rice"];
@@ -76,6 +78,22 @@ export function FarmControls(): JSX.Element | null {
               </span>
             ))}
           </div>
+            <span className="processing-stock-heading mining-stock-heading">
+              採掘物 {getMiningInventoryTotal(game.miningInventory)} / {getMiningCapacity(game.caveMining)}
+            </span>
+            <div className="processing-stock-items mining-stock-items">
+              {miningResourceDefinitions.map((resource) => (
+                <span
+                  key={resource.type}
+                  className="processing-stock-item mining-stock-item"
+                  aria-label={`${resource.name} ${game.miningInventory[resource.type]}`}
+                >
+                  <span className="processing-stock-icon" aria-hidden="true">{resource.icon}</span>
+                  <span>{resource.name}</span>
+                  <strong>{game.miningInventory[resource.type].toLocaleString("ja-JP")}</strong>
+                </span>
+              ))}
+            </div>
         </div>
         <div className="processing-stock-group">
           <span className="processing-stock-heading">加工物</span>

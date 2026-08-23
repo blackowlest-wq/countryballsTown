@@ -19,6 +19,8 @@ import { ResidentPanel } from "../ui/ResidentPanel";
 import { EncyclopediaPanel } from "../ui/EncyclopediaPanel";
 import { FishingPromptPanel } from "../ui/FishingPromptPanel";
 import { FishingGamePanel } from "../ui/FishingGamePanel";
+import { CaveMiningLauncher } from "../ui/CaveMiningLauncher";
+import { CaveMiningGameWindow } from "../ui/CaveMiningGameWindow";
 import { VillageScene } from "../scene/VillageScene";
 
 export function App(): JSX.Element {
@@ -51,6 +53,8 @@ export function App(): JSX.Element {
       <EncyclopediaPanel />
       <FishingPromptPanel />
       <FishingGamePanel />
+      <CaveMiningLauncher />
+      <CaveMiningGameWindow />
       <FarmControls />
       <div className="interaction-hint">
         <span className="hint-hand">✦</span>

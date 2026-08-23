@@ -26,6 +26,8 @@ export interface GameState {
   grilledFish: number;
   seafoodBowls: number;
   fishInventory: import("./Fish").FishInventory;
+  miningInventory: import("./Mining").MiningInventory;
+  caveMining: import("./Mining").CaveMiningState;
   hasFishingRod: boolean;
   currentMap: import("./Map").MapId;
   cowProductions: import("./Cow").CowProduction[];

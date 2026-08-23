@@ -21,6 +21,10 @@ describe("encyclopedia system", () => {
       "建物",
       "自然",
       "魚",
+      "鉱物",
+      "化石",
+      "遺物",
+      "地下生物",
       "作物",
       "畜産物",
       "加工品",
@@ -29,6 +33,9 @@ describe("encyclopedia system", () => {
     expect(encyclopediaEntries).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: "building:house", name: "家", category: "building" }),
       expect.objectContaining({ id: "fish:tuna", name: "マグロ", category: "fish" }),
+      expect.objectContaining({ id: "mining:diamond", name: "ダイヤモンド", category: "mineral" }),
+      expect.objectContaining({ id: "mining:fossil", name: "化石", category: "fossil" }),
+      expect.objectContaining({ id: "mining:ancient-relic", name: "古代遺物", category: "artifact" }),
       expect.objectContaining({ id: "crop:rice", name: "米", category: "crop" }),
       expect.objectContaining({ id: "processed:wheat-flour", name: "小麦粉", category: "processed" }),
       expect.objectContaining({ id: "food:omurice", name: "オムライス", category: "food" }),
@@ -74,6 +81,22 @@ describe("encyclopedia system", () => {
     expect(afterConsumption.encyclopediaCollectedIds).toEqual(
       expect.arrayContaining(["building:house", "fish:tuna", "crop:wheat", "processed:butter", "food:pizza"]),
     );
+  });
+
+  it("registers every collected mining resource in its cave category", () => {
+    const collected = syncEncyclopediaCollection({
+      ...createInitialGameState(0),
+      miningInventory: {
+        ...createInitialGameState(0).miningInventory,
+        copper: 1,
+        "glowing-mushroom": 1,
+      },
+    });
+
+    expect(collected.encyclopediaCollectedIds).toEqual(expect.arrayContaining([
+      "mining:copper",
+      "mining:glowing-mushroom",
+    ]));
   });
 
   it("persists collected stars in the save data", () => {

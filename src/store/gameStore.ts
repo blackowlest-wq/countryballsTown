@@ -49,6 +49,7 @@ import {
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { getMapDefinition } from "../game/data/maps";
+import { getMiningResourceDefinition } from "../game/data/mining";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
   getCropName,
@@ -69,6 +70,14 @@ import {
   canStartFishing,
   purchaseFishingRod as purchaseFishingRodSystem,
 } from "../game/systems/FishingSystem";
+import {
+  digCave as digCaveSystem,
+  purchaseCaveFuel as purchaseCaveFuelSystem,
+  upgradeCave as upgradeCaveSystem,
+  type CaveDigOutcome,
+  type CaveUpgradeKind,
+} from "../game/systems/CaveMiningSystem";
+import type { DigDirection } from "../game/types/Mining";
 
 export type InteractionMode = "inspect" | "build" | "move" | "farm";
 
@@ -93,6 +102,7 @@ interface GameStore {
   isEncyclopediaOpen: boolean;
   isFishingPromptOpen: boolean;
   isFishingGameOpen: boolean;
+  isCaveMiningGameOpen: boolean;
   notice: string | null;
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
@@ -107,6 +117,11 @@ interface GameStore {
   startFishingGame: () => boolean;
   closeFishingGame: () => void;
   recordFishCatch: (fishType: FishType) => void;
+  openCaveMiningGame: () => boolean;
+  closeCaveMiningGame: () => void;
+  digCave: (direction: DigDirection) => CaveDigOutcome | null;
+  purchaseCaveFuel: () => boolean;
+  upgradeCave: (kind: CaveUpgradeKind) => boolean;
   travelToMap: (mapId: MapId, now?: number) => void;
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
@@ -211,6 +226,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   isEncyclopediaOpen: false,
   isFishingPromptOpen: false,
   isFishingGameOpen: false,
+  isCaveMiningGameOpen: false,
   notice: null,
 
   tick: (deltaMs, now) => {
@@ -236,6 +252,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
     }
     : { isBuildMenuOpen: false }),
   setResidentPanelOpen: (open) => set(open
@@ -245,6 +262,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
     }
     : { isResidentPanelOpen: false }),
 
@@ -265,6 +283,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isEncyclopediaOpen: false,
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
+    isCaveMiningGameOpen: false,
     notice: null,
   }),
 
@@ -287,6 +306,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isEncyclopediaOpen: true,
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
+    isCaveMiningGameOpen: false,
     notice: null,
   }),
 
@@ -309,6 +329,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isEncyclopediaOpen: false,
     isFishingPromptOpen: true,
     isFishingGameOpen: false,
+    isCaveMiningGameOpen: false,
     notice: null,
   }),
 
@@ -334,6 +355,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     set({
       isFishingPromptOpen: false,
       isFishingGameOpen: true,
+      isCaveMiningGameOpen: false,
       notice: null,
     });
     return true;
@@ -351,6 +373,100 @@ export const useGameStore = create<GameStore>((setState, get) => {
       game: persist({ ...current.game, fishInventory }),
       notice: null,
     });
+  },
+
+  openCaveMiningGame: () => {
+    const current = get();
+    if (current.game.currentMap !== "cave") {
+      set({ notice: "洞窟で地面採掘ゲームを開けます。" });
+      return false;
+    }
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      porkFactoryPanelBuildingId: null,
+      wheatFactoryPanelBuildingId: null,
+      pizzaShopPanelBuildingId: null,
+      bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      isMapTravelOpen: false,
+      isEncyclopediaOpen: false,
+      isFishingPromptOpen: false,
+      isFishingGameOpen: false,
+      isCaveMiningGameOpen: true,
+      notice: null,
+    });
+    return true;
+  },
+
+  closeCaveMiningGame: () => set({ isCaveMiningGameOpen: false }),
+
+  digCave: (direction) => {
+    const current = get();
+    if (current.game.currentMap !== "cave" || !current.isCaveMiningGameOpen) return null;
+    const result = digCaveSystem(current.game, direction);
+    if (!result.ok) {
+      const notice = result.outcome === "no-fuel"
+        ? "燃料がありません。燃料切れ後に購入できます。"
+        : result.outcome === "capacity-full"
+          ? "採掘物がいっぱいです。採掘物容量を強化してください。"
+          : result.outcome === "too-hard"
+            ? `この岩は硬すぎます。必要なドリル硬度は${result.targetHardness}です。`
+            : "これ以上は掘り進めません。";
+      set({ notice });
+      return result.outcome;
+    }
+    const resourceName = result.resourceType
+      ? getMiningResourceDefinition(result.resourceType).name
+      : null;
+    set({
+      game: persist(result.state),
+      notice: resourceName
+        ? `${resourceName}を1個見つけました！`
+        : result.outcome === "moved"
+          ? null
+          : "削岩5で岩を掘り進みました。",
+    });
+    return result.outcome;
+  },
+
+  purchaseCaveFuel: () => {
+    const current = get();
+    const result = purchaseCaveFuelSystem(current.game);
+    if (!result.ok) {
+      set({
+        notice: result.reason === "fuel-not-empty"
+          ? "燃料が残っているため、まだ購入できません。"
+          : "コインが足りません。",
+      });
+      return false;
+    }
+    set({ game: persist(result.state), notice: "燃料を補給しました！" });
+    return true;
+  },
+
+  upgradeCave: (kind) => {
+    const current = get();
+    const result = upgradeCaveSystem(current.game, kind);
+    if (!result.ok) {
+      set({ notice: "コインが足りません。" });
+      return false;
+    }
+    const upgradeName = kind === "drill"
+      ? "ドリル硬度"
+      : kind === "fuel-tank"
+        ? "燃料タンク"
+        : "採掘物容量";
+    set({
+      game: persist(result.state),
+      notice: `${upgradeName}を強化しました！`,
+    });
+    return true;
   },
 
   travelToMap: (mapId, now = Date.now()) => {
@@ -375,8 +491,9 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isResidentPanelOpen: false,
       isMapTravelOpen: false,
       isEncyclopediaOpen: false,
-      isFishingPromptOpen: false,
-      isFishingGameOpen: false,
+    isFishingPromptOpen: false,
+    isFishingGameOpen: false,
+    isCaveMiningGameOpen: false,
       selectedResidentId: null,
       notice: mapId === "village"
         ? "村へ戻りました。"
@@ -402,6 +519,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
       notice: null,
     }),
 
@@ -421,6 +539,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
       notice: "移動先のセルをクリックしてください。",
     }),
 
@@ -442,6 +561,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
       notice: "種を選んで畑をタップしてください。成熟した作物は村画面でタップすると収穫できます。",
     }),
 
@@ -466,6 +586,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isMapTravelOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
     }),
 
   interactCrop: (gridX, gridY, now = Date.now()) => {
@@ -914,6 +1035,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         isEncyclopediaOpen: false,
         isFishingPromptOpen: false,
         isFishingGameOpen: false,
+        isCaveMiningGameOpen: false,
       });
       return;
     }
@@ -936,6 +1058,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         isEncyclopediaOpen: false,
         isFishingPromptOpen: false,
         isFishingGameOpen: false,
+        isCaveMiningGameOpen: false,
       });
       return;
     }
@@ -959,6 +1082,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
     });
   },
 
@@ -1001,6 +1125,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
+      isCaveMiningGameOpen: false,
       notice: "新しい村を始めました。",
     }),
   };

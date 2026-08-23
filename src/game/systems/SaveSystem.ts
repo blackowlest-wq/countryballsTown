@@ -14,8 +14,10 @@ import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 import { isCellInField, normalizeCrops } from "./CropSystem";
 import { normalizeFishInventory } from "../data/fish";
+import { normalizeMiningInventory } from "../data/mining";
 import { isMapId } from "./MapSystem";
 import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
+import { normalizeCaveMiningState } from "./CaveMiningSystem";
 import { normalizeProductionCollections } from "./ProductionRegistry";
 
 interface LegacyCropState {
@@ -71,11 +73,15 @@ export function prepareGameStateForSave(
     wheatFactoryProductions: state.wheatFactoryProductions,
   }, buildings, now);
   const fishInventory = normalizeFishInventory(state.fishInventory);
+  const miningInventory = normalizeMiningInventory(state.miningInventory);
+  const caveMining = normalizeCaveMiningState(state.caveMining);
   const normalizedState = syncEncyclopediaCollection({
     ...state,
     buildings,
     crops,
     fishInventory,
+    miningInventory,
+    caveMining,
     hasFishingRod: state.hasFishingRod === true,
   });
   const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
@@ -87,6 +93,8 @@ export function prepareGameStateForSave(
     crops,
     ...productionCollections,
     fishInventory,
+    miningInventory,
+    caveMining,
     hasFishingRod: normalizedState.hasFishingRod,
     encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
     lastSavedAt: now,
@@ -256,6 +264,8 @@ export function loadGameState(
           ? Math.max(0, Math.floor(parsed.seafoodBowls))
           : 0,
       fishInventory: normalizeFishInventory(parsed.fishInventory),
+      miningInventory: normalizeMiningInventory(parsed.miningInventory),
+      caveMining: normalizeCaveMiningState(parsed.caveMining),
       hasFishingRod: parsed.hasFishingRod === true,
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
       ...normalizeProductionCollections({
