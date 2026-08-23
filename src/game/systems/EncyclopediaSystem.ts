@@ -33,6 +33,8 @@ const positiveInventoryEntries: ReadonlyArray<[keyof GameState, string]> = [
   ["hamSandwiches", getFoodEncyclopediaId("ham-sandwich")],
   ["onigiri", getFoodEncyclopediaId("onigiri")],
   ["omurice", getFoodEncyclopediaId("omurice")],
+  ["grilledFish", getFoodEncyclopediaId("grilled-fish")],
+  ["seafoodBowls", getFoodEncyclopediaId("seafood-bowl")],
 ];
 
 const fishInventoryEntries: ReadonlyArray<readonly [FishType, string]> =

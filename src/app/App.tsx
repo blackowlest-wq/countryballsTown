@@ -13,6 +13,8 @@ import { PizzaShopPanel } from "../ui/PizzaShopPanel";
 import { WheatFactoryPanel } from "../ui/WheatFactoryPanel";
 import { BakeryPanel } from "../ui/BakeryPanel";
 import { RiceShopPanel } from "../ui/RiceShopPanel";
+import { FishShopPanel } from "../ui/FishShopPanel";
+import { MapTravelPanel } from "../ui/MapTravelPanel";
 import { ResidentPanel } from "../ui/ResidentPanel";
 import { EncyclopediaPanel } from "../ui/EncyclopediaPanel";
 import { FishingPromptPanel } from "../ui/FishingPromptPanel";
@@ -44,13 +46,15 @@ export function App(): JSX.Element {
       <PizzaShopPanel />
       <BakeryPanel />
       <RiceShopPanel />
+      <FishShopPanel />
+      <MapTravelPanel />
       <EncyclopediaPanel />
       <FishingPromptPanel />
       <FishingGamePanel />
       <FarmControls />
       <div className="interaction-hint">
         <span className="hint-hand">✦</span>
-        <span>ドラッグで村を見渡せます</span>
+        <span>ドラッグでマップを見渡せます</span>
       </div>
       <BottomMenu />
     </main>

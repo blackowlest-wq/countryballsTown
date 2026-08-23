@@ -5,7 +5,9 @@ export type CraftingProductType =
   | "croissant"
   | "ham-sandwich"
   | "onigiri"
-  | "omurice";
+  | "omurice"
+  | "grilled-fish"
+  | "seafood-bowl";
 
 export type CraftingIngredientKey =
   | "bacon"
@@ -17,7 +19,8 @@ export type CraftingIngredientKey =
   | "butter"
   | "eggs"
   | "ham"
-  | "rice";
+  | "rice"
+  | import("./Fish").FishType;
 
 export type CraftingOutputKey =
   | "pizzas"
@@ -26,7 +29,9 @@ export type CraftingOutputKey =
   | "croissants"
   | "hamSandwiches"
   | "onigiri"
-  | "omurice";
+  | "omurice"
+  | "grilledFish"
+  | "seafoodBowls";
 
 export interface CraftingRecipe {
   productType: CraftingProductType;
@@ -45,6 +50,8 @@ export const CRAFTING_PRODUCT_TYPES: readonly CraftingProductType[] = [
   "ham-sandwich",
   "onigiri",
   "omurice",
+  "grilled-fish",
+  "seafood-bowl",
 ];
 
 export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
@@ -121,6 +128,26 @@ export const CRAFTING_RECIPES: Record<CraftingProductType, CraftingRecipe> = {
       rice: 2,
       tomatoes: 1,
       eggs: 2,
+    },
+  },
+  "grilled-fish": {
+    productType: "grilled-fish",
+    name: "焼き魚",
+    icon: "🐟",
+    outputKey: "grilledFish",
+    outputAmount: 1,
+    ingredients: { sardine: 1 },
+  },
+  "seafood-bowl": {
+    productType: "seafood-bowl",
+    name: "海鮮丼",
+    icon: "🍚",
+    outputKey: "seafoodBowls",
+    outputAmount: 1,
+    ingredients: {
+      mackerel: 1,
+      "sea-bream": 1,
+      tuna: 1,
     },
   },
 };

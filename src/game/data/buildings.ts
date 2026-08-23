@@ -289,6 +289,27 @@ export const buildingDefinitions: BuildingDefinition[] = [
     description: "おにぎりやオムライスを作り、来訪客に販売するごはん屋。",
     removable: true,
   },
+  {
+    id: "fish-shop",
+    name: "魚屋",
+    width: 3,
+    height: 2,
+    cost: 150,
+    category: "building",
+    menuIcon: "🐟",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.7, z: 0.7 },
+    countryId: "japan",
+    interactionType: "fish-shop",
+    visitorService: {
+      queueCapacity: 3,
+      saleCoins: 0.3,
+      doorOffset: 0.45,
+      products: ["grilled-fish", "seafood-bowl"],
+    },
+    description: "釣った魚から焼き魚や海鮮丼を作り、来訪客に販売する魚屋。",
+    removable: true,
+  },
 ];
 
 export const buildingsById = Object.fromEntries(
@@ -317,4 +338,5 @@ export const playerBuildingIds = [
   "pizza-shop",
   "bakery",
   "rice-shop",
+  "fish-shop",
 ];

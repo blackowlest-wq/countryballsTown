@@ -21,8 +21,8 @@ export const countries: CountryDefinition[] = [
     flagColors: ["#fffaf2", "#ed5a67"],
     flagLayout: "horizontal",
     flagPattern: "circle",
-    favoriteBuildingIds: ["onsen", "torii", "cherry-tree", "rice-shop"],
-    unlockedBuildingIds: ["onsen", "torii", "rice-shop"],
+    favoriteBuildingIds: ["onsen", "torii", "cherry-tree", "rice-shop", "fish-shop"],
+    unlockedBuildingIds: ["onsen", "torii", "rice-shop", "fish-shop"],
     accentColor: "#ed5a67",
   },
   {

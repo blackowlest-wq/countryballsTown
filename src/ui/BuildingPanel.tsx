@@ -13,6 +13,7 @@ export function BuildingPanel(): JSX.Element | null {
   const openPizzaShopPanel = useGameStore((store) => store.openPizzaShopPanel);
   const openBakeryPanel = useGameStore((store) => store.openBakeryPanel);
   const openRiceShopPanel = useGameStore((store) => store.openRiceShopPanel);
+  const openFishShopPanel = useGameStore((store) => store.openFishShopPanel);
   const openEncyclopedia = useGameStore((store) => store.openEncyclopedia);
   const cancel = useGameStore((store) => store.cancelInteraction);
   if (!building || mode === "build") return null;
@@ -24,6 +25,7 @@ export function BuildingPanel(): JSX.Element | null {
   const isPizzaShop = building.buildingId === "pizza-shop";
   const isBakery = building.buildingId === "bakery";
   const isRiceShop = building.buildingId === "rice-shop";
+  const isFishShop = building.buildingId === "fish-shop";
 
   return (
     <section className="floating-panel building-panel" aria-label="建物の操作">
@@ -91,6 +93,15 @@ export function BuildingPanel(): JSX.Element | null {
               onClick={() => openRiceShopPanel(building.id)}
             >
               ごはんを作る
+            </button>
+          )}
+          {isFishShop && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => openFishShopPanel(building.id)}
+            >
+              魚料理を作る
             </button>
           )}
           {building.buildingId === "house" && (

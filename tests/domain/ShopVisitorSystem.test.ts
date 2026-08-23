@@ -22,6 +22,13 @@ const bakery: BuildingInstance = {
   gridY: 8,
 };
 
+const fishShop: BuildingInstance = {
+  id: "fish-shop-test",
+  buildingId: "fish-shop",
+  gridX: 8,
+  gridY: 8,
+};
+
 function stateWithPizzaShop(building = pizzaShop, pizzas = 3): GameState {
   return {
     ...createInitialGameState(0),
@@ -221,6 +228,38 @@ describe("ShopVisitorSystem", () => {
     );
 
     expect(purchased.productsSold).toEqual({ bread: 1 });
+    expect(purchased.coinsEarned).toBe(0.3);
+  });
+
+  it("魚屋は在庫のある魚料理を来訪客へ販売する", () => {
+    const state = {
+      ...createInitialGameState(0),
+      buildings: [fishShop],
+      grilledFish: 1,
+    };
+    const spawned = advanceShopVisitors(
+      state,
+      dueSimulation(),
+      0,
+      0,
+      () => 0,
+    ).simulation;
+    const arrived = advanceShopVisitors(
+      state,
+      { ...spawned, nextArrivalAt: Number.POSITIVE_INFINITY },
+      20_000,
+      20_000,
+      () => 0,
+    ).simulation;
+    const purchased = advanceShopVisitors(
+      state,
+      arrived,
+      0,
+      20_000 + SHOP_VISITOR_SERVICE_MS,
+      () => 0,
+    );
+
+    expect(purchased.productsSold).toEqual({ "grilled-fish": 1 });
     expect(purchased.coinsEarned).toBe(0.3);
   });
 });

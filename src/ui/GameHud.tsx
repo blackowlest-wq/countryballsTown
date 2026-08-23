@@ -1,4 +1,5 @@
 import { countBuildings } from "../game/systems/BuildingSystem";
+import { getMapDefinition } from "../game/data/maps";
 import { useGameStore } from "../store/gameStore";
 import { BgmToggle } from "./BgmToggle";
 import { CoinDisplay } from "./CoinDisplay";
@@ -12,10 +13,10 @@ export function GameHud(): JSX.Element {
   const treeCount = countBuildings(game, "tree");
   const flowerCount = countBuildings(game, "flower");
   const onsenCount = countBuildings(game, "onsen");
-  const fishCount = Object.values(game.fishInventory).reduce((total, count) => total + count, 0);
   const isVillage = game.currentMap === "village";
+  const mapDefinition = getMapDefinition(game.currentMap);
   const nextGoal = !isVillage
-    ? "海岸で釣り、川辺で遊べます"
+    ? mapDefinition.description
     : game.villageLevel === 1
       ? `木 ${treeCount}/3  ・  花 ${flowerCount}/3`
       : game.villageLevel === 2
@@ -28,13 +29,6 @@ export function GameHud(): JSX.Element {
         <VillageLevelDisplay level={game.villageLevel} />
         <div className="hud-right">
           <CoinDisplay coins={game.coins} />
-          <div className="resource-pill fish-resource-pill" aria-label={`魚 ${fishCount}匹`}>
-            <span className="resource-icon fish-icon" aria-hidden="true">🐟</span>
-            <span className="resource-summary-copy">
-              <span className="resource-label">魚</span>
-              <span className="resource-value">{fishCount}</span>
-            </span>
-          </div>
           <div className="mood-pill"><span>●</span> のんびり暮らし中</div>
           <BgmToggle />
         </div>
@@ -42,7 +36,7 @@ export function GameHud(): JSX.Element {
       <div className="goal-card">
         <span className="goal-sparkle">✦</span>
         <div>
-          <p className="goal-label">{isVillage ? "つぎの村の目標" : "海と川"}</p>
+          <p className="goal-label">{isVillage ? "つぎの村の目標" : mapDefinition.name}</p>
           <p className="goal-text">{nextGoal}</p>
         </div>
       </div>

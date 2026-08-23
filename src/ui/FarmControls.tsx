@@ -1,6 +1,8 @@
 import { useGameStore } from "../store/gameStore";
 import { getCropName } from "../game/systems/CropSystem";
 import { getCropDefinition, type CropType } from "../game/types/Crop";
+import { fishDefinitions } from "../game/data/fish";
+import { FishIcon } from "./FishIcon";
 
 const cropOptions: CropType[] = ["wheat", "tomato", "rice"];
 
@@ -60,6 +62,19 @@ export function FarmControls(): JSX.Element | null {
               <span>卵</span>
               <strong>{game.eggs.toLocaleString("ja-JP")}</strong>
             </span>
+            {fishDefinitions.map((fish) => (
+              <span
+                key={fish.type}
+                className="processing-stock-item fish-stock-item"
+                aria-label={`${fish.name} ${game.fishInventory[fish.type]}`}
+              >
+                <span className="processing-stock-icon fish-stock-icon" aria-hidden="true">
+                  <FishIcon fishType={fish.type} />
+                </span>
+                <span>{fish.name}</span>
+                <strong>{game.fishInventory[fish.type].toLocaleString("ja-JP")}</strong>
+              </span>
+            ))}
           </div>
         </div>
         <div className="processing-stock-group">
@@ -129,6 +144,16 @@ export function FarmControls(): JSX.Element | null {
               <span className="processing-stock-icon" aria-hidden="true">🍳</span>
               <span>オムライス</span>
               <strong>{game.omurice.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`焼き魚 ${game.grilledFish}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🐟</span>
+              <span>焼き魚</span>
+              <strong>{game.grilledFish.toLocaleString("ja-JP")}</strong>
+            </span>
+            <span className="processing-stock-item" aria-label={`海鮮丼 ${game.seafoodBowls}`}>
+              <span className="processing-stock-icon" aria-hidden="true">🍚</span>
+              <span>海鮮丼</span>
+              <strong>{game.seafoodBowls.toLocaleString("ja-JP")}</strong>
             </span>
           </div>
         </div>

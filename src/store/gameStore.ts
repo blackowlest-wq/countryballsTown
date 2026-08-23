@@ -38,6 +38,7 @@ import {
 } from "../game/systems/CraftingSystem";
 import { BAKERY_PRODUCT_TYPES } from "../game/systems/BakerySystem";
 import { RICE_SHOP_PRODUCT_TYPES } from "../game/systems/RiceShopSystem";
+import { FISH_SHOP_PRODUCT_TYPES } from "../game/systems/FishShopSystem";
 import {
   createShopVisitorSimulation,
 } from "../game/systems/ShopVisitorSystem";
@@ -47,6 +48,7 @@ import {
 } from "../game/systems/ResidentRequestSystem";
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
+import { getMapDefinition } from "../game/data/maps";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
   getCropName,
@@ -83,9 +85,11 @@ interface GameStore {
   pizzaShopPanelBuildingId: string | null;
   bakeryPanelBuildingId: string | null;
   riceShopPanelBuildingId: string | null;
+  fishShopPanelBuildingId: string | null;
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
   isResidentPanelOpen: boolean;
+  isMapTravelOpen: boolean;
   isEncyclopediaOpen: boolean;
   isFishingPromptOpen: boolean;
   isFishingGameOpen: boolean;
@@ -93,6 +97,8 @@ interface GameStore {
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
   setResidentPanelOpen: (open: boolean) => void;
+  openMapTravel: () => void;
+  closeMapTravel: () => void;
   openEncyclopedia: () => void;
   closeEncyclopedia: () => void;
   openFishingPrompt: () => void;
@@ -150,6 +156,8 @@ interface GameStore {
   closeBakeryPanel: () => void;
   openRiceShopPanel: (buildingInstanceId: string) => void;
   closeRiceShopPanel: () => void;
+  openFishShopPanel: (buildingInstanceId: string) => void;
+  closeFishShopPanel: () => void;
   craftShopProduct: (
     buildingInstanceId: string,
     productType: CraftingProductType,
@@ -195,9 +203,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
   pizzaShopPanelBuildingId: null,
   bakeryPanelBuildingId: null,
   riceShopPanelBuildingId: null,
+  fishShopPanelBuildingId: null,
   selectedResidentId: null,
   isBuildMenuOpen: false,
   isResidentPanelOpen: false,
+  isMapTravelOpen: false,
   isEncyclopediaOpen: false,
   isFishingPromptOpen: false,
   isFishingGameOpen: false,
@@ -222,6 +232,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   setBuildMenuOpen: (open) => set(open
     ? {
       isBuildMenuOpen: true,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
@@ -230,11 +241,34 @@ export const useGameStore = create<GameStore>((setState, get) => {
   setResidentPanelOpen: (open) => set(open
     ? {
       isResidentPanelOpen: true,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
     }
     : { isResidentPanelOpen: false }),
+
+  openMapTravel: () => set({
+    interactionMode: "inspect",
+    selectedBuildingId: null,
+    milkFactoryPanelBuildingId: null,
+    porkFactoryPanelBuildingId: null,
+    wheatFactoryPanelBuildingId: null,
+    pizzaShopPanelBuildingId: null,
+    bakeryPanelBuildingId: null,
+    riceShopPanelBuildingId: null,
+    fishShopPanelBuildingId: null,
+    selectedResidentId: null,
+    isBuildMenuOpen: false,
+    isResidentPanelOpen: false,
+    isMapTravelOpen: true,
+    isEncyclopediaOpen: false,
+    isFishingPromptOpen: false,
+    isFishingGameOpen: false,
+    notice: null,
+  }),
+
+  closeMapTravel: () => set({ isMapTravelOpen: false }),
 
   openEncyclopedia: () => set({
     interactionMode: "inspect",
@@ -245,9 +279,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
     pizzaShopPanelBuildingId: null,
     bakeryPanelBuildingId: null,
     riceShopPanelBuildingId: null,
+    fishShopPanelBuildingId: null,
     selectedResidentId: null,
     isBuildMenuOpen: false,
     isResidentPanelOpen: false,
+    isMapTravelOpen: false,
     isEncyclopediaOpen: true,
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
@@ -265,9 +301,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
     pizzaShopPanelBuildingId: null,
     bakeryPanelBuildingId: null,
     riceShopPanelBuildingId: null,
+    fishShopPanelBuildingId: null,
     selectedResidentId: null,
     isBuildMenuOpen: false,
     isResidentPanelOpen: false,
+    isMapTravelOpen: false,
     isEncyclopediaOpen: false,
     isFishingPromptOpen: true,
     isFishingGameOpen: false,
@@ -318,7 +356,10 @@ export const useGameStore = create<GameStore>((setState, get) => {
   travelToMap: (mapId, now = Date.now()) => {
     const current = get();
     const game = travelToMapSystem(current.game, mapId, now);
-    if (game === current.game) return;
+    if (game === current.game) {
+      set({ isMapTravelOpen: false });
+      return;
+    }
     set({
       game: persist(game),
       interactionMode: "inspect",
@@ -329,13 +370,17 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       selectedResidentId: null,
-      notice: mapId === "sea-and-river" ? "海と川へ移動しました。" : "村へ戻りました。",
+      notice: mapId === "village"
+        ? "村へ戻りました。"
+        : `${getMapDefinition(mapId).name}へ移動しました。`,
     });
   },
 
@@ -349,9 +394,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
@@ -368,7 +415,9 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       isBuildMenuOpen: false,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
@@ -385,9 +434,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
@@ -409,8 +460,10 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       notice: null,
       isEncyclopediaOpen: false,
+      isMapTravelOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
     }),
@@ -584,9 +637,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       notice: null,
     });
   },
@@ -608,6 +663,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       notice: `${getMilkFactoryProductName(productType)}の生産を始めました！`,
     });
     return true;
@@ -627,9 +683,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       notice: null,
     });
   },
@@ -650,6 +708,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       notice: `${getPorkFactoryProductName(productType)}の生産を始めました！`,
     });
     return true;
@@ -669,9 +728,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       notice: null,
     });
   },
@@ -693,6 +754,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       notice: `${getWheatFactoryProductName(productType)}の生産を始めました！`,
     });
     return true;
@@ -712,9 +774,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: buildingInstanceId,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       notice: null,
     });
   },
@@ -735,9 +799,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: buildingInstanceId,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       notice: null,
     });
   },
@@ -758,14 +824,41 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: buildingInstanceId,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       notice: null,
     });
   },
 
   closeRiceShopPanel: () => set({ riceShopPanelBuildingId: null }),
+
+  openFishShopPanel: (buildingInstanceId) => {
+    const current = get();
+    if (!current.game.buildings.some(
+      (building) => building.id === buildingInstanceId && building.buildingId === "fish-shop",
+    )) return;
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      porkFactoryPanelBuildingId: null,
+      wheatFactoryPanelBuildingId: null,
+      pizzaShopPanelBuildingId: null,
+      bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: buildingInstanceId,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      isMapTravelOpen: false,
+      notice: null,
+    });
+  },
+
+  closeFishShopPanel: () => set({ fishShopPanelBuildingId: null }),
 
   craftShopProduct: (buildingInstanceId, productType, quantity) => {
     const current = get();
@@ -774,9 +867,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       ? ["pizza"] as const
       : building?.buildingId === "bakery"
         ? BAKERY_PRODUCT_TYPES
-        : building?.buildingId === "rice-shop"
-          ? RICE_SHOP_PRODUCT_TYPES
-        : [] as const;
+          : building?.buildingId === "rice-shop"
+            ? RICE_SHOP_PRODUCT_TYPES
+            : building?.buildingId === "fish-shop"
+              ? FISH_SHOP_PRODUCT_TYPES
+              : [] as const;
     if (!building || !allowedProducts.includes(productType)) return false;
     const result = craftProduct(current.game, productType, quantity);
     if (result.outcome !== "crafted") {
@@ -793,6 +888,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       notice: `${getCraftingProductName(productType)}を${result.quantity}${unit}作りました！`,
     });
     return true;
@@ -811,8 +907,10 @@ export const useGameStore = create<GameStore>((setState, get) => {
         pizzaShopPanelBuildingId: null,
         bakeryPanelBuildingId: null,
         riceShopPanelBuildingId: null,
+        fishShopPanelBuildingId: null,
         selectedResidentId: null,
         isResidentPanelOpen: false,
+        isMapTravelOpen: false,
         isEncyclopediaOpen: false,
         isFishingPromptOpen: false,
         isFishingGameOpen: false,
@@ -832,6 +930,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         pizzaShopPanelBuildingId: null,
         bakeryPanelBuildingId: null,
         riceShopPanelBuildingId: null,
+        fishShopPanelBuildingId: null,
         selectedResidentId: null,
         isResidentPanelOpen: false,
         isEncyclopediaOpen: false,
@@ -853,8 +952,10 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
@@ -871,7 +972,9 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       isResidentPanelOpen: residentId !== null,
+      isMapTravelOpen: false,
     }),
 
   save: () => set({ game: persist(get().game) }),
@@ -890,7 +993,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
       pizzaShopPanelBuildingId: null,
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
       selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       isEncyclopediaOpen: false,
       isFishingPromptOpen: false,
       isFishingGameOpen: false,

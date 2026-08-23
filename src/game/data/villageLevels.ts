@@ -40,7 +40,7 @@ export const villageLevels: VillageLevelDefinition[] = [
       { type: "building-count", targetIds: ["flower"], minimum: 3 },
     ],
     unlockCountries: ["japan"],
-    unlockBuildings: ["onsen", "torii", "cherry-tree", "rice-shop"],
+    unlockBuildings: ["onsen", "torii", "cherry-tree", "rice-shop", "fish-shop"],
   },
   {
     level: 3,

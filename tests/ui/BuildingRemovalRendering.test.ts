@@ -366,7 +366,7 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
-  it.each(["field", "fence", "road", "cow", "pig", "chicken", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop"])(
+  it.each(["field", "fence", "road", "cow", "pig", "chicken", "tree", "cherry-tree", "flower", "onsen", "torii", "pizza-shop", "fish-shop"])(
     "重複IDを含む旧データでも%sを別の建物へ変えずに移動する",
     async (targetBuildingId) => {
       const conflictingBuildingId = targetBuildingId === "flower" ? "tree" : "flower";
@@ -399,6 +399,7 @@ describe("BuildingRenderer", () => {
           "onsen",
           "torii",
           "pizza-shop",
+          "fish-shop",
         ],
         buildings: [conflictingBuilding, targetBuilding],
       };

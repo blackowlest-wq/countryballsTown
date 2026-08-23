@@ -307,6 +307,16 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000).currentMap).toBe("village");
   });
 
+  it("洞窟と街のマップを保存データから復元できる", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+
+    for (const currentMap of ["cave", "city"] as const) {
+      saveGameState({ ...state, currentMap }, storage, 1_000);
+      expect(loadGameState(storage, 1_000).currentMap).toBe(currentMap);
+    }
+  });
+
   it("釣り竿情報がない旧セーブデータは未所持へ移行する", () => {
     const storage = memoryStorage();
     const { hasFishingRod: _hasFishingRod, ...legacyState } = createInitialGameState(0);
@@ -345,6 +355,21 @@ describe("SaveSystem", () => {
       milkFactoryProductions: [],
       pigProductions: [],
       porkFactoryProductions: [],
+    });
+  });
+
+  it("魚料理情報がない旧セーブデータを0個へ移行する", () => {
+    const storage = memoryStorage();
+    const {
+      grilledFish: _grilledFish,
+      seafoodBowls: _seafoodBowls,
+      ...legacyState
+    } = createInitialGameState(0);
+    storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
+
+    expect(loadGameState(storage, 1_000)).toMatchObject({
+      grilledFish: 0,
+      seafoodBowls: 0,
     });
   });
 

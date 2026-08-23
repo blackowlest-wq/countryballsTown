@@ -23,6 +23,8 @@ export interface GameState {
   hamSandwiches: number;
   onigiri: number;
   omurice: number;
+  grilledFish: number;
+  seafoodBowls: number;
   fishInventory: import("./Fish").FishInventory;
   hasFishingRod: boolean;
   currentMap: import("./Map").MapId;

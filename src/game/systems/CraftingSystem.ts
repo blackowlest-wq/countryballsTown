@@ -6,6 +6,7 @@ import {
   PIZZA_WHEAT_COST,
 } from "../constants/gameConstants";
 import type { GameState } from "../types/Village";
+import type { FishType } from "../types/Fish";
 import {
   CRAFTING_PRODUCT_TYPES,
   CRAFTING_RECIPES,
@@ -15,6 +16,7 @@ import {
   type CraftingProductType,
   type CraftingRecipe,
 } from "../types/Crafting";
+import { fishDefinitionsByType } from "../data/fish";
 
 export type CraftingOutcome =
   | "crafted"
@@ -42,6 +44,18 @@ const recipes: Record<CraftingProductType, CraftingRecipe> = {
     },
   },
 };
+
+function isFishIngredient(ingredient: CraftingIngredientKey): ingredient is FishType {
+  return Object.prototype.hasOwnProperty.call(fishDefinitionsByType, ingredient);
+}
+
+export function getCraftingIngredientStock(
+  state: GameState,
+  ingredient: CraftingIngredientKey,
+): number {
+  if (isFishIngredient(ingredient)) return state.fishInventory[ingredient];
+  return state[ingredient as Exclude<CraftingIngredientKey, FishType>];
+}
 
 export function getCraftingRecipe(productType: CraftingProductType): CraftingRecipe {
   return recipes[productType];
@@ -77,6 +91,14 @@ export function getCraftingIngredientName(ingredient: CraftingIngredientKey): st
       return "ハム";
     case "rice":
       return "米";
+    case "sardine":
+      return "イワシ";
+    case "mackerel":
+      return "サバ";
+    case "sea-bream":
+      return "タイ";
+    case "tuna":
+      return "マグロ";
   }
 }
 
@@ -102,6 +124,11 @@ export function getCraftingIngredientIcon(ingredient: CraftingIngredientKey): st
       return "🍖";
     case "rice":
       return "🍚";
+    case "sardine":
+    case "mackerel":
+    case "sea-bream":
+    case "tuna":
+      return fishDefinitionsByType[ingredient].icon;
   }
 }
 
@@ -119,7 +146,10 @@ export function getCraftingMaxCraftable(
     number,
   ]>;
   const maximum = ingredientAmounts.reduce(
-    (maximum, [ingredient, amount]) => Math.min(maximum, Math.floor(state[ingredient] / amount)),
+    (maximum, [ingredient, amount]) => Math.min(
+      maximum,
+      Math.floor(getCraftingIngredientStock(state, ingredient) / amount),
+    ),
     Number.POSITIVE_INFINITY,
   );
   return maximum === Number.POSITIVE_INFINITY ? 0 : Math.max(0, maximum);
@@ -148,7 +178,16 @@ export function craftProduct(
     number,
   ]>;
   for (const [ingredient, amount] of ingredientAmounts) {
-    nextState[ingredient] -= normalizedQuantity * amount;
+    const consumed = normalizedQuantity * amount;
+    if (isFishIngredient(ingredient)) {
+      nextState.fishInventory = {
+        ...nextState.fishInventory,
+        [ingredient]: nextState.fishInventory[ingredient] - consumed,
+      };
+    } else {
+      const scalarIngredient = ingredient as Exclude<CraftingIngredientKey, FishType>;
+      nextState[scalarIngredient] -= consumed;
+    }
   }
   nextState[recipe.outputKey] += normalizedQuantity * recipe.outputAmount;
   return {

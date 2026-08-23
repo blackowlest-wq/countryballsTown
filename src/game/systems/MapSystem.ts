@@ -6,6 +6,7 @@ import { clampToMap } from "./MovementSystem";
 
 export const SEA_START_X = 13.4;
 export const RIVER_HALF_WIDTH = 0.95;
+export const CAVE_WALKABLE_MARGIN = 1.25;
 const RIVER_MOUTH_HALF_WIDTH = 1.4;
 const RIVER_START_X = 7.2;
 const RIVER_MOUTH_X = SEA_START_X - RIVER_MOUTH_HALF_WIDTH + 0.2;
@@ -46,12 +47,23 @@ export function getRiverPathPoints(sampleCount = 48): RiverPathPoint[] {
 }
 
 export function isMapId(value: unknown): value is MapId {
-  return value === "village" || value === "sea-and-river";
+  return value === "village"
+    || value === "sea-and-river"
+    || value === "cave"
+    || value === "city";
 }
 
 export function isMapPositionWalkable(mapId: MapId, position: GridPosition): boolean {
   if (mapId === "village") return true;
-  if (position.x >= SEA_START_X) return false;
+  if (mapId === "sea-and-river") return position.x < SEA_START_X;
+  if (mapId === "cave") {
+    return (
+      position.x >= CAVE_WALKABLE_MARGIN &&
+      position.x <= GRID_SIZE - CAVE_WALKABLE_MARGIN &&
+      position.z >= CAVE_WALKABLE_MARGIN &&
+      position.z <= GRID_SIZE - CAVE_WALKABLE_MARGIN
+    );
+  }
   return true;
 }
 
@@ -59,14 +71,26 @@ export function getMapArrivalPosition(mapId: MapId, residentIndex: number): Grid
   if (mapId === "village") {
     return clampToMap({ x: 6.5 + (residentIndex % 3) * 1.25, z: 5.5 });
   }
-  return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.8, z: 17.2 });
+  if (mapId === "sea-and-river") {
+    return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.8, z: 17.2 });
+  }
+  if (mapId === "cave") {
+    return clampToMap({ x: 8.5 + (residentIndex % 4) * 0.85, z: 16.4 });
+  }
+  return clampToMap({ x: 8.7 + (residentIndex % 4) * 0.9, z: 16.8 });
 }
 
 function getMapArrivalDestination(mapId: MapId, residentIndex: number): GridPosition {
   if (mapId === "village") {
     return clampToMap({ x: 7.5 + (residentIndex % 3) * 1.25, z: 7.2 });
   }
-  return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.5, z: 15.5 });
+  if (mapId === "sea-and-river") {
+    return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.5, z: 15.5 });
+  }
+  if (mapId === "cave") {
+    return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.55, z: 14.6 });
+  }
+  return clampToMap({ x: 9.2 + (residentIndex % 4) * 0.55, z: 14.8 });
 }
 
 export function getMapActivityPosition(

@@ -128,4 +128,20 @@ describe("building definitions", () => {
       },
     });
   });
+
+  it("魚屋を日本の魚料理店舗として定義する", () => {
+    expect(playerBuildingIds).toContain("fish-shop");
+    expect(getBuildingDefinition("fish-shop")).toMatchObject({
+      name: "魚屋",
+      width: 3,
+      height: 2,
+      category: "building",
+      countryId: "japan",
+      visitorService: {
+        queueCapacity: 3,
+        saleCoins: 0.3,
+        products: ["grilled-fish", "seafood-bowl"],
+      },
+    });
+  });
 });

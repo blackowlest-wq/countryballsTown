@@ -5,22 +5,26 @@ export function BottomMenu(): JSX.Element {
   const isVillage = currentMap === "village";
   const buildOpen = useGameStore((store) => store.isBuildMenuOpen);
   const residentOpen = useGameStore((store) => store.isResidentPanelOpen);
+  const mapTravelOpen = useGameStore((store) => store.isMapTravelOpen);
   const mode = useGameStore((store) => store.interactionMode);
   const setBuildOpen = useGameStore((store) => store.setBuildMenuOpen);
   const setResidentOpen = useGameStore((store) => store.setResidentPanelOpen);
   const cancel = useGameStore((store) => store.cancelInteraction);
   const beginFarming = useGameStore((store) => store.beginFarming);
-  const travelToMap = useGameStore((store) => store.travelToMap);
+  const openMapTravel = useGameStore((store) => store.openMapTravel);
+  const closeMapTravel = useGameStore((store) => store.closeMapTravel);
 
   const toggleBuild = (): void => {
     if (!isVillage) return;
     setResidentOpen(false);
+    closeMapTravel();
     if (mode !== "inspect") cancel();
     setBuildOpen(!buildOpen);
   };
 
   const toggleResidents = (): void => {
     setBuildOpen(false);
+    closeMapTravel();
     if (mode !== "inspect") cancel();
     setResidentOpen(!residentOpen);
   };
@@ -29,6 +33,7 @@ export function BottomMenu(): JSX.Element {
     if (!isVillage) return;
     setBuildOpen(false);
     setResidentOpen(false);
+    closeMapTravel();
     if (mode === "farm") {
       cancel();
       return;
@@ -39,8 +44,12 @@ export function BottomMenu(): JSX.Element {
   const toggleMap = (): void => {
     setBuildOpen(false);
     setResidentOpen(false);
+    if (mapTravelOpen) {
+      closeMapTravel();
+      return;
+    }
     if (mode !== "inspect") cancel();
-    travelToMap(currentMap === "village" ? "sea-and-river" : "village");
+    openMapTravel();
   };
 
   return (
@@ -72,12 +81,12 @@ export function BottomMenu(): JSX.Element {
       </button>
       <button
         type="button"
-        className={`bottom-menu-button ${currentMap !== "village" ? "is-active" : ""}`}
-        aria-pressed={currentMap !== "village"}
+        className={`bottom-menu-button ${mapTravelOpen ? "is-active" : ""}`}
+        aria-pressed={mapTravelOpen}
         onClick={toggleMap}
       >
-        <span className="menu-icon crop-menu-icon">🌊</span>
-        <span>{currentMap === "village" ? "海と川" : "村へ戻る"}</span>
+        <span className="menu-icon crop-menu-icon">🧭</span>
+        <span>移動</span>
       </button>
     </nav>
   );

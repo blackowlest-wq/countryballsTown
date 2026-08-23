@@ -73,4 +73,37 @@ describe("CraftingSystem", () => {
       omurice: 1,
     });
   });
+
+  it("魚屋の焼き魚と海鮮丼を魚インベントリから作れる", () => {
+    const state = {
+      ...createInitialGameState(0),
+      fishInventory: {
+        sardine: 2,
+        mackerel: 1,
+        "sea-bream": 1,
+        tuna: 1,
+      },
+    };
+
+    expect(getCraftingMaxCraftable(state, "grilled-fish")).toBe(2);
+    expect(getCraftingMaxCraftable(state, "seafood-bowl")).toBe(1);
+    expect(craftProduct(state, "grilled-fish", 1).state).toMatchObject({
+      grilledFish: 1,
+      fishInventory: {
+        sardine: 1,
+        mackerel: 1,
+        "sea-bream": 1,
+        tuna: 1,
+      },
+    });
+    expect(craftProduct(state, "seafood-bowl", 1).state).toMatchObject({
+      seafoodBowls: 1,
+      fishInventory: {
+        sardine: 2,
+        mackerel: 0,
+        "sea-bream": 0,
+        tuna: 0,
+      },
+    });
+  });
 });

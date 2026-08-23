@@ -7,12 +7,18 @@ import {
   getRiverCenterX,
   getRiverHalfWidth,
   getRiverPathPoints,
+  isMapId,
   isMapPositionWalkable,
   SEA_START_X,
   travelToMap,
 } from "../../src/game/systems/MapSystem";
 
 describe("MapSystem", () => {
+  it("村・海と川・洞窟・街を有効なマップとして扱う", () => {
+    expect(["village", "sea-and-river", "cave", "city"].every(isMapId)).toBe(true);
+    expect(isMapId("unknown")).toBe(false);
+  });
+
   it("海と川へ移動すると現在地が変わり、住民全員が同じマップへ移動する", () => {
     const state = createInitialGameState(0);
     const moved = travelToMap(state, "sea-and-river", 5_000);
@@ -30,6 +36,26 @@ describe("MapSystem", () => {
   it("同じマップへの移動では状態を変更しない", () => {
     const state = createInitialGameState(0);
     expect(travelToMap(state, "village", 5_000)).toBe(state);
+  });
+
+  it("洞窟と街へ移動すると住民の到着地点も各マップへ移る", () => {
+    const state = createInitialGameState(0);
+
+    for (const mapId of ["cave", "city"] as const) {
+      const moved = travelToMap(state, mapId, 5_000);
+      expect(moved.currentMap).toBe(mapId);
+      moved.residents.forEach((resident, index) => {
+        expect(resident.position).toEqual(getMapArrivalPosition(mapId, index));
+        expect(isMapPositionWalkable(mapId, resident.position)).toBe(true);
+        expect(resident.destination && isMapPositionWalkable(mapId, resident.destination)).toBe(true);
+      });
+    }
+  });
+
+  it("洞窟の外周だけは歩けない", () => {
+    expect(isMapPositionWalkable("cave", { x: 0.8, z: 10 })).toBe(false);
+    expect(isMapPositionWalkable("cave", { x: 10, z: 10 })).toBe(true);
+    expect(isMapPositionWalkable("city", { x: 0.8, z: 10 })).toBe(true);
   });
 
   it("海岸と川辺の行動地点は水上ではなく歩ける岸にある", () => {

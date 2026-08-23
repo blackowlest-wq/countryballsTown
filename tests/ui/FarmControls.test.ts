@@ -6,6 +6,7 @@ import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { BottomMenu } from "../../src/ui/BottomMenu";
 import { FarmControls } from "../../src/ui/FarmControls";
+import { MapTravelPanel } from "../../src/ui/MapTravelPanel";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -17,6 +18,7 @@ afterEach(() => {
     selectedCropType: "wheat",
     isBuildMenuOpen: false,
     isResidentPanelOpen: false,
+    isMapTravelOpen: false,
     notice: null,
   });
   document.body.replaceChildren();
@@ -50,6 +52,14 @@ describe("FarmControls", () => {
         sausage: 5,
         bacon: 1,
         pizzas: 2,
+        grilledFish: 2,
+        seafoodBowls: 1,
+        fishInventory: {
+          sardine: 3,
+          mackerel: 2,
+          "sea-bream": 1,
+          tuna: 4,
+        },
       },
       interactionMode: "farm",
       selectedCropType: "wheat",
@@ -69,6 +79,12 @@ describe("FarmControls", () => {
     expect(container.querySelector('[aria-label="牛乳 7"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="豚肉 6"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="卵 8"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="イワシ 3"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="サバ 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="タイ 1"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="マグロ 4"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="焼き魚 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="海鮮丼 1"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="バター 4"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="チーズ 2"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="ハム 3"]')).not.toBeNull();
@@ -118,28 +134,38 @@ describe("FarmControls", () => {
     await act(async () => root.unmount());
   });
 
-  it("海と川メニューでマップを切り替える", async () => {
+  it("移動メニューで行き先を選べる", async () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
 
-    await act(async () => root.render(createElement(BottomMenu)));
+    await act(async () => root.render(createElement(
+      "div",
+      null,
+      createElement(BottomMenu),
+      createElement(MapTravelPanel),
+    )));
     const mapButton = [...container.querySelectorAll("button")]
-      .find((button) => button.textContent?.includes("海と川"));
+      .find((button) => button.textContent?.includes("移動"));
     expect(mapButton).toBeDefined();
 
     await act(async () => {
       mapButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(useGameStore.getState().game.currentMap).toBe("sea-and-river");
-    expect(container.textContent).toContain("村へ戻る");
+    expect(useGameStore.getState().game.currentMap).toBe("village");
+    expect(useGameStore.getState().isMapTravelOpen).toBe(true);
+    expect(container.querySelector('[data-map="sea-and-river"]')).not.toBeNull();
+    expect(container.querySelector('[data-map="cave"]')).not.toBeNull();
+    expect(container.querySelector('[data-map="city"]')).not.toBeNull();
 
     await act(async () => {
-      [...container.querySelectorAll("button")]
-        .find((button) => button.textContent?.includes("村へ戻る"))
+      container.querySelector<HTMLButtonElement>('[data-map="sea-and-river"]')
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(useGameStore.getState().game.currentMap).toBe("village");
+    expect(useGameStore.getState()).toMatchObject({
+      isMapTravelOpen: false,
+      game: { currentMap: "sea-and-river" },
+    });
 
     await act(async () => root.unmount());
   });

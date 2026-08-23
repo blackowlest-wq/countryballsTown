@@ -247,6 +247,14 @@ export function loadGameState(
         typeof parsed.omurice === "number" && Number.isFinite(parsed.omurice)
           ? Math.max(0, Math.floor(parsed.omurice))
           : 0,
+      grilledFish:
+        typeof parsed.grilledFish === "number" && Number.isFinite(parsed.grilledFish)
+          ? Math.max(0, Math.floor(parsed.grilledFish))
+          : 0,
+      seafoodBowls:
+        typeof parsed.seafoodBowls === "number" && Number.isFinite(parsed.seafoodBowls)
+          ? Math.max(0, Math.floor(parsed.seafoodBowls))
+          : 0,
       fishInventory: normalizeFishInventory(parsed.fishInventory),
       hasFishingRod: parsed.hasFishingRod === true,
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",

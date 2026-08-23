@@ -189,7 +189,7 @@ export function chooseResidentDestination(
         motion: "river-play",
       };
     }
-  } else {
+  } else if (state.currentMap === "village") {
     const country = getCountryDefinition(resident.countryId);
     const favorite = country?.favoriteBuildingIds.find((buildingId) =>
       state.buildings.some(

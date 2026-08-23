@@ -3,6 +3,7 @@ import {
   getCraftingIngredientIcon,
   getCraftingIngredientName,
   getCraftingMaxCraftable,
+  getCraftingIngredientStock,
   getCraftingProductIcon,
   getCraftingProductName,
   getCraftingProductUnit,
@@ -66,7 +67,7 @@ export function CraftingShopPanel({
     label: getCraftingIngredientName(ingredient),
     icon: getCraftingIngredientIcon(ingredient),
     amount: amount * quantity,
-    stock: game[ingredient],
+    stock: getCraftingIngredientStock(game, ingredient),
   }));
   const canCraft = maxCraftable > 0;
 

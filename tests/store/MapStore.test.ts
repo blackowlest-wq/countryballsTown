@@ -12,6 +12,7 @@ afterEach(() => {
     pizzaShopPanelBuildingId: null,
     isBuildMenuOpen: false,
     isResidentPanelOpen: false,
+    isMapTravelOpen: false,
     notice: null,
   });
 });
@@ -31,6 +32,7 @@ describe("map store interaction", () => {
       interactionMode: "inspect",
       isBuildMenuOpen: false,
       isResidentPanelOpen: false,
+      isMapTravelOpen: false,
       game: { currentMap: "sea-and-river" },
       notice: "海と川へ移動しました。",
     });
@@ -40,5 +42,25 @@ describe("map store interaction", () => {
     useGameStore.getState().travelToMap("village", 6_000);
     expect(useGameStore.getState().game.currentMap).toBe("village");
     expect(useGameStore.getState().notice).toBe("村へ戻りました。");
+  });
+
+  it("海と川から洞窟や街へ移動できる", () => {
+    useGameStore.getState().travelToMap("sea-and-river", 5_000);
+    useGameStore.getState().openMapTravel();
+
+    expect(useGameStore.getState().isMapTravelOpen).toBe(true);
+
+    useGameStore.getState().travelToMap("cave", 6_000);
+    expect(useGameStore.getState()).toMatchObject({
+      game: { currentMap: "cave" },
+      isMapTravelOpen: false,
+      notice: "洞窟へ移動しました。",
+    });
+
+    useGameStore.getState().travelToMap("city", 7_000);
+    expect(useGameStore.getState()).toMatchObject({
+      game: { currentMap: "city" },
+      notice: "街へ移動しました。",
+    });
   });
 });

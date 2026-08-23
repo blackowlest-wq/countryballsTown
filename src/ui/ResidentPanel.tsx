@@ -1,4 +1,5 @@
 import { getCountryDefinition } from "../game/data/countries";
+import { getMapDefinition } from "../game/data/maps";
 import { getResidentStatusLabel } from "../game/systems/ResidentSystem";
 import { useGameStore } from "../store/gameStore";
 
@@ -11,6 +12,7 @@ export function ResidentPanel(): JSX.Element | null {
   const selectResident = useGameStore((store) => store.selectResident);
   if (!open) return null;
   const selected = residents.find((resident) => resident.id === selectedResidentId);
+  const mapDefinition = getMapDefinition(currentMap);
 
   return (
     <section className="floating-panel resident-panel" aria-label="住民パネル">
@@ -48,7 +50,9 @@ export function ResidentPanel(): JSX.Element | null {
           <p className="detail-copy">
             {currentMap === "village"
               ? "村の中を自由に歩きながら、好きな場所でひと休みします。"
-              : "海岸や川辺を歩きながら、釣りや川遊びを楽しみます。"}
+              : currentMap === "sea-and-river"
+                ? "海岸や川辺を歩きながら、釣りや川遊びを楽しみます。"
+                : `${mapDefinition.name}を歩きながら、景色を楽しみます。`}
           </p>
         </div>
       )}
