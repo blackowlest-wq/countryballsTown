@@ -27,8 +27,8 @@ import { useGameStore } from "../store/gameStore";
 import { CaveDrillIcon } from "./CaveDrillIcon";
 
 const directions: ReadonlyArray<{ direction: DigDirection; label: string; icon: string }> = [
-  { direction: "up", label: "上へ掘る", icon: "↑" },
   { direction: "left", label: "左へ掘る", icon: "←" },
+  { direction: "up", label: "上へ掘る", icon: "↑" },
   { direction: "down", label: "下へ掘る", icon: "↓" },
   { direction: "right", label: "右へ掘る", icon: "→" },
 ];

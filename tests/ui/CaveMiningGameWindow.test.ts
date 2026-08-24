@@ -55,6 +55,9 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     expect(container.querySelector('[data-direction="down"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="up"]')).not.toBeNull();
     expect(container.querySelector('[data-direction="right"]')).not.toBeNull();
+    expect([...container.querySelectorAll<HTMLButtonElement>(".cave-mining-actions > .cave-dig-button")]
+      .map((button) => button.dataset.direction))
+      .toEqual(["left", "up", "down", "right"]);
     expect(container.querySelectorAll(".cave-mining-cell")).toHaveLength(
       CAVE_WIDTH * Math.min(CAVE_VISIBLE_MAP_ROWS, CAVE_MAX_DEPTH + 1),
     );

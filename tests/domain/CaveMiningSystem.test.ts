@@ -132,18 +132,19 @@ describe("CaveMiningSystem", () => {
     });
   });
 
-  it("採掘済みパネルから2マス以内の埋蔵物を表示する", () => {
+  it("採掘済みパネルから1マス以内の埋蔵物を表示する", () => {
     const state = createInitialGameState(0).caveMining;
 
-    expect(isCaveResourceRevealed(state, { x: 1, depth: 2 })).toBe(true);
-    expect(getRevealedCaveResourceType(state, { x: 1, depth: 2 })).toBe("fossil");
-    expect(getRevealedCaveResourceType(state, { x: 3, depth: 3 })).toBeNull();
+    expect(isCaveResourceRevealed(state, { x: 2, depth: 0 })).toBe(true);
+    expect(getRevealedCaveResourceType(state, { x: 2, depth: 0 })).toBe("copper");
+    expect(isCaveResourceRevealed(state, { x: 1, depth: 2 })).toBe(false);
+    expect(getRevealedCaveResourceType(state, { x: 1, depth: 2 })).toBeNull();
 
     const movedState = {
       ...state,
       excavatedCells: [...state.excavatedCells, "3:1"],
     };
-    expect(getRevealedCaveResourceType(movedState, { x: 3, depth: 3 })).toBe("ancient-relic");
+    expect(getRevealedCaveResourceType(movedState, { x: 3, depth: 2 })).toBe("gold");
   });
 
   it("採掘リセットで地形Seedと掘削状態だけを更新し、強化と材料を保持する", () => {
