@@ -3,13 +3,14 @@ import {
   CAVE_CELL_DURABILITY_PER_DEPTH,
   CAVE_CELL_DURABILITY_PER_HARDNESS,
   CAVE_DRILL_HARDNESS_PER_LEVEL,
-  CAVE_FUEL_PURCHASE_AMOUNT,
   CAVE_FUEL_PURCHASE_COST,
   CAVE_FUEL_TANK_CAPACITY_PER_LEVEL,
   CAVE_INITIAL_DRILL_HARDNESS,
   CAVE_INITIAL_FUEL,
   CAVE_INITIAL_FUEL_TANK_CAPACITY,
   CAVE_INITIAL_MINING_CAPACITY,
+  CAVE_MAX_DRILL_HARDNESS,
+  CAVE_MAX_DRILL_LEVEL,
   CAVE_MAX_DEPTH,
   CAVE_MINING_CAPACITY_PER_LEVEL,
   CAVE_RESOURCE_REVEAL_RADIUS,
@@ -115,7 +116,7 @@ export interface CaveDigResult {
 }
 
 export type CaveUpgradeKind = "drill" | "fuel-tank" | "mining-capacity";
-export type CaveUpgradeFailureReason = "not-enough-coins";
+export type CaveUpgradeFailureReason = "not-enough-coins" | "max-level";
 
 export interface CaveUpgradeResult {
   ok: boolean;
@@ -321,7 +322,17 @@ export function getFuelTankCapacity(
 export function getDrillHardness(
   state: Pick<CaveMiningState, "drillLevel">,
 ): number {
-  return CAVE_INITIAL_DRILL_HARDNESS + state.drillLevel * CAVE_DRILL_HARDNESS_PER_LEVEL;
+  return Math.min(
+    CAVE_MAX_DRILL_HARDNESS,
+    CAVE_INITIAL_DRILL_HARDNESS + state.drillLevel * CAVE_DRILL_HARDNESS_PER_LEVEL,
+  );
+}
+
+export function isCaveUpgradeMaxed(
+  state: Pick<CaveMiningState, "drillLevel">,
+  kind: CaveUpgradeKind,
+): boolean {
+  return kind === "drill" && getDrillHardness(state) >= CAVE_MAX_DRILL_HARDNESS;
 }
 
 export function getMiningCapacity(
@@ -359,7 +370,12 @@ export function normalizeCaveMiningState(value: unknown): CaveMiningState {
     ? value as Partial<CaveMiningState>
     : {};
   const fuelTankLevel = asNonNegativeInteger(candidate.fuelTankLevel, initial.fuelTankLevel);
-  const drillLevel = asNonNegativeInteger(candidate.drillLevel, initial.drillLevel);
+  const drillLevel = clampInteger(
+    candidate.drillLevel,
+    0,
+    CAVE_MAX_DRILL_LEVEL,
+    initial.drillLevel,
+  );
   const miningCapacityLevel = asNonNegativeInteger(
     candidate.miningCapacityLevel,
     initial.miningCapacityLevel,
@@ -543,7 +559,10 @@ function upgradeState(
   kind: CaveUpgradeKind,
 ): GameState {
   const caveMining = kind === "drill"
-    ? { ...state.caveMining, drillLevel: state.caveMining.drillLevel + 1 }
+    ? {
+      ...state.caveMining,
+      drillLevel: Math.min(CAVE_MAX_DRILL_LEVEL, state.caveMining.drillLevel + 1),
+    }
     : kind === "fuel-tank"
       ? { ...state.caveMining, fuelTankLevel: state.caveMining.fuelTankLevel + 1 }
       : { ...state.caveMining, miningCapacityLevel: state.caveMining.miningCapacityLevel + 1 };
@@ -554,6 +573,9 @@ export function upgradeCave(
   state: GameState,
   kind: CaveUpgradeKind,
 ): CaveUpgradeResult {
+  if (isCaveUpgradeMaxed(state.caveMining, kind)) {
+    return { ok: false, state, reason: "max-level" };
+  }
   const cost = getCaveUpgradeCost(state.caveMining, kind);
   if (!Number.isFinite(state.coins) || state.coins < cost) {
     return { ok: false, state, reason: "not-enough-coins" };
@@ -571,10 +593,6 @@ export function purchaseCaveFuel(state: GameState): CaveFuelPurchaseResult {
   if (!Number.isFinite(state.coins) || state.coins < CAVE_FUEL_PURCHASE_COST) {
     return { ok: false, state, reason: "not-enough-coins" };
   }
-  const fuel = Math.min(
-    getFuelTankCapacity(state.caveMining),
-    CAVE_FUEL_PURCHASE_AMOUNT,
-  );
   return {
     ok: true,
     state: {
@@ -582,7 +600,7 @@ export function purchaseCaveFuel(state: GameState): CaveFuelPurchaseResult {
       coins: state.coins - CAVE_FUEL_PURCHASE_COST,
       caveMining: {
         ...state.caveMining,
-        fuel,
+        fuel: getFuelTankCapacity(state.caveMining),
       },
     },
   };

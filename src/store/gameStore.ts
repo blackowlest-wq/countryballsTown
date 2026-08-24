@@ -466,7 +466,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
     const current = get();
     const result = upgradeCaveSystem(current.game, kind);
     if (!result.ok) {
-      set({ notice: "コインが足りません。" });
+      set({
+        notice: result.reason === "max-level"
+          ? "ドリル硬度は最大レベルです。"
+          : "コインが足りません。",
+      });
       return false;
     }
     const upgradeName = kind === "drill"

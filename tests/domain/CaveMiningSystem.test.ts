@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_ROCK_BREAKING_POWER_PER_FUEL } from "../../src/game/constants/gameConstants";
+import {
+  CAVE_FUEL_PURCHASE_COST,
+  CAVE_MAX_DEPTH,
+  CAVE_MAX_DRILL_HARDNESS,
+  CAVE_MAX_DRILL_LEVEL,
+  CAVE_ROCK_BREAKING_POWER_PER_FUEL,
+} from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { getMiningResourceDefinition } from "../../src/game/data/mining";
 import {
@@ -15,6 +21,7 @@ import {
   getMiningInventoryTotal,
   getRevealedCaveResourceType,
   getTargetPosition,
+  isCaveUpgradeMaxed,
   isCaveCellCracked,
   isCaveResourceRevealed,
   normalizeCaveMiningState,
@@ -132,6 +139,26 @@ describe("CaveMiningSystem", () => {
     });
   });
 
+  it("ドリル硬度は10を上限にし、最大後は強化できない", () => {
+    const base = createInitialGameState(0);
+    const maxState = {
+      ...base,
+      coins: getCaveUpgradeCost(
+        { ...base.caveMining, drillLevel: CAVE_MAX_DRILL_LEVEL },
+        "drill",
+      ),
+      caveMining: { ...base.caveMining, drillLevel: CAVE_MAX_DRILL_LEVEL },
+    };
+
+    expect(getDrillHardness(maxState.caveMining)).toBe(CAVE_MAX_DRILL_HARDNESS);
+    expect(isCaveUpgradeMaxed(maxState.caveMining, "drill")).toBe(true);
+    expect(upgradeCave(maxState, "drill")).toMatchObject({
+      ok: false,
+      state: maxState,
+      reason: "max-level",
+    });
+  });
+
   it("採掘済みパネルから1マス以内の埋蔵物を表示する", () => {
     const state = createInitialGameState(0).caveMining;
 
@@ -206,17 +233,17 @@ describe("CaveMiningSystem", () => {
     expect(result.state).toBe(fullState);
   });
 
-  it("燃料が0のときだけ燃料を購入できる", () => {
+  it("燃料が0のときだけ、燃料タンクを満タンまで補給できる", () => {
     const state = {
       ...createInitialGameState(0),
       coins: CAVE_FUEL_PURCHASE_COST,
-      caveMining: { ...createInitialCaveMiningState(), fuel: 0 },
+      caveMining: { ...createInitialCaveMiningState(), fuel: 0, fuelTankLevel: 1 },
     };
 
     const result = purchaseCaveFuel(state);
 
     expect(result).toMatchObject({ ok: true, state: { coins: 0 } });
-    expect(result.state.caveMining.fuel).toBe(5);
+    expect(result.state.caveMining.fuel).toBe(15);
     expect(purchaseCaveFuel(result.state)).toMatchObject({
       ok: false,
       reason: "fuel-not-empty",

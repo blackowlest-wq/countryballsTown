@@ -4,7 +4,6 @@ import {
   CAVE_VISIBLE_MAP_ROWS,
   CAVE_WIDTH,
   CAVE_ROCK_BREAKING_POWER_PER_FUEL,
-  CAVE_FUEL_PURCHASE_AMOUNT,
   CAVE_FUEL_PURCHASE_COST,
 } from "../game/constants/gameConstants";
 import { miningResourceDefinitions, getMiningResourceDefinition } from "../game/data/mining";
@@ -20,6 +19,7 @@ import {
   getTargetPosition,
   isCaveCellCracked,
   isCaveCellExcavated,
+  isCaveUpgradeMaxed,
   type CaveUpgradeKind,
 } from "../game/systems/CaveMiningSystem";
 import type { DigDirection } from "../game/types/Mining";
@@ -153,7 +153,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           <div className="cave-fuel-purchase">
             <div>
               <strong>燃料切れ</strong>
-              <small>{CAVE_FUEL_PURCHASE_AMOUNT}燃料を🪙{CAVE_FUEL_PURCHASE_COST}で購入できます。</small>
+              <small>燃料を満タンまで🪙{CAVE_FUEL_PURCHASE_COST}で補給できます。</small>
             </div>
             <button
               type="button"
@@ -165,7 +165,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             </button>
           </div>
         ) : (
-          <p className="cave-mining-footnote cave-mining-fuel-hint">燃料は削岩5ごとに1消費します。燃料が0になると購入できます。</p>
+          <p className="cave-mining-footnote cave-mining-fuel-hint">燃料は削岩5ごとに1消費します。燃料が0になると満タンまで補給できます。</p>
         )}
 
         <div className="cave-mining-board" aria-label="採掘盤面">
@@ -245,20 +245,21 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           <div className="cave-mining-upgrades">
             {upgrades.map(({ kind, label, description }) => {
               const cost = getCaveUpgradeCost(mining, kind);
+              const isMaxed = isCaveUpgradeMaxed(mining, kind);
               return (
                 <button
                   key={kind}
                   type="button"
                   className="cave-upgrade-button"
                   data-upgrade={kind}
-                  disabled={isDigging || game.coins < cost}
+                  disabled={isDigging || isMaxed || game.coins < cost}
                   onClick={() => upgradeCave(kind)}
                 >
                   <span>
                     <strong>{label}</strong>
                     <small>{description}</small>
                   </span>
-                  <b>🪙 {cost}</b>
+                  <b>{isMaxed ? "最大" : `🪙 ${cost}`}</b>
                 </button>
               );
             })}

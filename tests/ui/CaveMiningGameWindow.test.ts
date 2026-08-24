@@ -1,7 +1,13 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DEPTH, CAVE_VISIBLE_MAP_ROWS, CAVE_WIDTH } from "../../src/game/constants/gameConstants";
+import {
+  CAVE_FUEL_PURCHASE_COST,
+  CAVE_MAX_DEPTH,
+  CAVE_MAX_DRILL_LEVEL,
+  CAVE_VISIBLE_MAP_ROWS,
+  CAVE_WIDTH,
+} from "../../src/game/constants/gameConstants";
 import { createInitialCaveMiningState } from "../../src/game/systems/CaveMiningSystem";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
@@ -153,8 +159,32 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     await act(async () => {
       purchaseButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(useGameStore.getState().game.caveMining.fuel).toBe(5);
-    expect(container.textContent).toContain("燃料は削岩5ごとに1消費");
+    expect(useGameStore.getState().game.caveMining.fuel).toBe(10);
+    expect(container.textContent).toContain("満タンまで");
+
+    await act(async () => root.unmount());
+  });
+
+  it("ドリル硬度10では追加強化を無効にする", async () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        coins: 999_999,
+        caveMining: { ...base.caveMining, drillLevel: CAVE_MAX_DRILL_LEVEL },
+      },
+      isCaveMiningGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CaveMiningGameWindow)));
+
+    const drillUpgrade = container.querySelector<HTMLButtonElement>('[data-upgrade="drill"]');
+    expect(drillUpgrade?.disabled).toBe(true);
+    expect(drillUpgrade?.textContent).toContain("最大");
 
     await act(async () => root.unmount());
   });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST } from "../../src/game/constants/gameConstants";
+import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DRILL_LEVEL } from "../../src/game/constants/gameConstants";
 import { createInitialCaveMiningState } from "../../src/game/systems/CaveMiningSystem";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
@@ -104,8 +104,25 @@ describe("地面採掘ゲームのStore接続", () => {
     });
 
     expect(useGameStore.getState().purchaseCaveFuel()).toBe(true);
-    expect(useGameStore.getState().game.caveMining.fuel).toBe(5);
+    expect(useGameStore.getState().game.caveMining.fuel).toBe(10);
     expect(useGameStore.getState().upgradeCave("drill")).toBe(true);
     expect(useGameStore.getState().game.caveMining.drillLevel).toBe(1);
+  });
+
+  it("ドリル硬度が上限ならStoreから追加強化できない", () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        coins: 999_999,
+        caveMining: { ...base.caveMining, drillLevel: CAVE_MAX_DRILL_LEVEL },
+      },
+      isCaveMiningGameOpen: true,
+    });
+
+    expect(useGameStore.getState().upgradeCave("drill")).toBe(false);
+    expect(useGameStore.getState().game.caveMining.drillLevel).toBe(CAVE_MAX_DRILL_LEVEL);
+    expect(useGameStore.getState().notice).toBe("ドリル硬度は最大レベルです。");
   });
 });
