@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { CAVE_FUEL_PURCHASE_COST, CAVE_MAX_DRILL_LEVEL } from "../../src/game/constants/gameConstants";
+import {
+  CAVE_FUEL_PURCHASE_COST,
+  CAVE_MAX_DRILL_LEVEL,
+  CAVE_MAX_FUEL_TANK_LEVEL,
+  CAVE_MAX_MINING_CAPACITY_LEVEL,
+} from "../../src/game/constants/gameConstants";
 import { createInitialCaveMiningState } from "../../src/game/systems/CaveMiningSystem";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
@@ -124,5 +129,27 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().upgradeCave("drill")).toBe(false);
     expect(useGameStore.getState().game.caveMining.drillLevel).toBe(CAVE_MAX_DRILL_LEVEL);
     expect(useGameStore.getState().notice).toBe("ドリル硬度は最大レベルです。");
+  });
+
+  it("燃料タンクと採掘物容量が上限ならStoreから追加強化できない", () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        coins: 999_999,
+        caveMining: {
+          ...base.caveMining,
+          fuelTankLevel: CAVE_MAX_FUEL_TANK_LEVEL,
+          miningCapacityLevel: CAVE_MAX_MINING_CAPACITY_LEVEL,
+        },
+      },
+      isCaveMiningGameOpen: true,
+    });
+
+    expect(useGameStore.getState().upgradeCave("fuel-tank")).toBe(false);
+    expect(useGameStore.getState().notice).toBe("燃料タンクは最大レベルです。");
+    expect(useGameStore.getState().upgradeCave("mining-capacity")).toBe(false);
+    expect(useGameStore.getState().notice).toBe("採掘物容量は最大レベルです。");
   });
 });

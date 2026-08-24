@@ -35,6 +35,7 @@ export const CAVE_VISIBLE_MAP_ROWS = 9;
 export const CAVE_INITIAL_FUEL = 10;
 export const CAVE_INITIAL_FUEL_TANK_CAPACITY = 10;
 export const CAVE_FUEL_TANK_CAPACITY_PER_LEVEL = 5;
+export const CAVE_MAX_FUEL_TANK_LEVEL = 10;
 export const CAVE_INITIAL_DRILL_HARDNESS = 1;
 export const CAVE_DRILL_HARDNESS_PER_LEVEL = 1;
 export const CAVE_MAX_DRILL_HARDNESS = 10;
@@ -43,6 +44,7 @@ export const CAVE_MAX_DRILL_LEVEL = Math.floor(
 );
 export const CAVE_INITIAL_MINING_CAPACITY = 10;
 export const CAVE_MINING_CAPACITY_PER_LEVEL = 5;
+export const CAVE_MAX_MINING_CAPACITY_LEVEL = 10;
 export const CAVE_FUEL_PURCHASE_COST = 10;
 export const CAVE_UPGRADE_BASE_COST = 50;
 export const CAVE_ROCK_BREAKING_POWER_PER_FUEL = 5;

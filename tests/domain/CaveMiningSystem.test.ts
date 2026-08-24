@@ -4,6 +4,8 @@ import {
   CAVE_MAX_DEPTH,
   CAVE_MAX_DRILL_HARDNESS,
   CAVE_MAX_DRILL_LEVEL,
+  CAVE_MAX_FUEL_TANK_LEVEL,
+  CAVE_MAX_MINING_CAPACITY_LEVEL,
   CAVE_ROCK_BREAKING_POWER_PER_FUEL,
 } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
@@ -159,6 +161,38 @@ describe("CaveMiningSystem", () => {
     });
   });
 
+  it("燃料タンクと採掘物容量はそれぞれ10段階を上限にする", () => {
+    const base = createInitialGameState(0);
+    const fuelTankMaxState = {
+      ...base,
+      coins: 999_999,
+      caveMining: { ...base.caveMining, fuelTankLevel: CAVE_MAX_FUEL_TANK_LEVEL },
+    };
+    const miningCapacityMaxState = {
+      ...base,
+      coins: 999_999,
+      caveMining: {
+        ...base.caveMining,
+        miningCapacityLevel: CAVE_MAX_MINING_CAPACITY_LEVEL,
+      },
+    };
+
+    expect(getFuelTankCapacity(fuelTankMaxState.caveMining)).toBe(60);
+    expect(getMiningCapacity(miningCapacityMaxState.caveMining)).toBe(60);
+    expect(isCaveUpgradeMaxed(fuelTankMaxState.caveMining, "fuel-tank")).toBe(true);
+    expect(isCaveUpgradeMaxed(miningCapacityMaxState.caveMining, "mining-capacity")).toBe(true);
+    expect(upgradeCave(fuelTankMaxState, "fuel-tank")).toMatchObject({
+      ok: false,
+      state: fuelTankMaxState,
+      reason: "max-level",
+    });
+    expect(upgradeCave(miningCapacityMaxState, "mining-capacity")).toMatchObject({
+      ok: false,
+      state: miningCapacityMaxState,
+      reason: "max-level",
+    });
+  });
+
   it("採掘済みパネルから1マス以内の埋蔵物を表示する", () => {
     const state = createInitialGameState(0).caveMining;
 
@@ -269,6 +303,18 @@ describe("CaveMiningSystem", () => {
       position: { x: 3, depth: 0 },
       excavatedCells: ["3:0"],
       cellDamage: { "2:0": 5 },
+    });
+  });
+
+  it("強化レベルが上限を超えた保存データを最大段階へ正規化する", () => {
+    const normalized = normalizeCaveMiningState({
+      fuelTankLevel: 99,
+      miningCapacityLevel: 99,
+    });
+
+    expect(normalized).toMatchObject({
+      fuelTankLevel: CAVE_MAX_FUEL_TANK_LEVEL,
+      miningCapacityLevel: CAVE_MAX_MINING_CAPACITY_LEVEL,
     });
   });
 });

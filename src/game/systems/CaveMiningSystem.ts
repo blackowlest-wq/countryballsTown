@@ -9,9 +9,11 @@ import {
   CAVE_INITIAL_FUEL,
   CAVE_INITIAL_FUEL_TANK_CAPACITY,
   CAVE_INITIAL_MINING_CAPACITY,
+  CAVE_MAX_FUEL_TANK_LEVEL,
   CAVE_MAX_DRILL_HARDNESS,
   CAVE_MAX_DRILL_LEVEL,
   CAVE_MAX_DEPTH,
+  CAVE_MAX_MINING_CAPACITY_LEVEL,
   CAVE_MINING_CAPACITY_PER_LEVEL,
   CAVE_RESOURCE_REVEAL_RADIUS,
   CAVE_ROCK_BREAKING_POWER_PER_FUEL,
@@ -145,12 +147,6 @@ export function createInitialCaveMiningState(
     excavatedCells: [getCaveCellKey(CAVE_START_POSITION)],
     cellDamage: {},
   };
-}
-
-function asNonNegativeInteger(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value)
-    ? Math.max(0, Math.floor(value))
-    : fallback;
 }
 
 function asSeed(value: unknown, fallback: number): number {
@@ -316,7 +312,8 @@ export function getFuelTankCapacity(
   state: Pick<CaveMiningState, "fuelTankLevel">,
 ): number {
   return CAVE_INITIAL_FUEL_TANK_CAPACITY
-    + state.fuelTankLevel * CAVE_FUEL_TANK_CAPACITY_PER_LEVEL;
+    + Math.min(CAVE_MAX_FUEL_TANK_LEVEL, state.fuelTankLevel)
+      * CAVE_FUEL_TANK_CAPACITY_PER_LEVEL;
 }
 
 export function getDrillHardness(
@@ -329,17 +326,20 @@ export function getDrillHardness(
 }
 
 export function isCaveUpgradeMaxed(
-  state: Pick<CaveMiningState, "drillLevel">,
+  state: Pick<CaveMiningState, "drillLevel" | "fuelTankLevel" | "miningCapacityLevel">,
   kind: CaveUpgradeKind,
 ): boolean {
-  return kind === "drill" && getDrillHardness(state) >= CAVE_MAX_DRILL_HARDNESS;
+  if (kind === "drill") return getDrillHardness(state) >= CAVE_MAX_DRILL_HARDNESS;
+  if (kind === "fuel-tank") return state.fuelTankLevel >= CAVE_MAX_FUEL_TANK_LEVEL;
+  return state.miningCapacityLevel >= CAVE_MAX_MINING_CAPACITY_LEVEL;
 }
 
 export function getMiningCapacity(
   state: Pick<CaveMiningState, "miningCapacityLevel">,
 ): number {
   return CAVE_INITIAL_MINING_CAPACITY
-    + state.miningCapacityLevel * CAVE_MINING_CAPACITY_PER_LEVEL;
+    + Math.min(CAVE_MAX_MINING_CAPACITY_LEVEL, state.miningCapacityLevel)
+      * CAVE_MINING_CAPACITY_PER_LEVEL;
 }
 
 export function getMiningInventoryTotal(inventory: MiningInventory): number {
@@ -369,15 +369,22 @@ export function normalizeCaveMiningState(value: unknown): CaveMiningState {
   const candidate = value && typeof value === "object"
     ? value as Partial<CaveMiningState>
     : {};
-  const fuelTankLevel = asNonNegativeInteger(candidate.fuelTankLevel, initial.fuelTankLevel);
+  const fuelTankLevel = clampInteger(
+    candidate.fuelTankLevel,
+    0,
+    CAVE_MAX_FUEL_TANK_LEVEL,
+    initial.fuelTankLevel,
+  );
   const drillLevel = clampInteger(
     candidate.drillLevel,
     0,
     CAVE_MAX_DRILL_LEVEL,
     initial.drillLevel,
   );
-  const miningCapacityLevel = asNonNegativeInteger(
+  const miningCapacityLevel = clampInteger(
     candidate.miningCapacityLevel,
+    0,
+    CAVE_MAX_MINING_CAPACITY_LEVEL,
     initial.miningCapacityLevel,
   );
   const layoutSeed = asSeed(candidate.layoutSeed, initial.layoutSeed);
@@ -564,8 +571,17 @@ function upgradeState(
       drillLevel: Math.min(CAVE_MAX_DRILL_LEVEL, state.caveMining.drillLevel + 1),
     }
     : kind === "fuel-tank"
-      ? { ...state.caveMining, fuelTankLevel: state.caveMining.fuelTankLevel + 1 }
-      : { ...state.caveMining, miningCapacityLevel: state.caveMining.miningCapacityLevel + 1 };
+      ? {
+        ...state.caveMining,
+        fuelTankLevel: Math.min(CAVE_MAX_FUEL_TANK_LEVEL, state.caveMining.fuelTankLevel + 1),
+      }
+      : {
+        ...state.caveMining,
+        miningCapacityLevel: Math.min(
+          CAVE_MAX_MINING_CAPACITY_LEVEL,
+          state.caveMining.miningCapacityLevel + 1,
+        ),
+      };
   return { ...state, caveMining };
 }
 

@@ -5,6 +5,8 @@ import {
   CAVE_FUEL_PURCHASE_COST,
   CAVE_MAX_DEPTH,
   CAVE_MAX_DRILL_LEVEL,
+  CAVE_MAX_FUEL_TANK_LEVEL,
+  CAVE_MAX_MINING_CAPACITY_LEVEL,
   CAVE_VISIBLE_MAP_ROWS,
   CAVE_WIDTH,
 } from "../../src/game/constants/gameConstants";
@@ -165,14 +167,19 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     await act(async () => root.unmount());
   });
 
-  it("ドリル硬度10では追加強化を無効にする", async () => {
+  it("強化が上限に達した項目は追加強化を無効にする", async () => {
     const base = createInitialGameState(0);
     useGameStore.setState({
       game: {
         ...base,
         currentMap: "cave",
         coins: 999_999,
-        caveMining: { ...base.caveMining, drillLevel: CAVE_MAX_DRILL_LEVEL },
+        caveMining: {
+          ...base.caveMining,
+          drillLevel: CAVE_MAX_DRILL_LEVEL,
+          fuelTankLevel: CAVE_MAX_FUEL_TANK_LEVEL,
+          miningCapacityLevel: CAVE_MAX_MINING_CAPACITY_LEVEL,
+        },
       },
       isCaveMiningGameOpen: true,
     });
@@ -182,9 +189,11 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
 
     await act(async () => root.render(createElement(CaveMiningGameWindow)));
 
-    const drillUpgrade = container.querySelector<HTMLButtonElement>('[data-upgrade="drill"]');
-    expect(drillUpgrade?.disabled).toBe(true);
-    expect(drillUpgrade?.textContent).toContain("最大");
+    for (const kind of ["drill", "fuel-tank", "mining-capacity"]) {
+      const upgrade = container.querySelector<HTMLButtonElement>(`[data-upgrade="${kind}"]`);
+      expect(upgrade?.disabled).toBe(true);
+      expect(upgrade?.textContent).toContain("最大");
+    }
 
     await act(async () => root.unmount());
   });
