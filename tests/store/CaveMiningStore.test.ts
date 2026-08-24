@@ -37,7 +37,7 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().isCaveMiningGameOpen).toBe(false);
   });
 
-  it("新しい採掘ゲームを開くと前回の採掘バッグを空にする", () => {
+  it("予期せぬ終了後に採掘ゲームを開くと保存済みのバッグを復元する", () => {
     const base = createInitialGameState(0);
     useGameStore.setState({
       game: {
@@ -53,7 +53,7 @@ describe("地面採掘ゲームのStore接続", () => {
 
     expect(useGameStore.getState().openCaveMiningGame()).toBe(true);
     expect(useGameStore.getState().game.miningInventory.copper).toBe(2);
-    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(0);
+    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(1);
   });
 
   it("採掘操作のダメージ蓄積と採掘結果を保存し、通知する", () => {

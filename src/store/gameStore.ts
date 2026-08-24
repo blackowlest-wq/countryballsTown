@@ -394,7 +394,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
       return false;
     }
     set({
-      game: persist(finishCaveMiningSession(current.game)),
       interactionMode: "inspect",
       selectedBuildingId: null,
       milkFactoryPanelBuildingId: null,
