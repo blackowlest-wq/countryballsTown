@@ -72,6 +72,7 @@ import {
 } from "../game/systems/FishingSystem";
 import {
   digCave as digCaveSystem,
+  finishCaveMiningSession,
   purchaseCaveFuel as purchaseCaveFuelSystem,
   resetCaveMining as resetCaveMiningSystem,
   upgradeCave as upgradeCaveSystem,
@@ -204,6 +205,15 @@ function combineNotices(...notices: Array<string | null>): string | null {
 
 export const useGameStore = create<GameStore>((setState, get) => {
   const set = (update: Partial<GameStore>): void => {
+    const current = get();
+    if (current.isCaveMiningGameOpen && update.isCaveMiningGameOpen === false) {
+      const game = update.game ?? current.game;
+      setState({
+        ...update,
+        game: persist(finishCaveMiningSession(game)),
+      });
+      return;
+    }
     setState(update);
   };
 
@@ -384,6 +394,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       return false;
     }
     set({
+      game: persist(finishCaveMiningSession(current.game)),
       interactionMode: "inspect",
       selectedBuildingId: null,
       milkFactoryPanelBuildingId: null,
@@ -413,7 +424,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     if (current.game.currentMap !== "cave" || !current.isCaveMiningGameOpen) return false;
     set({
       game: persist(resetCaveMiningSystem(current.game)),
-      notice: "新しい地層を用意しました。強化・材料・図鑑はそのままです。",
+      notice: "新しい地層を用意しました。バッグは空になり、強化・材料・図鑑はそのままです。",
     });
     return true;
   },
@@ -426,7 +437,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       const notice = result.outcome === "no-fuel"
         ? "燃料が切れています。燃料を購入して補給してください。"
         : result.outcome === "capacity-full"
-          ? "採掘物がいっぱいです。採掘物容量を強化してください。"
+          ? "採掘バッグがいっぱいです。バッグ容量を強化してください。"
           : "ここから先には掘れる地面がありません。";
       set({ notice });
       return result.outcome;
@@ -468,7 +479,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       ? "ドリル硬度"
       : kind === "fuel-tank"
         ? "燃料タンク"
-        : "採掘物容量";
+        : "バッグ容量";
     const result = upgradeCaveSystem(current.game, kind);
     if (!result.ok) {
       set({

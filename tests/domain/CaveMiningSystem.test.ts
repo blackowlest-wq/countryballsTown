@@ -9,9 +9,10 @@ import {
   CAVE_ROCK_BREAKING_POWER_PER_FUEL,
 } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
-import { getMiningResourceDefinition } from "../../src/game/data/mining";
+import { createInitialMiningInventory, getMiningResourceDefinition } from "../../src/game/data/mining";
 import {
   createInitialCaveMiningState,
+  finishCaveMiningSession,
   getCaveCellDamage,
   getCaveDigDamage,
   digCave,
@@ -33,7 +34,7 @@ import {
 } from "../../src/game/systems/CaveMiningSystem";
 
 describe("CaveMiningSystem", () => {
-  it("初期状態に燃料・硬度・燃料タンク・採掘物容量がある", () => {
+  it("初期状態に燃料・硬度・燃料タンク・バッグ容量がある", () => {
     const state = createInitialGameState(0);
 
     expect(state.caveMining).toEqual(createInitialCaveMiningState());
@@ -69,7 +70,27 @@ describe("CaveMiningSystem", () => {
     expect(dug).toMatchObject({ outcome: "dug", resourceType: "copper", damageDealt: 5, cellDamage: 0 });
     expect(dug.state.caveMining).toMatchObject({ fuel: 7, position: { x: 2, depth: 0 } });
     expect(dug.state.miningInventory.copper).toBe(1);
+    expect(dug.state.caveMining.carriedInventory.copper).toBe(1);
     expect(dug.state.caveMining.cellDamage).toEqual({});
+  });
+
+  it("ゲーム終了時に採掘バッグを空にし、蓄積した材料は保持する", () => {
+    const base = createInitialGameState(0);
+    const state = {
+      ...base,
+      miningInventory: { ...base.miningInventory, copper: 2 },
+      caveMining: {
+        ...base.caveMining,
+        carriedInventory: { ...base.caveMining.carriedInventory, copper: 1 },
+        position: { x: 2, depth: 0 },
+      },
+    };
+
+    const finished = finishCaveMiningSession(state);
+
+    expect(finished.miningInventory.copper).toBe(2);
+    expect(finished.caveMining.carriedInventory).toEqual(createInitialMiningInventory());
+    expect(finished.caveMining.position).toEqual({ x: 2, depth: 0 });
   });
 
   it("掘ったセルへ戻る移動では燃料を消費しない", () => {
@@ -161,7 +182,7 @@ describe("CaveMiningSystem", () => {
     });
   });
 
-  it("燃料タンクと採掘物容量はそれぞれ10段階を上限にする", () => {
+  it("燃料タンクとバッグ容量はそれぞれ10段階を上限にする", () => {
     const base = createInitialGameState(0);
     const fuelTankMaxState = {
       ...base,
@@ -216,6 +237,7 @@ describe("CaveMiningSystem", () => {
       miningInventory: { ...base.miningInventory, copper: 2 },
       caveMining: {
         ...base.caveMining,
+        carriedInventory: { ...base.caveMining.carriedInventory, copper: 1 },
         drillLevel: 2,
         fuelTankLevel: 1,
         fuel: 3,
@@ -229,6 +251,7 @@ describe("CaveMiningSystem", () => {
 
     expect(reset.coins).toBe(321);
     expect(reset.miningInventory.copper).toBe(2);
+    expect(reset.caveMining.carriedInventory).toEqual(createInitialMiningInventory());
     expect(reset.caveMining).toMatchObject({
       drillLevel: 2,
       fuelTankLevel: 1,
@@ -241,7 +264,7 @@ describe("CaveMiningSystem", () => {
     expect(getCaveCell({ x: 2, depth: 0 }, reset.caveMining.layoutSeed)?.resourceType).not.toBeNull();
   });
 
-  it("燃料タンクと採掘物容量を別々に強化できる", () => {
+  it("燃料タンクとバッグ容量を別々に強化できる", () => {
     const base = createInitialGameState(0);
     const fuelTankCost = getCaveUpgradeCost(base.caveMining, "fuel-tank");
     const capacityCost = getCaveUpgradeCost(base.caveMining, "mining-capacity");
@@ -256,10 +279,16 @@ describe("CaveMiningSystem", () => {
     expect(capacity.state.coins).toBe(0);
   });
 
-  it("採掘物容量がいっぱいなら新しいセルを掘れない", () => {
+  it("バッグ容量がいっぱいなら新しいセルを掘れない", () => {
     const state = createInitialGameState(0);
-    const fullInventory = { ...state.miningInventory, copper: getMiningCapacity(state.caveMining) };
-    const fullState = { ...state, miningInventory: fullInventory };
+    const fullInventory = {
+      ...state.caveMining.carriedInventory,
+      copper: getMiningCapacity(state.caveMining),
+    };
+    const fullState = {
+      ...state,
+      caveMining: { ...state.caveMining, carriedInventory: fullInventory },
+    };
 
     const result = digCave(fullState, "left");
 
@@ -290,6 +319,7 @@ describe("CaveMiningSystem", () => {
       fuelTankLevel: -2,
       drillLevel: "bad",
       miningCapacityLevel: 1.8,
+      carriedInventory: { copper: 3 },
       position: { x: 999, depth: -1 },
       excavatedCells: ["3:0", "3:0", "bad", "99:99"],
       cellDamage: { "2:0": 5, "3:0": 99, bad: 2 },
@@ -300,6 +330,7 @@ describe("CaveMiningSystem", () => {
       fuelTankLevel: 0,
       drillLevel: 0,
       miningCapacityLevel: 1,
+      carriedInventory: { copper: 3 },
       position: { x: 3, depth: 0 },
       excavatedCells: ["3:0"],
       cellDamage: { "2:0": 5 },

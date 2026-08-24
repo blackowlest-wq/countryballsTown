@@ -78,7 +78,40 @@ describe("地面採掘ゲームの2Dウィンドウ", () => {
     });
     expect(container.querySelector(".cave-mining-window.is-digging")).not.toBeNull();
     expect(useGameStore.getState().game.miningInventory.copper).toBe(1);
+    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(1);
     expect(container.textContent).toContain("銅");
+
+    await act(async () => root.unmount());
+  });
+
+  it("閉じると採掘バッグを空にし、採掘材料を残す", async () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        miningInventory: { ...base.miningInventory, copper: 1 },
+        caveMining: {
+          ...base.caveMining,
+          carriedInventory: { ...base.caveMining.carriedInventory, copper: 1 },
+        },
+      },
+      isCaveMiningGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(CaveMiningGameWindow)));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[aria-label="地面採掘ゲームを閉じる"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(useGameStore.getState().isCaveMiningGameOpen).toBe(false);
+    expect(useGameStore.getState().game.miningInventory.copper).toBe(1);
+    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(0);
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
 
     await act(async () => root.unmount());
   });

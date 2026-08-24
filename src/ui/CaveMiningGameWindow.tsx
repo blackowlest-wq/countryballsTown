@@ -50,7 +50,7 @@ const upgrades: ReadonlyArray<{
 }> = [
   { kind: "drill", label: "ドリル硬度", description: "硬い岩を効率よく掘る" },
   { kind: "fuel-tank", label: "燃料タンク", description: "最大燃料が増える" },
-  { kind: "mining-capacity", label: "採掘物容量", description: "持ち帰れる数が増える" },
+  { kind: "mining-capacity", label: "バッグ容量", description: "持てる採掘物が増える" },
 ];
 
 function getCellLabel(
@@ -94,7 +94,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
   const fuelCapacity = getFuelTankCapacity(mining);
   const drillHardness = getDrillHardness(mining);
   const miningCapacity = getMiningCapacity(mining);
-  const miningTotal = getMiningInventoryTotal(game.miningInventory);
+  const miningTotal = getMiningInventoryTotal(mining.carriedInventory);
   const currentCell = getCaveCell(mining.position, mining.layoutSeed);
   const visibleDepths = getVisibleDepths(mining.position.depth);
   const displayNotice = notice ?? "上下左右のボタンで地面を掘り進めます。";
@@ -131,7 +131,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             <button className="icon-button" type="button" onClick={close} aria-label="地面採掘ゲームを閉じる">×</button>
           </div>
         </div>
-        <p className="panel-hint">上下左右へ掘り進み、見つけた採掘物を図鑑と材料に加えます。リセットすると新しい地層になります。</p>
+        <p className="panel-hint">上下左右へ掘り進み、見つけた採掘物をバッグに入れます。ゲーム終了時に材料へ蓄積され、バッグは空になります。</p>
         <p className="cave-mining-notice" role="status">{displayNotice}</p>
 
         <div className="cave-mining-stats" aria-label="採掘ステータス">
@@ -144,7 +144,7 @@ export function CaveMiningGameWindow(): JSX.Element | null {
             <strong><CaveDrillIcon /> {drillHardness}</strong>
           </div>
           <div className="cave-mining-stat">
-            <span>採掘物</span>
+            <span>採掘バッグ</span>
             <strong>🎒 {miningTotal} / {miningCapacity}</strong>
           </div>
         </div>
@@ -266,10 +266,10 @@ export function CaveMiningGameWindow(): JSX.Element | null {
           </div>
         </div>
 
-        <div className="cave-mining-inventory" aria-label="採掘物一覧">
+        <div className="cave-mining-inventory" aria-label="採掘材料一覧">
           <div className="cave-mining-section-heading">
-            <strong>採掘物</strong>
-            <small>入手したものは図鑑に登録されます</small>
+            <strong>採掘材料</strong>
+            <small>ゲーム終了後も蓄積し、鉱物は図鑑に登録されます</small>
           </div>
           <div className="cave-mining-inventory-list">
             {miningResourceDefinitions.map((resource) => (

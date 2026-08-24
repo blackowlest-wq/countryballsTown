@@ -37,6 +37,25 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().isCaveMiningGameOpen).toBe(false);
   });
 
+  it("新しい採掘ゲームを開くと前回の採掘バッグを空にする", () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        miningInventory: { ...base.miningInventory, copper: 2 },
+        caveMining: {
+          ...base.caveMining,
+          carriedInventory: { ...base.caveMining.carriedInventory, copper: 1 },
+        },
+      },
+    });
+
+    expect(useGameStore.getState().openCaveMiningGame()).toBe(true);
+    expect(useGameStore.getState().game.miningInventory.copper).toBe(2);
+    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(0);
+  });
+
   it("採掘操作のダメージ蓄積と採掘結果を保存し、通知する", () => {
     useGameStore.setState({
       game: { ...createInitialGameState(0), currentMap: "cave" },
@@ -50,8 +69,31 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().notice).toContain("ヒビが入りました");
     expect(useGameStore.getState().digCave("left")).toBe("dug");
     expect(useGameStore.getState().game.miningInventory.copper).toBe(1);
+    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(1);
     expect(useGameStore.getState().game.caveMining.fuel).toBe(7);
     expect(useGameStore.getState().notice).toBe("銅を1個見つけました！");
+  });
+
+  it("ゲーム終了時に採掘バッグを空にし、採掘材料を蓄積したままにする", () => {
+    const base = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...base,
+        currentMap: "cave",
+        miningInventory: { ...base.miningInventory, copper: 1 },
+        caveMining: {
+          ...base.caveMining,
+          carriedInventory: { ...base.caveMining.carriedInventory, copper: 1 },
+        },
+      },
+      isCaveMiningGameOpen: true,
+    });
+
+    useGameStore.getState().closeCaveMiningGame();
+
+    expect(useGameStore.getState().isCaveMiningGameOpen).toBe(false);
+    expect(useGameStore.getState().game.miningInventory.copper).toBe(1);
+    expect(useGameStore.getState().game.caveMining.carriedInventory.copper).toBe(0);
   });
 
   it("ゲームを開き直しても採掘状態をリセットしない", () => {
@@ -131,7 +173,7 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().notice).toBe("ドリル硬度は最大レベルです。");
   });
 
-  it("燃料タンクと採掘物容量が上限ならStoreから追加強化できない", () => {
+  it("燃料タンクとバッグ容量が上限ならStoreから追加強化できない", () => {
     const base = createInitialGameState(0);
     useGameStore.setState({
       game: {
@@ -150,6 +192,6 @@ describe("地面採掘ゲームのStore接続", () => {
     expect(useGameStore.getState().upgradeCave("fuel-tank")).toBe(false);
     expect(useGameStore.getState().notice).toBe("燃料タンクは最大レベルです。");
     expect(useGameStore.getState().upgradeCave("mining-capacity")).toBe(false);
-    expect(useGameStore.getState().notice).toBe("採掘物容量は最大レベルです。");
+    expect(useGameStore.getState().notice).toBe("バッグ容量は最大レベルです。");
   });
 });

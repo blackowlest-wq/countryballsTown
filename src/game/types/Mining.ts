@@ -23,6 +23,8 @@ export interface CaveMiningState {
   fuelTankLevel: number;
   drillLevel: number;
   miningCapacityLevel: number;
+  /** Items carried during the active mining session; emptied when the game ends. */
+  carriedInventory: MiningInventory;
   layoutSeed: number;
   position: CavePosition;
   excavatedCells: string[];

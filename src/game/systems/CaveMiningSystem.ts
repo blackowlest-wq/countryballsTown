@@ -21,6 +21,7 @@ import {
   CAVE_WIDTH,
 } from "../constants/gameConstants";
 import {
+  createInitialMiningInventory,
   getMiningResourceDefinition,
   normalizeMiningInventory,
 } from "../data/mining";
@@ -142,6 +143,7 @@ export function createInitialCaveMiningState(
     fuelTankLevel: 0,
     drillLevel: 0,
     miningCapacityLevel: 0,
+    carriedInventory: createInitialMiningInventory(),
     layoutSeed,
     position: { ...CAVE_START_POSITION },
     excavatedCells: [getCaveCellKey(CAVE_START_POSITION)],
@@ -347,6 +349,17 @@ export function getMiningInventoryTotal(inventory: MiningInventory): number {
     .reduce((total, amount) => total + amount, 0);
 }
 
+/** Ends the active mining session without changing the accumulated materials. */
+export function finishCaveMiningSession(state: GameState): GameState {
+  return {
+    ...state,
+    caveMining: {
+      ...state.caveMining,
+      carriedInventory: createInitialMiningInventory(),
+    },
+  };
+}
+
 export function getCaveUpgradeCost(
   state: CaveMiningState,
   kind: CaveUpgradeKind,
@@ -419,6 +432,7 @@ export function normalizeCaveMiningState(value: unknown): CaveMiningState {
     fuelTankLevel,
     drillLevel,
     miningCapacityLevel,
+    carriedInventory: normalizeMiningInventory(candidate.carriedInventory),
     layoutSeed,
     position,
     excavatedCells: uniqueExcavatedCells,
@@ -444,6 +458,7 @@ export function resetCaveMining(state: GameState, random: () => number = Math.ra
     ...state,
     caveMining: {
       ...state.caveMining,
+      carriedInventory: createInitialMiningInventory(),
       layoutSeed: createCaveLayoutSeed(random, state.caveMining.layoutSeed),
       position: { ...CAVE_START_POSITION },
       excavatedCells: [getCaveCellKey(CAVE_START_POSITION)],
@@ -517,7 +532,8 @@ export function digCave(state: GameState, direction: DigDirection): CaveDigResul
   if (miningState.fuel < 1) {
     return getFailureResult(state, "no-fuel", target, targetCell);
   }
-  if (getMiningInventoryTotal(state.miningInventory) >= getMiningCapacity(miningState)) {
+  const carriedInventory = normalizeMiningInventory(miningState.carriedInventory);
+  if (getMiningInventoryTotal(carriedInventory) >= getMiningCapacity(miningState)) {
     return getFailureResult(state, "capacity-full", target, targetCell);
   }
 
@@ -531,7 +547,11 @@ export function digCave(state: GameState, direction: DigDirection): CaveDigResul
   else nextCellDamage[cellKey] = cellDamage;
 
   const nextInventory = normalizeMiningInventory(state.miningInventory);
-  if (isDug && targetCell.resourceType) nextInventory[targetCell.resourceType] += 1;
+  const nextCarriedInventory = normalizeMiningInventory(carriedInventory);
+  if (isDug && targetCell.resourceType) {
+    nextInventory[targetCell.resourceType] += 1;
+    nextCarriedInventory[targetCell.resourceType] += 1;
+  }
   const nextMiningState: CaveMiningState = {
     ...miningState,
     fuel: miningState.fuel - 1,
@@ -540,6 +560,9 @@ export function digCave(state: GameState, direction: DigDirection): CaveDigResul
       ? [...miningState.excavatedCells, cellKey]
       : miningState.excavatedCells,
     cellDamage: nextCellDamage,
+    carriedInventory: isDug && targetCell.resourceType
+      ? nextCarriedInventory
+      : miningState.carriedInventory,
   };
   return {
     ok: true,

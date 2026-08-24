@@ -3,7 +3,7 @@ import { getCropName } from "../game/systems/CropSystem";
 import { getCropDefinition, type CropType } from "../game/types/Crop";
 import { fishDefinitions } from "../game/data/fish";
 import { miningResourceDefinitions } from "../game/data/mining";
-import { getMiningCapacity, getMiningInventoryTotal } from "../game/systems/CaveMiningSystem";
+import { getMiningInventoryTotal } from "../game/systems/CaveMiningSystem";
 import { FishIcon } from "./FishIcon";
 
 const cropOptions: CropType[] = ["wheat", "tomato", "rice"];
@@ -79,7 +79,7 @@ export function FarmControls(): JSX.Element | null {
             ))}
           </div>
             <span className="processing-stock-heading mining-stock-heading">
-              採掘物 {getMiningInventoryTotal(game.miningInventory)} / {getMiningCapacity(game.caveMining)}
+              採掘材料 {getMiningInventoryTotal(game.miningInventory)}
             </span>
             <div className="processing-stock-items mining-stock-items">
               {miningResourceDefinitions.map((resource) => (
