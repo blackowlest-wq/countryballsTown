@@ -1,7 +1,7 @@
 import type { FishDefinition } from "../systems/FishGameSystem";
 import type { FishInventory, FishType } from "../types/Fish";
 
-const STANDARD_FISH_SIZE = 0.14;
+const STANDARD_FISH_SIZE = 0.18;
 
 export const fishDefinitions: readonly FishDefinition[] = [
   {
@@ -12,7 +12,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "ふつう",
     probability: 0.52,
     biteWindowMs: 3_000,
-    movementSpeed: 0.16,
+    movementSpeed: 0.32,
     movementChangeIntervalMs: 900,
     fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.28,
@@ -28,7 +28,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "めずらしい",
     probability: 0.3,
     biteWindowMs: 2_200,
-    movementSpeed: 0.24,
+    movementSpeed: 0.48,
     movementChangeIntervalMs: 760,
     fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.24,
@@ -44,7 +44,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "レア",
     probability: 0.14,
     biteWindowMs: 1_500,
-    movementSpeed: 0.34,
+    movementSpeed: 0.68,
     movementChangeIntervalMs: 620,
     fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.21,
@@ -60,7 +60,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "伝説",
     probability: 0.04,
     biteWindowMs: 900,
-    movementSpeed: 0.46,
+    movementSpeed: 0.92,
     movementChangeIntervalMs: 500,
     fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.18,

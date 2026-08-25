@@ -292,7 +292,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fishing-time-limit small { font-size: 9px; }
 .fishing-time-limit.is-urgent { color: #a55e43; background: #fff0d0; border-color: #f3c47b; animation: fishing-time-limit-alert .55s ease-in-out infinite alternate; }
 .fishing-time-limit.is-urgent strong { color: #d45c4d; }
-.fishing-fish { position: absolute; z-index: 2; display: grid; width: clamp(48px, 12%, 64px); place-items: center; transform: translate(-50%, -50%); filter: drop-shadow(0 4px 3px rgba(28, 94, 115, .28)); transition: filter .15s ease; }
+.fishing-fish { position: absolute; z-index: 2; display: grid; width: clamp(64px, 16%, 88px); place-items: center; transform: translate(-50%, -50%); filter: drop-shadow(0 4px 3px rgba(28, 94, 115, .28)); transition: filter .15s ease; }
 .fishing-fish.is-facing-left { transform: translate(-50%, -50%) scaleX(-1); }
 .fishing-fish .fish-icon-visual { width: 100%; height: auto; }
 .fishing-catch-frame { position: absolute; z-index: 3; min-width: 40px; min-height: 40px; border: 3px solid #ffdc72; border-radius: 17px; background: rgba(255, 239, 159, .08); box-shadow: 0 0 0 2px rgba(255,255,255,.48), 0 0 22px rgba(255, 218, 93, .5), inset 0 0 18px rgba(255, 236, 134, .2); pointer-events: none; transform: translate(-50%, -50%); transition: border-color .12s ease, background-color .12s ease, box-shadow .12s ease; }
@@ -306,7 +306,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fishing-catch-frame-corner-top-right { top: -3px; right: -3px; border-width: 3px 3px 0 0; border-radius: 0 11px 0 0; }
 .fishing-catch-frame-corner-bottom-left { bottom: -3px; left: -3px; border-width: 0 0 3px 3px; border-radius: 0 0 0 11px; }
 .fishing-catch-frame-corner-bottom-right { right: -3px; bottom: -3px; border-width: 0 3px 3px 0; border-radius: 0 0 11px; }
-.fishing-catch-progress-wrap { position: absolute; right: 7%; bottom: 14px; left: 7%; z-index: 5; padding: 9px 11px 10px; background: rgba(255,250,238,.93); border: 1px solid rgba(255,255,255,.9); border-radius: 14px; box-shadow: 0 5px 12px rgba(31, 90, 108, .2); pointer-events: none; }
+.fishing-catch-progress-wrap { width: 100%; box-sizing: border-box; padding: 9px 11px 10px; background: rgba(255,250,238,.93); border: 1px solid rgba(255,255,255,.9); border-radius: 14px; box-shadow: 0 5px 12px rgba(31, 90, 108, .2); pointer-events: none; }
 .fishing-catch-progress-heading { display: flex; margin-bottom: 5px; align-items: center; justify-content: space-between; color: #668176; font-size: 10px; font-weight: 900; }
 .fishing-catch-progress-heading strong { color: #719c57; font-size: 11px; }
 .fishing-catch-progress { height: 10px; overflow: hidden; background: #d9d2c5; border: 2px solid #fffdf6; border-radius: 10px; box-shadow: inset 0 2px 4px rgba(74, 82, 75, .18); }
@@ -481,7 +481,6 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .fishing-stage { min-height: 245px; }
   .fishing-bobber { top: 171px; }
   .fishing-ripples { top: 193px; }
-  .fishing-catch-progress-wrap { right: 5%; bottom: 10px; left: 5%; }
   .fishing-tap-hint { top: 10px; font-size: 9px; }
   .fishing-time-limit { top: 9px; right: 9px; }
   .fishing-phase-message { font-size: 12px; }

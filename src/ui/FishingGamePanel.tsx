@@ -360,22 +360,6 @@ export function FishingGamePanel(): JSX.Element | null {
                 <span className="fishing-catch-frame-corner fishing-catch-frame-corner-bottom-left" />
                 <span className="fishing-catch-frame-corner fishing-catch-frame-corner-bottom-right" />
               </div>
-              <div className="fishing-catch-progress-wrap">
-                <div className="fishing-catch-progress-heading">
-                  <span>{isFishInFrame ? "ロックオン中！" : "魚を枠に入れよう"}</span>
-                  <strong>{progressPercent}%</strong>
-                </div>
-                <div
-                  className="fishing-catch-progress"
-                  role="progressbar"
-                  aria-label="捕獲ゲージ"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={progressPercent}
-                >
-                  <span style={{ width: `${progressPercent}%` }} />
-                </div>
-              </div>
               <span className="fishing-tap-hint">タップ・スワイプで枠を移動</span>
             </div>
           ) : (
@@ -408,6 +392,25 @@ export function FishingGamePanel(): JSX.Element | null {
             </>
           )}
         </div>
+
+        {phase === "chase" && (
+          <div className="fishing-catch-progress-wrap">
+            <div className="fishing-catch-progress-heading">
+              <span>{isFishInFrame ? "ロックオン中！" : "魚を枠に入れよう"}</span>
+              <strong>{progressPercent}%</strong>
+            </div>
+            <div
+              className="fishing-catch-progress"
+              role="progressbar"
+              aria-label="捕獲ゲージ"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progressPercent}
+            >
+              <span style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        )}
 
         <div className="fishing-status-copy">
           <p className="fishing-phase-message">{getPhaseMessage(phase)}</p>

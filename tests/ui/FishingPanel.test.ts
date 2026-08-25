@@ -120,6 +120,7 @@ describe("fishing panels", () => {
     expect(container.querySelector(".fishing-playfield")).not.toBeNull();
     expect(container.querySelector(".fishing-catch-frame")).not.toBeNull();
     expect(container.querySelector('[aria-label="捕獲ゲージ"]')).not.toBeNull();
+    expect(container.querySelector(".fishing-playfield .fishing-catch-progress-wrap")).toBeNull();
     expect(container.textContent).toContain("タップ・スワイプで枠を移動");
 
     const playfield = container.querySelector<HTMLDivElement>(".fishing-playfield");
@@ -135,15 +136,29 @@ describe("fishing panels", () => {
       toJSON: () => ({}),
     } as DOMRect);
     await act(async () => {
-      playfield?.dispatchEvent(new MouseEvent("pointerdown", {
-        bubbles: true,
-        clientX: 20,
-        clientY: 0,
-      }));
+      playfield?.dispatchEvent(createPointerEvent("pointerdown", 20, 0));
     });
 
-    elapsedMs = 1_900;
-    await act(async () => vi.advanceTimersByTime(1_900));
+    const moveFrameToFish = async (): Promise<void> => {
+      const fish = container.querySelector<HTMLElement>(".fishing-fish");
+      if (!fish || !playfield) throw new Error("Fishing chase elements are missing.");
+      await act(async () => {
+        playfield.dispatchEvent(createPointerEvent(
+          "pointermove",
+          Number.parseFloat(fish.style.left),
+          Number.parseFloat(fish.style.top),
+        ));
+      });
+    };
+    let previousElapsedMs = 0;
+    for (const nextElapsedMs of [300, 600, 900, 1_200, 1_500]) {
+      elapsedMs = nextElapsedMs;
+      await act(async () => vi.advanceTimersByTime(nextElapsedMs - previousElapsedMs));
+      await moveFrameToFish();
+      previousElapsedMs = nextElapsedMs;
+    }
+    elapsedMs = 1_800;
+    await act(async () => vi.advanceTimersByTime(1_800 - previousElapsedMs));
 
     expect(container.textContent).toContain("魚を釣り上げました！");
     expect(useGameStore.getState().game.fishInventory.sardine).toBe(1);
