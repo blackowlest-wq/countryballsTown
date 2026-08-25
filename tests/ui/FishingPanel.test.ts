@@ -63,8 +63,10 @@ describe("fishing panels", () => {
     await act(async () => root.unmount());
   });
 
-  it("食いつき後にゲージを範囲内で止めると魚をゲットできる", async () => {
+  it("食いつき後に魚を枠へ入れ続けると魚をゲットできる", async () => {
     vi.useFakeTimers();
+    let elapsedMs = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => elapsedMs);
     vi.spyOn(Math, "random").mockReturnValue(0);
     useGameStore.setState({
       game: createInitialGameState(0),
@@ -90,12 +92,33 @@ describe("fishing panels", () => {
       biteButton
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    const stopButton = [...container.querySelectorAll("button")]
-      .find((button) => button.textContent?.includes("ここで止める"));
-    expect(stopButton?.closest(".fishing-action-slot")).toBe(actionSlot);
+    expect(container.querySelector(".fishing-playfield")).not.toBeNull();
+    expect(container.querySelector(".fishing-catch-frame")).not.toBeNull();
+    expect(container.querySelector('[aria-label="捕獲ゲージ"]')).not.toBeNull();
+    expect(container.textContent).toContain("画面をタップして枠を移動");
+
+    const playfield = container.querySelector<HTMLDivElement>(".fishing-playfield");
+    vi.spyOn(playfield!, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
     await act(async () => {
-      stopButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      playfield?.dispatchEvent(new MouseEvent("pointerdown", {
+        bubbles: true,
+        clientX: 20,
+        clientY: 0,
+      }));
     });
+
+    elapsedMs = 1_900;
+    await act(async () => vi.advanceTimersByTime(1_900));
 
     expect(container.textContent).toContain("魚を釣り上げました！");
     expect(useGameStore.getState().game.fishInventory.sardine).toBe(1);
@@ -105,18 +128,10 @@ describe("fishing panels", () => {
     await act(async () => root.unmount());
   });
 
-  it("停止時に最後の更新からの経過時間も含めて判定する", async () => {
+  it("水中エリアをタップすると枠がその場所へ移動する", async () => {
     vi.useFakeTimers();
-    const realPerformanceNow = performance.now.bind(performance);
-    let elapsedMs = 0;
-    vi.spyOn(performance, "now").mockImplementation(() => realPerformanceNow() + elapsedMs);
-    vi.spyOn(Math, "random")
-      .mockReturnValueOnce(0)
-      .mockReturnValueOnce(0.05857142857142857)
-      .mockReturnValueOnce(0)
-      .mockReturnValueOnce(0.05857142857142857)
-      .mockReturnValueOnce(0)
-      .mockReturnValue(0);
+    vi.spyOn(performance, "now").mockImplementation(() => Date.now());
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
     useGameStore.setState({
       game: createInitialGameState(0),
       isFishingGameOpen: true,
@@ -126,21 +141,38 @@ describe("fishing panels", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(FishingGamePanel)));
-    await act(async () => vi.advanceTimersByTime(1_200));
+    await act(async () => vi.advanceTimersByTime(2_100));
     await act(async () => {
       container.querySelector<HTMLButtonElement>("[aria-label=\"魚が食いついたのでタップ\"]")
         ?.click();
     });
-    elapsedMs = 100;
-    await act(async () => vi.advanceTimersByTime(100));
+
+    const playfield = container.querySelector<HTMLDivElement>(".fishing-playfield");
+    expect(playfield).not.toBeNull();
+    vi.spyOn(playfield!, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+
     await act(async () => {
-      [...container.querySelectorAll("button")]
-        .find((button) => button.textContent?.includes("ここで止める"))
-        ?.click();
+      playfield?.dispatchEvent(new MouseEvent("pointerdown", {
+        bubbles: true,
+        clientX: 80,
+        clientY: 20,
+      }));
     });
 
-    expect(container.textContent).toContain("魚を釣り上げました！");
-    expect(useGameStore.getState().game.fishInventory.sardine).toBe(1);
+    const frame = container.querySelector<HTMLElement>(".fishing-catch-frame");
+    expect(frame?.style.left).toBe("80%");
+    expect(frame?.style.top).toBe("20%");
+    expect(container.textContent).toContain("枠の中に魚を入れ続けよう！");
     await act(async () => root.unmount());
   });
 });

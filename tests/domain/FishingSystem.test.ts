@@ -8,10 +8,12 @@ import {
   purchaseFishingRod,
 } from "../../src/game/systems/FishingSystem";
 import {
-  advanceFishingGauge,
+  advanceFishingChase,
+  advanceFishingFish,
   chooseFishDefinition,
-  createFishingGaugeTarget,
-  isFishingGaugeInTarget,
+  createFishingChaseState,
+  isFishingFishInFrame,
+  moveFishingFrameToTap,
 } from "../../src/game/systems/FishGameSystem";
 
 describe("FishGameSystem", () => {
@@ -22,29 +24,66 @@ describe("FishGameSystem", () => {
     expect(chooseFishDefinition(fishDefinitions, 0.97).type).toBe("tuna");
   });
 
-  it("レアな魚ほど食いつき時間が短く、ゲージが速く、範囲が狭い", () => {
+  it("レアな魚ほど速く動き、捕獲枠が狭い", () => {
     const common = fishDefinitions[0];
     const legendary = fishDefinitions.at(-1);
     expect(legendary).toBeDefined();
     expect(legendary!.biteWindowMs).toBeLessThan(common.biteWindowMs);
-    expect(legendary!.gaugeSpeed).toBeGreaterThan(common.gaugeSpeed);
-    expect(legendary!.gaugeTargetWidth).toBeLessThan(common.gaugeTargetWidth);
+    expect(legendary!.movementSpeed).toBeGreaterThan(common.movementSpeed);
+    expect(legendary!.catchFrameSize).toBeLessThan(common.catchFrameSize);
   });
 
-  it("ゲージの成功範囲を画面内に配置する", () => {
+  it("魚と枠をプレイエリア内に配置し、タップ位置を枠の中心へ変換する", () => {
     const fish = fishDefinitions.at(-1)!;
-    const target = createFishingGaugeTarget(fish, 1);
-    expect(target.start).toBeCloseTo(0.9);
-    expect(target.end).toBeCloseTo(1);
-    expect(isFishingGaugeInTarget(0.95, target)).toBe(true);
-    expect(isFishingGaugeInTarget(0.5, target)).toBe(false);
+    const chase = createFishingChaseState(fish, 1, 0, 0);
+    expect(chase.fish.position).toEqual({
+      x: 1 - fish.fishSize / 2,
+      y: fish.fishSize / 2,
+    });
+    expect(chase.frame).toEqual({ x: 0.5, y: 0.5 });
+
+    expect(moveFishingFrameToTap(chase.frame, { x: 1, y: -1 }, fish.catchFrameSize)).toEqual({
+      x: 1 - fish.catchFrameSize / 2,
+      y: fish.catchFrameSize / 2,
+    });
   });
 
-  it("ゲージが端で跳ね返る", () => {
-    expect(advanceFishingGauge({ position: 0.95, direction: 1 }, 100, 1))
-      .toEqual({ position: 0.95, direction: -1 });
-    expect(advanceFishingGauge({ position: 0.05, direction: -1 }, 100, 1))
-      .toEqual({ position: 0.05, direction: 1 });
+  it("魚がプレイエリアの端で跳ね返る", () => {
+    const bounced = advanceFishingFish({
+      position: { x: 0.92, y: 0.5 },
+      velocity: { x: 0.4, y: 0 },
+    }, 100, 0.1);
+    expect(bounced.position.x).toBeCloseTo(0.94);
+    expect(bounced.position.y).toBe(0.5);
+    expect(bounced.velocity).toEqual({ x: -0.4, y: 0 });
+  });
+
+  it("魚が枠に入っている間だけ捕獲ゲージが増え、必要時間で釣り上がる", () => {
+    const fish = fishDefinitions[0];
+    const chase = {
+      fish: {
+        position: { x: 0.5, y: 0.5 },
+        velocity: { x: 0, y: 0 },
+      },
+      frame: { x: 0.5, y: 0.5 },
+      focusProgressMs: 0,
+    };
+
+    const focused = advanceFishingChase(chase, fish, 1_000);
+    expect(focused.isFishInFrame).toBe(true);
+    expect(focused.state.focusProgressMs).toBe(1_000);
+    expect(focused.caught).toBe(false);
+
+    const caught = advanceFishingChase(focused.state, fish, fish.catchDurationMs);
+    expect(caught.caught).toBe(true);
+    expect(caught.state.focusProgressMs).toBe(fish.catchDurationMs);
+
+    const movedAway = advanceFishingChase({
+      ...focused.state,
+      frame: { x: 0.1, y: 0.1 },
+    }, fish, 100);
+    expect(isFishingFishInFrame(movedAway.state.fish.position, { x: 0.1, y: 0.1 }, fish.catchFrameSize, fish.fishSize)).toBe(false);
+    expect(movedAway.state.focusProgressMs).toBeLessThan(focused.state.focusProgressMs);
   });
 });
 

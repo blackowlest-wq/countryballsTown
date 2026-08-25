@@ -1,24 +1,38 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { fishDefinitions } from "../game/data/fish";
 import {
-  advanceFishingGauge,
+  advanceFishingChase,
   chooseFishDefinition,
-  createFishingGaugeTarget,
-  isFishingGaugeInTarget,
+  createFishingChaseState,
+  isFishingFishInFrame,
+  moveFishingFrameToTap,
   type FishDefinition,
-  type FishingGaugeState,
-  type FishingGaugeTarget,
+  type FishingChaseState,
+  type FishingPoint,
 } from "../game/systems/FishGameSystem";
 import { useGameStore } from "../store/gameStore";
 import { FishIcon } from "./FishIcon";
 
-type FishingPhase = "waiting" | "bite" | "gauge" | "caught" | "escaped";
+type FishingPhase = "waiting" | "bite" | "chase" | "caught" | "escaped";
 
 const FIRST_BITE_DELAY_MIN_MS = 1_200;
 const FIRST_BITE_DELAY_RANGE_MS = 1_800;
 
-function createGaugeState(): FishingGaugeState {
-  return { position: 0, direction: 1 };
+interface FishingRound {
+  fish: FishDefinition;
+  chase: FishingChaseState;
+}
+
+function createFishingRound(): FishingRound {
+  const fish = chooseFishDefinition(fishDefinitions);
+  return { fish, chase: createFishingChaseState(fish) };
 }
 
 function getPhaseMessage(phase: FishingPhase): string {
@@ -27,8 +41,8 @@ function getPhaseMessage(phase: FishingPhase): string {
       return "波の音を聞きながら、浮きが動くのを待ちましょう。";
     case "bite":
       return "魚が食いつきました！すぐにタップ！";
-    case "gauge":
-      return "動くマークを魚のいる範囲で止めましょう。";
+    case "chase":
+      return "枠の中に魚を入れ続けよう！";
     case "caught":
       return "魚を釣り上げました！";
     case "escaped":
@@ -41,26 +55,26 @@ export function FishingGamePanel(): JSX.Element | null {
   const close = useGameStore((store) => store.closeFishingGame);
   const recordFishCatch = useGameStore((store) => store.recordFishCatch);
   const [phase, setPhase] = useState<FishingPhase>("waiting");
-  const [fish, setFish] = useState<FishDefinition>(() => chooseFishDefinition(fishDefinitions));
-  const [target, setTarget] = useState<FishingGaugeTarget>(() => createFishingGaugeTarget(fish));
-  const [gauge, setGauge] = useState<FishingGaugeState>(createGaugeState);
-  const gaugeRef = useRef<FishingGaugeState>(createGaugeState());
-  const gaugeUpdatedAtRef = useRef<number | null>(null);
+  const [round, setRound] = useState<FishingRound>(createFishingRound);
+  const chaseRef = useRef<FishingChaseState>(round.chase);
+  const chaseUpdatedAtRef = useRef<number | null>(null);
+  const resolvedRoundRef = useRef(false);
 
   const startRound = useCallback(() => {
-    const nextFish = chooseFishDefinition(fishDefinitions);
-    const nextGauge = createGaugeState();
-    setFish(nextFish);
-    setTarget(createFishingGaugeTarget(nextFish));
-    gaugeRef.current = nextGauge;
-    gaugeUpdatedAtRef.current = null;
-    setGauge(nextGauge);
+    const nextRound = createFishingRound();
+    chaseRef.current = nextRound.chase;
+    chaseUpdatedAtRef.current = null;
+    resolvedRoundRef.current = false;
+    setRound(nextRound);
     setPhase("waiting");
   }, []);
 
   useEffect(() => {
     if (open) startRound();
   }, [open, startRound]);
+
+  const fish = round.fish;
+  const chase = round.chase;
 
   useEffect(() => {
     if (!open || phase !== "waiting") return;
@@ -78,51 +92,92 @@ export function FishingGamePanel(): JSX.Element | null {
   }, [fish.biteWindowMs, open, phase]);
 
   useEffect(() => {
-    if (!open || phase !== "gauge") return;
-    gaugeUpdatedAtRef.current = performance.now();
+    if (!open || phase !== "chase") return;
+    chaseUpdatedAtRef.current = performance.now();
     const timer = window.setInterval(() => {
       const now = performance.now();
-      const previous = gaugeUpdatedAtRef.current ?? now;
-      const nextGauge = advanceFishingGauge(
-        gaugeRef.current,
+      const previous = chaseUpdatedAtRef.current ?? now;
+      const update = advanceFishingChase(
+        chaseRef.current,
+        fish,
         now - previous,
-        fish.gaugeSpeed,
       );
-      gaugeRef.current = nextGauge;
-      gaugeUpdatedAtRef.current = now;
-      setGauge(nextGauge);
+      chaseRef.current = update.state;
+      chaseUpdatedAtRef.current = now;
+      setRound((current) => ({ ...current, chase: update.state }));
+      if (update.caught && !resolvedRoundRef.current) {
+        resolvedRoundRef.current = true;
+        recordFishCatch(fish.type);
+        setPhase("caught");
+      }
     }, 16);
     return () => window.clearInterval(timer);
-  }, [fish.gaugeSpeed, open, phase]);
+  }, [fish, open, phase, recordFishCatch]);
+
+  const moveFrame = useCallback((tapPosition: FishingPoint): void => {
+    const nextFrame = moveFishingFrameToTap(
+      chaseRef.current.frame,
+      tapPosition,
+      fish.catchFrameSize,
+    );
+    const nextChase = { ...chaseRef.current, frame: nextFrame };
+    chaseRef.current = nextChase;
+    setRound((current) => ({ ...current, chase: nextChase }));
+  }, [fish.catchFrameSize]);
+
+  const handlePlayfieldPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    if (phase !== "chase") return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    moveFrame({
+      x: (event.clientX - bounds.left) / bounds.width,
+      y: (event.clientY - bounds.top) / bounds.height,
+    });
+  };
+
+  const handlePlayfieldKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
+    if (phase !== "chase") return;
+    const step = 0.09;
+    const offset = event.key === "ArrowLeft"
+      ? { x: -step, y: 0 }
+      : event.key === "ArrowRight"
+        ? { x: step, y: 0 }
+        : event.key === "ArrowUp"
+          ? { x: 0, y: -step }
+          : event.key === "ArrowDown"
+            ? { x: 0, y: step }
+            : null;
+    if (!offset) return;
+    event.preventDefault();
+    moveFrame({
+      x: chaseRef.current.frame.x + offset.x,
+      y: chaseRef.current.frame.y + offset.y,
+    });
+  };
 
   if (!open) return null;
 
+  const isFishInFrame = phase === "chase" && isFishingFishInFrame(
+    chase.fish.position,
+    chase.frame,
+    fish.catchFrameSize,
+    fish.fishSize,
+  );
+  const progressPercent = Math.min(100, Math.round(chase.focusProgressMs / fish.catchDurationMs * 100));
+  const fishPosition = {
+    left: `${chase.fish.position.x * 100}%`,
+    top: `${chase.fish.position.y * 100}%`,
+  };
+  const framePosition = {
+    left: `${chase.frame.x * 100}%`,
+    top: `${chase.frame.y * 100}%`,
+    width: `${fish.catchFrameSize * 100}%`,
+    height: `${fish.catchFrameSize * 100}%`,
+  };
+
   const handleBite = (): void => {
-    if (phase === "bite") setPhase("gauge");
+    if (phase === "bite") setPhase("chase");
   };
-
-  const handleStopGauge = (): void => {
-    if (phase !== "gauge") return;
-    const now = performance.now();
-    const previous = gaugeUpdatedAtRef.current ?? now;
-    const currentGauge = advanceFishingGauge(
-      gaugeRef.current,
-      now - previous,
-      fish.gaugeSpeed,
-    );
-    gaugeRef.current = currentGauge;
-    gaugeUpdatedAtRef.current = now;
-    if (isFishingGaugeInTarget(currentGauge.position, target)) {
-      recordFishCatch(fish.type);
-      setPhase("caught");
-    } else {
-      setPhase("escaped");
-    }
-  };
-
-  const markerPosition = `${gauge.position * 100}%`;
-  const targetStart = `${target.start * 100}%`;
-  const targetWidth = `${(target.end - target.start) * 100}%`;
 
   return (
     <div className="fishing-overlay">
@@ -135,43 +190,82 @@ export function FishingGamePanel(): JSX.Element | null {
           <button className="icon-button" type="button" onClick={close} aria-label="釣りをやめる">×</button>
         </div>
 
-        <div className="fishing-stage" aria-live="polite">
-          <div className="fishing-cloud fishing-cloud-left" aria-hidden="true" />
-          <div className="fishing-cloud fishing-cloud-right" aria-hidden="true" />
-          <div className="fishing-water-line" aria-hidden="true" />
-          <svg
-            className="fishing-stage-art"
-            viewBox="0 0 100 278"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path className="fishing-rod" d="M -5 35 L 47.5 131" />
-            <path className="fishing-rod-tip" d="M 45.5 127 L 47.5 131" />
-            <path
-              className="fishing-line"
-              d="M 47.5 131 C 47.5 148 46.8 164 49 178 C 50 187 51 196 50.5 207"
-            />
-          </svg>
-          <div className="fishing-ripples" aria-hidden="true">
-            <span />
-            <span />
-          </div>
-          <div className={`fishing-bobber fishing-bobber-${phase}`} aria-hidden="true">
-            <span className="fishing-bobber-body" />
-            <span className="fishing-bobber-top" />
-            {phase === "bite" && <span className="fishing-bobber-alert">!</span>}
-          </div>
-          {phase === "gauge" && (
-            <div className="fishing-gauge-wrap">
-              <div className="fishing-gauge" aria-label="魚釣りゲージ">
-                <span
-                  className="fishing-gauge-target"
-                  style={{ left: targetStart, width: targetWidth }}
-                />
-                <span className="fishing-gauge-marker" style={{ left: markerPosition }} />
+        <div className={`fishing-stage fishing-stage-${phase}`} aria-live="polite">
+          {phase === "chase" ? (
+            <div
+              className="fishing-playfield"
+              role="button"
+              tabIndex={0}
+              aria-label="魚釣りエリア。タップした場所へ枠を移動できます。"
+              onPointerDown={handlePlayfieldPointerDown}
+              onKeyDown={handlePlayfieldKeyDown}
+            >
+              <div className="fishing-underwater-rays" aria-hidden="true" />
+              <div className="fishing-water-bubble fishing-water-bubble-one" aria-hidden="true" />
+              <div className="fishing-water-bubble fishing-water-bubble-two" aria-hidden="true" />
+              <div
+                className={`fishing-fish ${chase.fish.velocity.x < 0 ? "is-facing-left" : ""}`}
+                style={fishPosition}
+                aria-hidden="true"
+              >
+                <FishIcon fishType={fish.type} />
               </div>
-              <div className="fishing-gauge-direction" aria-hidden="true">↔</div>
+              <div
+                className={`fishing-catch-frame ${isFishInFrame ? "is-locking" : ""}`}
+                style={framePosition}
+                aria-hidden="true"
+              >
+                <span className="fishing-catch-frame-corner fishing-catch-frame-corner-top-left" />
+                <span className="fishing-catch-frame-corner fishing-catch-frame-corner-top-right" />
+                <span className="fishing-catch-frame-corner fishing-catch-frame-corner-bottom-left" />
+                <span className="fishing-catch-frame-corner fishing-catch-frame-corner-bottom-right" />
+              </div>
+              <div className="fishing-catch-progress-wrap">
+                <div className="fishing-catch-progress-heading">
+                  <span>{isFishInFrame ? "ロックオン中！" : "魚を枠に入れよう"}</span>
+                  <strong>{progressPercent}%</strong>
+                </div>
+                <div
+                  className="fishing-catch-progress"
+                  role="progressbar"
+                  aria-label="捕獲ゲージ"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progressPercent}
+                >
+                  <span style={{ width: `${progressPercent}%` }} />
+                </div>
+              </div>
+              <span className="fishing-tap-hint">画面をタップして枠を移動</span>
             </div>
+          ) : (
+            <>
+              <div className="fishing-cloud fishing-cloud-left" aria-hidden="true" />
+              <div className="fishing-cloud fishing-cloud-right" aria-hidden="true" />
+              <div className="fishing-water-line" aria-hidden="true" />
+              <svg
+                className="fishing-stage-art"
+                viewBox="0 0 100 278"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path className="fishing-rod" d="M -5 35 L 47.5 131" />
+                <path className="fishing-rod-tip" d="M 45.5 127 L 47.5 131" />
+                <path
+                  className="fishing-line"
+                  d="M 47.5 131 C 47.5 148 46.8 164 49 178 C 50 187 51 196 50.5 207"
+                />
+              </svg>
+              <div className="fishing-ripples" aria-hidden="true">
+                <span />
+                <span />
+              </div>
+              <div className={`fishing-bobber fishing-bobber-${phase}`} aria-hidden="true">
+                <span className="fishing-bobber-body" />
+                <span className="fishing-bobber-top" />
+                {phase === "bite" && <span className="fishing-bobber-alert">!</span>}
+              </div>
+            </>
           )}
         </div>
 
@@ -179,8 +273,8 @@ export function FishingGamePanel(): JSX.Element | null {
           <p className="fishing-phase-message">{getPhaseMessage(phase)}</p>
           {phase === "waiting" && <small>しばらくすると魚が食いつきます。</small>}
           {phase === "bite" && <small>魚ごとにタップできる時間が違います。</small>}
-          {phase === "gauge" && (
-            <small>魚：{fish.name} / 難易度：{fish.rarityLabel}</small>
+          {phase === "chase" && (
+            <small>魚：{fish.name} / 捕獲ゲージ：{progressPercent}%</small>
           )}
           {phase === "caught" && (
             <div className="fishing-result-card">
@@ -202,11 +296,7 @@ export function FishingGamePanel(): JSX.Element | null {
               ！ タップ！
             </button>
           )}
-          {phase === "gauge" && (
-            <button className="primary-button fishing-action-button" type="button" onClick={handleStopGauge}>
-              ここで止める
-            </button>
-          )}
+          {phase === "chase" && <small className="fishing-action-tip">枠が魚に重なっている間、ゲージが増えます</small>}
           {(phase === "caught" || phase === "escaped") && (
             <div className="panel-actions fishing-result-actions">
               <button className="primary-button fishing-action-button" type="button" onClick={startRound}>もう一度釣る</button>
