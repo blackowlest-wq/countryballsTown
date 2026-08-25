@@ -15,6 +15,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     fishSize: 0.1,
     catchFrameSize: 0.28,
     catchDurationMs: 1_800,
+    timeLimitMs: 8_000,
     description: "海辺でよく釣れる小さな魚。",
   },
   {
@@ -30,6 +31,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     fishSize: 0.1,
     catchFrameSize: 0.24,
     catchDurationMs: 1_900,
+    timeLimitMs: 7_000,
     description: "銀色の体がきらめく魚。",
   },
   {
@@ -45,6 +47,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     fishSize: 0.11,
     catchFrameSize: 0.21,
     catchDurationMs: 2_000,
+    timeLimitMs: 6_000,
     description: "赤い体をした縁起のよい魚。",
   },
   {
@@ -60,6 +63,7 @@ export const fishDefinitions: readonly FishDefinition[] = [
     fishSize: 0.12,
     catchFrameSize: 0.18,
     catchDurationMs: 2_100,
+    timeLimitMs: 5_000,
     description: "大きくて、とてもすばやい魚。",
   },
 ];

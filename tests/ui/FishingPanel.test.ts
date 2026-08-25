@@ -182,4 +182,52 @@ describe("fishing panels", () => {
     expect(container.textContent).toContain("枠の中に魚を入れ続けよう！");
     await act(async () => root.unmount());
   });
+
+  it("制限時間が切れると釣りに失敗する", async () => {
+    vi.useFakeTimers();
+    let elapsedMs = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => elapsedMs);
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    useGameStore.setState({
+      game: createInitialGameState(0),
+      isFishingGameOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(FishingGamePanel)));
+    await act(async () => vi.advanceTimersByTime(2_100));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[aria-label=\"魚が食いついたのでタップ\"]")
+        ?.click();
+    });
+
+    const playfield = container.querySelector<HTMLDivElement>(".fishing-playfield");
+    vi.spyOn(playfield!, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    await act(async () => {
+      playfield?.dispatchEvent(new MouseEvent("pointerdown", {
+        bubbles: true,
+        clientX: 0,
+        clientY: 0,
+      }));
+    });
+
+    elapsedMs = 8_000;
+    await act(async () => vi.advanceTimersByTime(8_000));
+
+    expect(container.textContent).toContain("時間切れ！");
+    expect(useGameStore.getState().game.fishInventory.sardine).toBe(0);
+    await act(async () => root.unmount());
+  });
 });

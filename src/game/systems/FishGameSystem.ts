@@ -13,6 +13,7 @@ export interface FishDefinition {
   fishSize: number;
   catchFrameSize: number;
   catchDurationMs: number;
+  timeLimitMs: number;
   description: string;
 }
 
@@ -31,12 +32,14 @@ export interface FishingChaseState {
   fish: FishingFishMotionState;
   frame: FishingPoint;
   focusProgressMs: number;
+  remainingTimeMs: number;
 }
 
 export interface FishingChaseUpdate {
   state: FishingChaseState;
   isFishInFrame: boolean;
   caught: boolean;
+  timedOut: boolean;
 }
 
 export type FishingRandomSource = () => number;
@@ -87,6 +90,7 @@ export function createFishingChaseState(
     },
     frame: { x: 0.5, y: 0.5 },
     focusProgressMs: 0,
+    remainingTimeMs: Math.max(0, fish.timeLimitMs),
   };
 }
 
@@ -158,9 +162,14 @@ export function advanceFishingChase(
   randomSource: FishingRandomSource = Math.random,
 ): FishingChaseUpdate {
   const safeDeltaMs = Math.max(0, Number.isFinite(deltaMs) ? deltaMs : 0);
+  const timeLimitMs = Math.max(
+    0,
+    Number.isFinite(state.remainingTimeMs) ? state.remainingTimeMs : fish.timeLimitMs,
+  );
+  const activeDeltaMs = Math.min(safeDeltaMs, timeLimitMs);
   const nextFish = advanceFishingFish(
     state.fish,
-    safeDeltaMs,
+    activeDeltaMs,
     fish.fishSize,
     fish.movementSpeed,
     fish.movementChangeIntervalMs,
@@ -179,17 +188,21 @@ export function advanceFishingChase(
     catchDurationMs,
   );
   const focusProgressMs = isFishInFrame
-    ? Math.min(catchDurationMs, currentProgressMs + safeDeltaMs)
-    : Math.max(0, currentProgressMs - safeDeltaMs * FOCUS_PROGRESS_DECAY_RATE);
+    ? Math.min(catchDurationMs, currentProgressMs + activeDeltaMs)
+    : Math.max(0, currentProgressMs - activeDeltaMs * FOCUS_PROGRESS_DECAY_RATE);
+  const remainingTimeMs = Math.max(0, timeLimitMs - safeDeltaMs);
+  const caught = focusProgressMs >= catchDurationMs;
 
   return {
     state: {
       fish: nextFish,
       frame: state.frame,
       focusProgressMs,
+      remainingTimeMs,
     },
     isFishInFrame,
-    caught: focusProgressMs >= catchDurationMs,
+    caught,
+    timedOut: remainingTimeMs <= 0,
   };
 }
 

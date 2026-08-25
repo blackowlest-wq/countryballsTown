@@ -46,7 +46,7 @@ function getPhaseMessage(phase: FishingPhase): string {
     case "caught":
       return "魚を釣り上げました！";
     case "escaped":
-      return "魚に逃げられてしまいました。";
+      return "時間切れ！魚に逃げられてしまいました。";
   }
 }
 
@@ -112,6 +112,9 @@ export function FishingGamePanel(): JSX.Element | null {
         resolvedRoundRef.current = true;
         recordFishCatch(fish.type);
         setPhase("caught");
+      } else if (update.timedOut && !resolvedRoundRef.current) {
+        resolvedRoundRef.current = true;
+        setPhase("escaped");
       }
     }, 16);
     return () => window.clearInterval(timer);
@@ -193,7 +196,9 @@ export function FishingGamePanel(): JSX.Element | null {
     fish.catchFrameSize,
     fish.fishSize,
   );
-  const progressPercent = Math.min(100, Math.round(chase.focusProgressMs / fish.catchDurationMs * 100));
+  const progressPercent = Math.min(100, Math.round(chase.focusProgressMs / Math.max(1, fish.catchDurationMs) * 100));
+  const remainingTimeMs = Math.max(0, chase.remainingTimeMs);
+  const remainingSeconds = Math.ceil(remainingTimeMs / 1_000);
   const fishPosition = {
     left: `${chase.fish.position.x * 100}%`,
     top: `${chase.fish.position.y * 100}%`,
@@ -236,6 +241,15 @@ export function FishingGamePanel(): JSX.Element | null {
               <div className="fishing-underwater-rays" aria-hidden="true" />
               <div className="fishing-water-bubble fishing-water-bubble-one" aria-hidden="true" />
               <div className="fishing-water-bubble fishing-water-bubble-two" aria-hidden="true" />
+              <div
+                className={`fishing-time-limit ${remainingSeconds <= 3 ? "is-urgent" : ""}`}
+                role="timer"
+                aria-label={`残り時間 ${remainingSeconds}秒`}
+              >
+                <span aria-hidden="true">⏱</span>
+                <strong>{remainingSeconds}</strong>
+                <small>秒</small>
+              </div>
               <div
                 className={`fishing-fish ${chase.fish.velocity.x < 0 ? "is-facing-left" : ""}`}
                 style={fishPosition}
@@ -307,7 +321,7 @@ export function FishingGamePanel(): JSX.Element | null {
           {phase === "waiting" && <small>しばらくすると魚が食いつきます。</small>}
           {phase === "bite" && <small>魚ごとにタップできる時間が違います。</small>}
           {phase === "chase" && (
-            <small>魚：{fish.name} / 捕獲ゲージ：{progressPercent}%</small>
+            <small>魚：{fish.name} / 捕獲ゲージ：{progressPercent}% / 残り{remainingSeconds}秒</small>
           )}
           {phase === "caught" && (
             <div className="fishing-result-card">
@@ -329,7 +343,7 @@ export function FishingGamePanel(): JSX.Element | null {
               ！ タップ！
             </button>
           )}
-          {phase === "chase" && <small className="fishing-action-tip">枠が魚に重なっている間、ゲージが増えます</small>}
+          {phase === "chase" && <small className="fishing-action-tip">時間内に、枠が魚に重なっている状態を続けましょう</small>}
           {(phase === "caught" || phase === "escaped") && (
             <div className="panel-actions fishing-result-actions">
               <button className="primary-button fishing-action-button" type="button" onClick={startRound}>もう一度釣る</button>

@@ -32,6 +32,7 @@ describe("FishGameSystem", () => {
     expect(legendary!.movementSpeed).toBeGreaterThan(common.movementSpeed);
     expect(legendary!.movementChangeIntervalMs).toBeLessThan(common.movementChangeIntervalMs);
     expect(legendary!.catchFrameSize).toBeLessThan(common.catchFrameSize);
+    expect(legendary!.timeLimitMs).toBeLessThan(common.timeLimitMs);
   });
 
   it("魚と枠をプレイエリア内に配置し、タップ位置を枠の中心へ変換する", () => {
@@ -69,6 +70,7 @@ describe("FishGameSystem", () => {
       },
       frame: { x: 0.5, y: 0.5 },
       focusProgressMs: 0,
+      remainingTimeMs: fish.timeLimitMs,
     };
     const randomValues = [0.25, 0, 0.5];
     const updated = advanceFishingChase(
@@ -93,6 +95,7 @@ describe("FishGameSystem", () => {
       },
       frame: { x: 0.5, y: 0.5 },
       focusProgressMs: 0,
+      remainingTimeMs: fish.timeLimitMs,
     };
 
     const focused = advanceFishingChase(chase, fish, 1_000);
@@ -110,6 +113,26 @@ describe("FishGameSystem", () => {
     }, fish, 100);
     expect(isFishingFishInFrame(movedAway.state.fish.position, { x: 0.1, y: 0.1 }, fish.catchFrameSize, fish.fishSize)).toBe(false);
     expect(movedAway.state.focusProgressMs).toBeLessThan(focused.state.focusProgressMs);
+  });
+
+  it("制限時間が0になると、捕獲できていない釣りをタイムアウトにする", () => {
+    const fish = fishDefinitions[0];
+    const result = advanceFishingChase({
+      fish: {
+        position: { x: 0.5, y: 0.5 },
+        velocity: { x: 0, y: 0 },
+        directionChangeInMs: 10_000,
+      },
+      frame: { x: 0.1, y: 0.1 },
+      focusProgressMs: 0,
+      remainingTimeMs: 1_000,
+    }, fish, 1_000);
+
+    expect(result).toMatchObject({
+      caught: false,
+      timedOut: true,
+      state: { remainingTimeMs: 0 },
+    });
   });
 });
 
