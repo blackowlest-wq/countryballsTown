@@ -11,6 +11,31 @@ import { FishingPromptPanel } from "../../src/ui/FishingPromptPanel";
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
 
+function createPointerEvent(
+  type: string,
+  clientX: number,
+  clientY: number,
+  pointerId = 7,
+): MouseEvent {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    clientX,
+    clientY,
+  });
+  Object.defineProperty(event, "pointerId", { value: pointerId });
+  return event;
+}
+
+function createTouchEvent(type: string, clientX: number, clientY: number): Event {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  const touch = { clientX, clientY };
+  Object.defineProperties(event, {
+    touches: { value: type === "touchend" ? [] : [touch] },
+    changedTouches: { value: [touch] },
+  });
+  return event;
+}
+
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -162,23 +187,23 @@ describe("fishing panels", () => {
     } as DOMRect);
 
     await act(async () => {
-      playfield?.dispatchEvent(new MouseEvent("pointerdown", {
-        bubbles: true,
-        clientX: 80,
-        clientY: 20,
-      }));
+      playfield?.dispatchEvent(createPointerEvent("pointerdown", 80, 20));
     });
     await act(async () => {
-      playfield?.dispatchEvent(new MouseEvent("pointermove", {
-        bubbles: true,
-        clientX: 35,
-        clientY: 70,
-      }));
+      document.dispatchEvent(createPointerEvent("pointermove", 35, 70));
     });
 
     const frame = container.querySelector<HTMLElement>(".fishing-catch-frame");
     expect(frame?.style.left).toBe("35%");
     expect(frame?.style.top).toBe("70%");
+
+    await act(async () => {
+      playfield?.dispatchEvent(createTouchEvent("touchstart", 80, 20));
+      document.dispatchEvent(createTouchEvent("touchmove", 60, 40));
+    });
+    expect(frame?.style.left).toBe("60%");
+    expect(frame?.style.top).toBe("40%");
+
     expect(container.textContent).toContain("枠の中に魚を入れ続けよう！");
     await act(async () => root.unmount());
   });

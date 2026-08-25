@@ -5,6 +5,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
 } from "react";
 import { fishDefinitions } from "../game/data/fish";
 import {
@@ -58,14 +59,18 @@ export function FishingGamePanel(): JSX.Element | null {
   const [round, setRound] = useState<FishingRound>(createFishingRound);
   const chaseRef = useRef<FishingChaseState>(round.chase);
   const chaseUpdatedAtRef = useRef<number | null>(null);
+  const playfieldRef = useRef<HTMLDivElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
+  const activeTouchRef = useRef(false);
   const resolvedRoundRef = useRef(false);
 
   const startRound = useCallback(() => {
     const nextRound = createFishingRound();
     chaseRef.current = nextRound.chase;
     chaseUpdatedAtRef.current = null;
+    playfieldRef.current = null;
     activePointerIdRef.current = null;
+    activeTouchRef.current = false;
     resolvedRoundRef.current = false;
     setRound(nextRound);
     setPhase("waiting");
@@ -131,41 +136,124 @@ export function FishingGamePanel(): JSX.Element | null {
     setRound((current) => ({ ...current, chase: nextChase }));
   }, [fish.catchFrameSize]);
 
-  const getPlayfieldPoint = useCallback((event: ReactPointerEvent<HTMLDivElement>): FishingPoint | null => {
-    const bounds = event.currentTarget.getBoundingClientRect();
+  const getPlayfieldPoint = useCallback((clientX: number, clientY: number): FishingPoint | null => {
+    const playfield = playfieldRef.current;
+    if (!playfield) return null;
+    const bounds = playfield.getBoundingClientRect();
     if (bounds.width <= 0 || bounds.height <= 0) return null;
     return {
-      x: (event.clientX - bounds.left) / bounds.width,
-      y: (event.clientY - bounds.top) / bounds.height,
+      x: (clientX - bounds.left) / bounds.width,
+      y: (clientY - bounds.top) / bounds.height,
     };
   }, []);
 
+  const releasePointer = useCallback((pointerId: number): void => {
+    if (activePointerIdRef.current !== pointerId) return;
+    activePointerIdRef.current = null;
+    const playfield = playfieldRef.current;
+    const releasePointerCapture = playfield?.releasePointerCapture;
+    if (playfield && typeof releasePointerCapture === "function") {
+      try {
+        releasePointerCapture.call(playfield, pointerId);
+      } catch {
+        // ポインターが先に解放されたブラウザではキャプチャ解除が例外になるため無視する。
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open || phase !== "chase") return;
+    const handleWindowPointerMove = (event: PointerEvent): void => {
+      if (activePointerIdRef.current !== event.pointerId) return;
+      event.preventDefault();
+      const point = getPlayfieldPoint(event.clientX, event.clientY);
+      if (point) moveFrame(point);
+    };
+    const handleWindowPointerEnd = (event: PointerEvent): void => {
+      releasePointer(event.pointerId);
+    };
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerEnd);
+    window.addEventListener("pointercancel", handleWindowPointerEnd);
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerEnd);
+      window.removeEventListener("pointercancel", handleWindowPointerEnd);
+    };
+  }, [getPlayfieldPoint, moveFrame, open, phase, releasePointer]);
+
+  useEffect(() => {
+    if (!open || phase !== "chase") return;
+    const handleWindowTouchMove = (event: TouchEvent): void => {
+      if (!activeTouchRef.current) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      event.preventDefault();
+      const point = getPlayfieldPoint(touch.clientX, touch.clientY);
+      if (point) moveFrame(point);
+    };
+    const handleWindowTouchEnd = (): void => {
+      activeTouchRef.current = false;
+    };
+    window.addEventListener("touchmove", handleWindowTouchMove, { passive: false });
+    window.addEventListener("touchend", handleWindowTouchEnd);
+    window.addEventListener("touchcancel", handleWindowTouchEnd);
+    return () => {
+      window.removeEventListener("touchmove", handleWindowTouchMove);
+      window.removeEventListener("touchend", handleWindowTouchEnd);
+      window.removeEventListener("touchcancel", handleWindowTouchEnd);
+    };
+  }, [getPlayfieldPoint, moveFrame, open, phase]);
+
   const handlePlayfieldPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (phase !== "chase") return;
+    const point = getPlayfieldPoint(event.clientX, event.clientY);
+    if (!point) return;
     event.preventDefault();
     activePointerIdRef.current = event.pointerId;
+    moveFrame(point);
     const setPointerCapture = event.currentTarget.setPointerCapture;
     if (typeof setPointerCapture === "function") {
-      setPointerCapture.call(event.currentTarget, event.pointerId);
+      try {
+        setPointerCapture.call(event.currentTarget, event.pointerId);
+      } catch {
+        // キャプチャに対応しない環境でも、ウィンドウ側の監視でスワイプを継続する。
+      }
     }
-    const point = getPlayfieldPoint(event);
-    if (point) moveFrame(point);
   };
 
   const handlePlayfieldPointerMove = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (phase !== "chase" || activePointerIdRef.current !== event.pointerId) return;
     event.preventDefault();
-    const point = getPlayfieldPoint(event);
+    const point = getPlayfieldPoint(event.clientX, event.clientY);
     if (point) moveFrame(point);
   };
 
   const handlePlayfieldPointerUp = (event: ReactPointerEvent<HTMLDivElement>): void => {
-    if (activePointerIdRef.current !== event.pointerId) return;
-    activePointerIdRef.current = null;
-    const releasePointerCapture = event.currentTarget.releasePointerCapture;
-    if (typeof releasePointerCapture === "function") {
-      releasePointerCapture.call(event.currentTarget, event.pointerId);
-    }
+    releasePointer(event.pointerId);
+  };
+
+  const handlePlayfieldTouchStart = (event: ReactTouchEvent<HTMLDivElement>): void => {
+    if (phase !== "chase") return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    event.preventDefault();
+    activeTouchRef.current = true;
+    const point = getPlayfieldPoint(touch.clientX, touch.clientY);
+    if (point) moveFrame(point);
+  };
+
+  const handlePlayfieldTouchMove = (event: ReactTouchEvent<HTMLDivElement>): void => {
+    if (phase !== "chase" || !activeTouchRef.current) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    event.preventDefault();
+    const point = getPlayfieldPoint(touch.clientX, touch.clientY);
+    if (point) moveFrame(point);
+  };
+
+  const handlePlayfieldTouchEnd = (): void => {
+    activeTouchRef.current = false;
   };
 
   const handlePlayfieldKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
@@ -229,6 +317,7 @@ export function FishingGamePanel(): JSX.Element | null {
           {phase === "chase" ? (
             <div
               className="fishing-playfield"
+              ref={playfieldRef}
               role="button"
               tabIndex={0}
               aria-label="魚釣りエリア。タップやスワイプした場所へ枠を移動できます。"
@@ -236,6 +325,10 @@ export function FishingGamePanel(): JSX.Element | null {
               onPointerMove={handlePlayfieldPointerMove}
               onPointerUp={handlePlayfieldPointerUp}
               onPointerCancel={handlePlayfieldPointerUp}
+              onTouchStart={handlePlayfieldTouchStart}
+              onTouchMove={handlePlayfieldTouchMove}
+              onTouchEnd={handlePlayfieldTouchEnd}
+              onTouchCancel={handlePlayfieldTouchEnd}
               onKeyDown={handlePlayfieldKeyDown}
             >
               <div className="fishing-underwater-rays" aria-hidden="true" />
