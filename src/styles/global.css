@@ -292,7 +292,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fishing-time-limit small { font-size: 9px; }
 .fishing-time-limit.is-urgent { color: #a55e43; background: #fff0d0; border-color: #f3c47b; animation: fishing-time-limit-alert .55s ease-in-out infinite alternate; }
 .fishing-time-limit.is-urgent strong { color: #d45c4d; }
-.fishing-fish { position: absolute; z-index: 2; display: grid; place-items: center; transform: translate(-50%, -50%); filter: drop-shadow(0 4px 3px rgba(28, 94, 115, .28)); transition: filter .15s ease; }
+.fishing-fish { position: absolute; z-index: 2; display: grid; width: clamp(48px, 12%, 64px); place-items: center; transform: translate(-50%, -50%); filter: drop-shadow(0 4px 3px rgba(28, 94, 115, .28)); transition: filter .15s ease; }
 .fishing-fish.is-facing-left { transform: translate(-50%, -50%) scaleX(-1); }
 .fishing-fish .fish-icon-visual { width: 100%; height: auto; }
 .fishing-catch-frame { position: absolute; z-index: 3; min-width: 40px; min-height: 40px; border: 3px solid #ffdc72; border-radius: 17px; background: rgba(255, 239, 159, .08); box-shadow: 0 0 0 2px rgba(255,255,255,.48), 0 0 22px rgba(255, 218, 93, .5), inset 0 0 18px rgba(255, 236, 134, .2); pointer-events: none; transform: translate(-50%, -50%); transition: border-color .12s ease, background-color .12s ease, box-shadow .12s ease; }

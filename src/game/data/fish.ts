@@ -1,6 +1,8 @@
 import type { FishDefinition } from "../systems/FishGameSystem";
 import type { FishInventory, FishType } from "../types/Fish";
 
+const STANDARD_FISH_SIZE = 0.14;
+
 export const fishDefinitions: readonly FishDefinition[] = [
   {
     type: "sardine",
@@ -12,11 +14,11 @@ export const fishDefinitions: readonly FishDefinition[] = [
     biteWindowMs: 3_000,
     movementSpeed: 0.16,
     movementChangeIntervalMs: 900,
-    fishSize: 0.1,
+    fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.28,
     catchDurationMs: 1_800,
     timeLimitMs: 8_000,
-    description: "海辺でよく釣れる小さな魚。",
+    description: "海辺でよく釣れる魚。",
   },
   {
     type: "mackerel",
@@ -26,11 +28,11 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "めずらしい",
     probability: 0.3,
     biteWindowMs: 2_200,
-    movementSpeed: 0.22,
+    movementSpeed: 0.24,
     movementChangeIntervalMs: 760,
-    fishSize: 0.1,
+    fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.24,
-    catchDurationMs: 1_900,
+    catchDurationMs: 2_200,
     timeLimitMs: 7_000,
     description: "銀色の体がきらめく魚。",
   },
@@ -42,11 +44,11 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "レア",
     probability: 0.14,
     biteWindowMs: 1_500,
-    movementSpeed: 0.29,
+    movementSpeed: 0.34,
     movementChangeIntervalMs: 620,
-    fishSize: 0.11,
+    fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.21,
-    catchDurationMs: 2_000,
+    catchDurationMs: 2_800,
     timeLimitMs: 6_000,
     description: "赤い体をした縁起のよい魚。",
   },
@@ -58,13 +60,13 @@ export const fishDefinitions: readonly FishDefinition[] = [
     rarityLabel: "伝説",
     probability: 0.04,
     biteWindowMs: 900,
-    movementSpeed: 0.38,
+    movementSpeed: 0.46,
     movementChangeIntervalMs: 500,
-    fishSize: 0.12,
+    fishSize: STANDARD_FISH_SIZE,
     catchFrameSize: 0.18,
-    catchDurationMs: 2_100,
+    catchDurationMs: 3_600,
     timeLimitMs: 5_000,
-    description: "大きくて、とてもすばやい魚。",
+    description: "とてもすばやく、釣り上げに時間がかかる魚。",
   },
 ];
 

@@ -24,15 +24,16 @@ describe("FishGameSystem", () => {
     expect(chooseFishDefinition(fishDefinitions, 0.97).type).toBe("tuna");
   });
 
-  it("レアな魚ほど速く動き、捕獲枠が狭い", () => {
+  it("魚のサイズは一定で、レアな魚ほど速く動き捕獲に時間がかかる", () => {
     const common = fishDefinitions[0];
     const legendary = fishDefinitions.at(-1);
     expect(legendary).toBeDefined();
     expect(legendary!.biteWindowMs).toBeLessThan(common.biteWindowMs);
     expect(legendary!.movementSpeed).toBeGreaterThan(common.movementSpeed);
     expect(legendary!.movementChangeIntervalMs).toBeLessThan(common.movementChangeIntervalMs);
-    expect(legendary!.catchFrameSize).toBeLessThan(common.catchFrameSize);
+    expect(legendary!.catchDurationMs).toBeGreaterThan(common.catchDurationMs);
     expect(legendary!.timeLimitMs).toBeLessThan(common.timeLimitMs);
+    expect(fishDefinitions.every((fish) => fish.fishSize === common.fishSize)).toBe(true);
   });
 
   it("魚と枠をプレイエリア内に配置し、タップ位置を枠の中心へ変換する", () => {
