@@ -30,6 +30,7 @@ describe("FishGameSystem", () => {
     expect(legendary).toBeDefined();
     expect(legendary!.biteWindowMs).toBeLessThan(common.biteWindowMs);
     expect(legendary!.movementSpeed).toBeGreaterThan(common.movementSpeed);
+    expect(legendary!.movementChangeIntervalMs).toBeLessThan(common.movementChangeIntervalMs);
     expect(legendary!.catchFrameSize).toBeLessThan(common.catchFrameSize);
   });
 
@@ -58,12 +59,37 @@ describe("FishGameSystem", () => {
     expect(bounced.velocity).toEqual({ x: -0.4, y: 0 });
   });
 
+  it("一定時間ごとに魚の向きと速度を乱数で変える", () => {
+    const fish = fishDefinitions[0];
+    const chase = {
+      fish: {
+        position: { x: 0.5, y: 0.5 },
+        velocity: { x: fish.movementSpeed, y: 0 },
+        directionChangeInMs: 100,
+      },
+      frame: { x: 0.5, y: 0.5 },
+      focusProgressMs: 0,
+    };
+    const randomValues = [0.25, 0, 0.5];
+    const updated = advanceFishingChase(
+      chase,
+      fish,
+      100,
+      () => randomValues.shift() ?? 0,
+    );
+
+    expect(updated.state.fish.velocity.x).toBeCloseTo(0);
+    expect(updated.state.fish.velocity.y).toBeGreaterThan(0);
+    expect(updated.state.fish.directionChangeInMs).toBeCloseTo(fish.movementChangeIntervalMs);
+  });
+
   it("魚が枠に入っている間だけ捕獲ゲージが増え、必要時間で釣り上がる", () => {
     const fish = fishDefinitions[0];
     const chase = {
       fish: {
         position: { x: 0.5, y: 0.5 },
         velocity: { x: 0, y: 0 },
+        directionChangeInMs: 10_000,
       },
       frame: { x: 0.5, y: 0.5 },
       focusProgressMs: 0,

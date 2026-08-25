@@ -9,6 +9,7 @@ export interface FishDefinition {
   probability: number;
   biteWindowMs: number;
   movementSpeed: number;
+  movementChangeIntervalMs: number;
   fishSize: number;
   catchFrameSize: number;
   catchDurationMs: number;
@@ -23,6 +24,7 @@ export interface FishingPoint {
 export interface FishingFishMotionState {
   position: FishingPoint;
   velocity: FishingPoint;
+  directionChangeInMs?: number;
 }
 
 export interface FishingChaseState {
@@ -37,7 +39,10 @@ export interface FishingChaseUpdate {
   caught: boolean;
 }
 
+export type FishingRandomSource = () => number;
+
 const FOCUS_PROGRESS_DECAY_RATE = 1.6;
+const MIN_DIRECTION_CHANGE_INTERVAL_MS = 180;
 
 export function chooseFishDefinition(
   definitions: readonly FishDefinition[],
@@ -59,6 +64,7 @@ export function createFishingChaseState(
   randomX = Math.random(),
   randomY = Math.random(),
   randomDirection = Math.random(),
+  randomDirectionChange = Math.random(),
 ): FishingChaseState {
   const fishSize = clamp(fish.fishSize, 0, 1);
   const margin = fishSize / 2;
@@ -74,6 +80,10 @@ export function createFishingChaseState(
         x: Math.cos(angle) * Math.max(0, fish.movementSpeed),
         y: Math.sin(angle) * Math.max(0, fish.movementSpeed),
       },
+      directionChangeInMs: createDirectionChangeDelay(
+        fish.movementChangeIntervalMs,
+        randomDirectionChange,
+      ),
     },
     frame: { x: 0.5, y: 0.5 },
     focusProgressMs: 0,
@@ -96,14 +106,36 @@ export function advanceFishingFish(
   state: FishingFishMotionState,
   deltaMs: number,
   fishSize: number,
+  movementSpeed = Math.hypot(state.velocity.x, state.velocity.y),
+  movementChangeIntervalMs = Number.POSITIVE_INFINITY,
+  randomSource: FishingRandomSource = Math.random,
 ): FishingFishMotionState {
-  const deltaSeconds = Math.max(0, Number.isFinite(deltaMs) ? deltaMs : 0) / 1_000;
-  const margin = clamp(fishSize, 0, 1) / 2;
-  const x = advanceBoundedAxis(state.position.x, state.velocity.x, deltaSeconds, margin, 1 - margin);
-  const y = advanceBoundedAxis(state.position.y, state.velocity.y, deltaSeconds, margin, 1 - margin);
+  const safeDeltaMs = Math.max(0, Number.isFinite(deltaMs) ? deltaMs : 0);
+  if (!Number.isFinite(movementChangeIntervalMs) || movementChangeIntervalMs <= 0) {
+    return advanceFishingFishPosition(state, safeDeltaMs, fishSize);
+  }
+
+  const changeIntervalMs = Math.max(MIN_DIRECTION_CHANGE_INTERVAL_MS, movementChangeIntervalMs);
+  let directionChangeInMs = Number.isFinite(state.directionChangeInMs)
+    ? Math.max(0, state.directionChangeInMs!)
+    : changeIntervalMs;
+  let remainingMs = safeDeltaMs;
+  let nextState = state;
+
+  while (directionChangeInMs <= remainingMs) {
+    nextState = advanceFishingFishPosition(nextState, directionChangeInMs, fishSize);
+    remainingMs -= directionChangeInMs;
+    nextState = {
+      ...nextState,
+      velocity: createRandomFishVelocity(movementSpeed, randomSource),
+    };
+    directionChangeInMs = createDirectionChangeDelay(changeIntervalMs, randomSource());
+  }
+
+  nextState = advanceFishingFishPosition(nextState, remainingMs, fishSize);
   return {
-    position: { x: x.position, y: y.position },
-    velocity: { x: x.velocity, y: y.velocity },
+    ...nextState,
+    directionChangeInMs: directionChangeInMs - remainingMs,
   };
 }
 
@@ -123,9 +155,17 @@ export function advanceFishingChase(
   state: FishingChaseState,
   fish: FishDefinition,
   deltaMs: number,
+  randomSource: FishingRandomSource = Math.random,
 ): FishingChaseUpdate {
   const safeDeltaMs = Math.max(0, Number.isFinite(deltaMs) ? deltaMs : 0);
-  const nextFish = advanceFishingFish(state.fish, safeDeltaMs, fish.fishSize);
+  const nextFish = advanceFishingFish(
+    state.fish,
+    safeDeltaMs,
+    fish.fishSize,
+    fish.movementSpeed,
+    fish.movementChangeIntervalMs,
+    randomSource,
+  );
   const isFishInFrame = isFishingFishInFrame(
     nextFish.position,
     state.frame,
@@ -151,6 +191,38 @@ export function advanceFishingChase(
     isFishInFrame,
     caught: focusProgressMs >= catchDurationMs,
   };
+}
+
+function advanceFishingFishPosition(
+  state: FishingFishMotionState,
+  deltaMs: number,
+  fishSize: number,
+): FishingFishMotionState {
+  const deltaSeconds = Math.max(0, Number.isFinite(deltaMs) ? deltaMs : 0) / 1_000;
+  const margin = clamp(fishSize, 0, 1) / 2;
+  const x = advanceBoundedAxis(state.position.x, state.velocity.x, deltaSeconds, margin, 1 - margin);
+  const y = advanceBoundedAxis(state.position.y, state.velocity.y, deltaSeconds, margin, 1 - margin);
+  return {
+    position: { x: x.position, y: y.position },
+    velocity: { x: x.velocity, y: y.velocity },
+  };
+}
+
+function createRandomFishVelocity(
+  movementSpeed: number,
+  randomSource: FishingRandomSource,
+): FishingPoint {
+  const angle = normalizeRandom(randomSource()) * Math.PI * 2;
+  const speed = Math.max(0, movementSpeed) * (0.65 + normalizeRandom(randomSource()) * 0.7);
+  return {
+    x: Math.cos(angle) * speed,
+    y: Math.sin(angle) * speed,
+  };
+}
+
+function createDirectionChangeDelay(baseIntervalMs: number, randomValue: number): number {
+  const interval = Math.max(MIN_DIRECTION_CHANGE_INTERVAL_MS, baseIntervalMs);
+  return interval * (0.75 + normalizeRandom(randomValue) * 0.5);
 }
 
 function advanceBoundedAxis(

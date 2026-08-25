@@ -58,12 +58,14 @@ export function FishingGamePanel(): JSX.Element | null {
   const [round, setRound] = useState<FishingRound>(createFishingRound);
   const chaseRef = useRef<FishingChaseState>(round.chase);
   const chaseUpdatedAtRef = useRef<number | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
   const resolvedRoundRef = useRef(false);
 
   const startRound = useCallback(() => {
     const nextRound = createFishingRound();
     chaseRef.current = nextRound.chase;
     chaseUpdatedAtRef.current = null;
+    activePointerIdRef.current = null;
     resolvedRoundRef.current = false;
     setRound(nextRound);
     setPhase("waiting");
@@ -101,6 +103,7 @@ export function FishingGamePanel(): JSX.Element | null {
         chaseRef.current,
         fish,
         now - previous,
+        Math.random,
       );
       chaseRef.current = update.state;
       chaseUpdatedAtRef.current = now;
@@ -125,14 +128,41 @@ export function FishingGamePanel(): JSX.Element | null {
     setRound((current) => ({ ...current, chase: nextChase }));
   }, [fish.catchFrameSize]);
 
-  const handlePlayfieldPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
-    if (phase !== "chase") return;
+  const getPlayfieldPoint = useCallback((event: ReactPointerEvent<HTMLDivElement>): FishingPoint | null => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    if (bounds.width <= 0 || bounds.height <= 0) return;
-    moveFrame({
+    if (bounds.width <= 0 || bounds.height <= 0) return null;
+    return {
       x: (event.clientX - bounds.left) / bounds.width,
       y: (event.clientY - bounds.top) / bounds.height,
-    });
+    };
+  }, []);
+
+  const handlePlayfieldPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    if (phase !== "chase") return;
+    event.preventDefault();
+    activePointerIdRef.current = event.pointerId;
+    const setPointerCapture = event.currentTarget.setPointerCapture;
+    if (typeof setPointerCapture === "function") {
+      setPointerCapture.call(event.currentTarget, event.pointerId);
+    }
+    const point = getPlayfieldPoint(event);
+    if (point) moveFrame(point);
+  };
+
+  const handlePlayfieldPointerMove = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    if (phase !== "chase" || activePointerIdRef.current !== event.pointerId) return;
+    event.preventDefault();
+    const point = getPlayfieldPoint(event);
+    if (point) moveFrame(point);
+  };
+
+  const handlePlayfieldPointerUp = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    if (activePointerIdRef.current !== event.pointerId) return;
+    activePointerIdRef.current = null;
+    const releasePointerCapture = event.currentTarget.releasePointerCapture;
+    if (typeof releasePointerCapture === "function") {
+      releasePointerCapture.call(event.currentTarget, event.pointerId);
+    }
   };
 
   const handlePlayfieldKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
@@ -196,8 +226,11 @@ export function FishingGamePanel(): JSX.Element | null {
               className="fishing-playfield"
               role="button"
               tabIndex={0}
-              aria-label="魚釣りエリア。タップした場所へ枠を移動できます。"
+              aria-label="魚釣りエリア。タップやスワイプした場所へ枠を移動できます。"
               onPointerDown={handlePlayfieldPointerDown}
+              onPointerMove={handlePlayfieldPointerMove}
+              onPointerUp={handlePlayfieldPointerUp}
+              onPointerCancel={handlePlayfieldPointerUp}
               onKeyDown={handlePlayfieldKeyDown}
             >
               <div className="fishing-underwater-rays" aria-hidden="true" />
@@ -236,7 +269,7 @@ export function FishingGamePanel(): JSX.Element | null {
                   <span style={{ width: `${progressPercent}%` }} />
                 </div>
               </div>
-              <span className="fishing-tap-hint">画面をタップして枠を移動</span>
+              <span className="fishing-tap-hint">タップ・スワイプで枠を移動</span>
             </div>
           ) : (
             <>

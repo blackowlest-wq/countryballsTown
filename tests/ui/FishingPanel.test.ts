@@ -95,7 +95,7 @@ describe("fishing panels", () => {
     expect(container.querySelector(".fishing-playfield")).not.toBeNull();
     expect(container.querySelector(".fishing-catch-frame")).not.toBeNull();
     expect(container.querySelector('[aria-label="捕獲ゲージ"]')).not.toBeNull();
-    expect(container.textContent).toContain("画面をタップして枠を移動");
+    expect(container.textContent).toContain("タップ・スワイプで枠を移動");
 
     const playfield = container.querySelector<HTMLDivElement>(".fishing-playfield");
     vi.spyOn(playfield!, "getBoundingClientRect").mockReturnValue({
@@ -128,7 +128,7 @@ describe("fishing panels", () => {
     await act(async () => root.unmount());
   });
 
-  it("水中エリアをタップすると枠がその場所へ移動する", async () => {
+  it("水中エリアをスワイプすると枠が指の位置へ追従する", async () => {
     vi.useFakeTimers();
     vi.spyOn(performance, "now").mockImplementation(() => Date.now());
     vi.spyOn(Math, "random").mockReturnValue(0.5);
@@ -168,10 +168,17 @@ describe("fishing panels", () => {
         clientY: 20,
       }));
     });
+    await act(async () => {
+      playfield?.dispatchEvent(new MouseEvent("pointermove", {
+        bubbles: true,
+        clientX: 35,
+        clientY: 70,
+      }));
+    });
 
     const frame = container.querySelector<HTMLElement>(".fishing-catch-frame");
-    expect(frame?.style.left).toBe("80%");
-    expect(frame?.style.top).toBe("20%");
+    expect(frame?.style.left).toBe("35%");
+    expect(frame?.style.top).toBe("70%");
     expect(container.textContent).toContain("枠の中に魚を入れ続けよう！");
     await act(async () => root.unmount());
   });
