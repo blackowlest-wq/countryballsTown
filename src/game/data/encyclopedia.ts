@@ -2,10 +2,10 @@ import { buildingDefinitions } from "./buildings";
 import { fishDefinitions } from "./fish";
 import { miningResourceDefinitions } from "./mining";
 import {
-  CRAFTING_PRODUCT_TYPES,
-  CRAFTING_RECIPES,
-  type CraftingProductType,
-} from "../types/Crafting";
+  inventoryPresentationDefinitions,
+  type InventoryPresentationCategory,
+} from "./inventory";
+import type { CraftingProductType } from "../types/Crafting";
 import { cropDefinitions, type CropType } from "../types/Crop";
 import type { FishType } from "../types/Fish";
 
@@ -49,75 +49,6 @@ export const encyclopediaCategories: readonly EncyclopediaCategory[] = [
   { id: "livestock", name: "畜産物", icon: "🥚" },
   { id: "processed", name: "加工品", icon: "🏭" },
   { id: "food", name: "食べ物", icon: "🍽️" },
-];
-
-const livestockEntries: EncyclopediaEntry[] = [
-  {
-    id: "livestock:milk",
-    category: "livestock",
-    name: "牛乳",
-    icon: "🥛",
-    description: "牛から収穫できる素材。",
-  },
-  {
-    id: "livestock:pork",
-    category: "livestock",
-    name: "豚肉",
-    icon: "🥩",
-    description: "豚から収穫できる素材。",
-  },
-  {
-    id: "livestock:eggs",
-    category: "livestock",
-    name: "卵",
-    icon: "🥚",
-    description: "鶏から収穫できる素材。",
-  },
-];
-
-const processedEntries: EncyclopediaEntry[] = [
-  {
-    id: "processed:wheat-flour",
-    category: "processed",
-    name: "小麦粉",
-    icon: "🥣",
-    description: "小麦工場で小麦から作る加工品。",
-  },
-  {
-    id: "processed:butter",
-    category: "processed",
-    name: "バター",
-    icon: "🧈",
-    description: "牛乳工場で牛乳から作る加工品。",
-  },
-  {
-    id: "processed:cheese",
-    category: "processed",
-    name: "チーズ",
-    icon: "🧀",
-    description: "牛乳工場で牛乳から作る加工品。",
-  },
-  {
-    id: "processed:ham",
-    category: "processed",
-    name: "ハム",
-    icon: "🍖",
-    description: "豚肉工場で豚肉から作る加工品。",
-  },
-  {
-    id: "processed:sausage",
-    category: "processed",
-    name: "ソーセージ",
-    icon: "🌭",
-    description: "豚肉工場で豚肉から作る加工品。",
-  },
-  {
-    id: "processed:bacon",
-    category: "processed",
-    name: "ベーコン",
-    icon: "🥓",
-    description: "豚肉工場で豚肉から作る加工品。",
-  },
 ];
 
 function createBuildingEntries(): EncyclopediaEntry[] {
@@ -164,17 +95,16 @@ function createMiningEntries(): EncyclopediaEntry[] {
   }));
 }
 
-function createFoodEntries(): EncyclopediaEntry[] {
-  return CRAFTING_PRODUCT_TYPES.map((productType: CraftingProductType) => {
-    const recipe = CRAFTING_RECIPES[productType];
-    return {
-      id: `food:${productType}`,
-      category: "food",
-      name: recipe.name,
-      icon: recipe.icon,
-      description: "材料を加工して作る食べ物。",
-    };
-  });
+function createInventoryEntries(category: InventoryPresentationCategory): EncyclopediaEntry[] {
+  return inventoryPresentationDefinitions
+    .filter((definition) => definition.category === category)
+    .map(({ id, name, icon, description }) => ({
+      id,
+      category,
+      name,
+      icon,
+      description,
+    }));
 }
 
 export const encyclopediaEntries: readonly EncyclopediaEntry[] = [
@@ -182,9 +112,9 @@ export const encyclopediaEntries: readonly EncyclopediaEntry[] = [
   ...createFishEntries(),
   ...createMiningEntries(),
   ...createCropEntries(),
-  ...livestockEntries,
-  ...processedEntries,
-  ...createFoodEntries(),
+  ...createInventoryEntries("livestock"),
+  ...createInventoryEntries("processed"),
+  ...createInventoryEntries("food"),
 ];
 
 export function getBuildingEncyclopediaId(buildingId: string): string {

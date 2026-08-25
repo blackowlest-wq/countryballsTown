@@ -4,6 +4,7 @@ import {
   encyclopediaCategories,
   encyclopediaEntries,
 } from "../../src/game/data/encyclopedia";
+import { inventoryPresentationDefinitions } from "../../src/game/data/inventory";
 import { syncEncyclopediaCollection } from "../../src/game/systems/EncyclopediaSystem";
 import { loadGameState, saveGameState, type StorageLike } from "../../src/game/systems/SaveSystem";
 
@@ -81,6 +82,34 @@ describe("encyclopedia system", () => {
     expect(afterConsumption.encyclopediaCollectedIds).toEqual(
       expect.arrayContaining(["building:house", "fish:tuna", "crop:wheat", "processed:butter", "food:pizza"]),
     );
+  });
+
+  it("shares inventory presentation definitions between the encyclopedia and inventory views", () => {
+    expect(inventoryPresentationDefinitions).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: "livestock:milk",
+        name: "牛乳",
+        icon: "🥛",
+        countKey: "milk",
+      }),
+      expect.objectContaining({
+        id: "processed:butter",
+        name: "バター",
+        icon: "🧈",
+        countKey: "butter",
+      }),
+      expect.objectContaining({
+        id: "food:omurice",
+        name: "オムライス",
+        icon: "🍳",
+        countKey: "omurice",
+      }),
+    ]));
+    expect(encyclopediaEntries).toEqual(expect.arrayContaining(
+      inventoryPresentationDefinitions.map(({ id, category, name, icon }) =>
+        expect.objectContaining({ id, category, name, icon }),
+      ),
+    ));
   });
 
   it("registers every collected mining resource in its cave category", () => {

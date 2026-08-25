@@ -1,181 +1,91 @@
-import { useGameStore } from "../store/gameStore";
+import { useEffect, useState } from "react";
 import { getCropName } from "../game/systems/CropSystem";
-import { getCropDefinition, type CropType } from "../game/types/Crop";
-import { fishDefinitions } from "../game/data/fish";
-import { miningResourceDefinitions } from "../game/data/mining";
-import { getMiningInventoryTotal } from "../game/systems/CaveMiningSystem";
-import { FishIcon } from "./FishIcon";
-
-const cropOptions: CropType[] = ["wheat", "tomato", "rice"];
+import { getCropDefinition } from "../game/types/Crop";
+import { useGameStore } from "../store/gameStore";
+import { CropSelector } from "./CropSelector";
+import { InventoryDrawer } from "./InventoryDrawer";
 
 export function FarmControls(): JSX.Element | null {
   const interactionMode = useGameStore((store) => store.interactionMode);
   const selectedCropType = useGameStore((store) => store.selectedCropType);
   const game = useGameStore((store) => store.game);
   const selectCropType = useGameStore((store) => store.selectCropType);
+  const [isCropSelectorOpen, setCropSelectorOpen] = useState(false);
+  const [isInventoryOpen, setInventoryOpen] = useState(false);
+
+  useEffect(() => {
+    if (interactionMode !== "farm") {
+      setCropSelectorOpen(false);
+      setInventoryOpen(false);
+    }
+  }, [interactionMode]);
+
   if (interactionMode !== "farm") return null;
+
+  const selectedCrop = getCropDefinition(selectedCropType);
+  const selectedSeeds = game[selectedCrop.seedKey];
+
+  const openCropSelector = (): void => {
+    setInventoryOpen(false);
+    setCropSelectorOpen(true);
+  };
+
+  const openInventory = (): void => {
+    setCropSelectorOpen(false);
+    setInventoryOpen(true);
+  };
 
   return (
     <section className="farm-controls" aria-label="作物の操作">
-      <div className="crop-inventory" role="group" aria-label="種を選ぶ">
-        {cropOptions.map((type) => {
-          const definition = getCropDefinition(type);
-          const { icon } = definition;
-          const seeds = game[definition.seedKey];
-          const harvested = game[definition.harvestKey];
-          return (
-            <button
-              key={type}
-              type="button"
-              className="crop-choice-button"
-              data-crop={type}
-              aria-pressed={selectedCropType === type}
-              aria-label={`${getCropName(type)}の種を選ぶ。種 ${seeds}、収穫 ${harvested}`}
-              onClick={() => selectCropType(type)}
-            >
-              <span className="crop-choice-icon" aria-hidden="true">{icon}</span>
-              <span className="crop-choice-copy">
-                <strong>{getCropName(type)}</strong>
-                <span className="crop-stock-row">
-                  <span>種 <b>{seeds.toLocaleString("ja-JP")}</b></span>
-                  <span>収穫 <b>{harvested.toLocaleString("ja-JP")}</b></span>
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="processing-stock" aria-label="素材と加工物">
-        <div className="processing-stock-group">
-          <span className="processing-stock-heading">素材</span>
-          <div className="processing-stock-items">
-            <span className="processing-stock-item" aria-label={`牛乳 ${game.milk}`}>
-              <span className="processing-stock-icon milk-stock-icon" aria-hidden="true">🥛</span>
-              <span>牛乳</span>
-              <strong>{game.milk.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`豚肉 ${game.pork}`}>
-              <span className="processing-stock-icon pork-stock-icon" aria-hidden="true">🍖</span>
-              <span>豚肉</span>
-              <strong>{game.pork.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`卵 ${game.eggs}`}>
-              <span className="processing-stock-icon egg-stock-icon" aria-hidden="true">🥚</span>
-              <span>卵</span>
-              <strong>{game.eggs.toLocaleString("ja-JP")}</strong>
-            </span>
-            {fishDefinitions.map((fish) => (
-              <span
-                key={fish.type}
-                className="processing-stock-item fish-stock-item"
-                aria-label={`${fish.name} ${game.fishInventory[fish.type]}`}
-              >
-                <span className="processing-stock-icon fish-stock-icon" aria-hidden="true">
-                  <FishIcon fishType={fish.type} />
-                </span>
-                <span>{fish.name}</span>
-                <strong>{game.fishInventory[fish.type].toLocaleString("ja-JP")}</strong>
-              </span>
-            ))}
-          </div>
-            <span className="processing-stock-heading mining-stock-heading">
-              採掘材料 {getMiningInventoryTotal(game.miningInventory)}
-            </span>
-            <div className="processing-stock-items mining-stock-items">
-              {miningResourceDefinitions.map((resource) => (
-                <span
-                  key={resource.type}
-                  className="processing-stock-item mining-stock-item"
-                  aria-label={`${resource.name} ${game.miningInventory[resource.type]}`}
-                >
-                  <span className="processing-stock-icon" aria-hidden="true">{resource.icon}</span>
-                  <span>{resource.name}</span>
-                  <strong>{game.miningInventory[resource.type].toLocaleString("ja-JP")}</strong>
-                </span>
-              ))}
-            </div>
+      <div className="farm-control-bar">
+        <div className="farm-selected-crop" aria-label={`植える作物 ${selectedCrop.name}`}>
+          <span className="farm-selected-crop-icon" aria-hidden="true">{selectedCrop.icon}</span>
+          <span className="farm-selected-crop-copy">
+            <small>植える作物</small>
+            <strong>{selectedCrop.name}</strong>
+            <span>種 <b>{selectedSeeds.toLocaleString("ja-JP")}</b></span>
+          </span>
         </div>
-        <div className="processing-stock-group">
-          <span className="processing-stock-heading">加工物</span>
-          <div className="processing-stock-items">
-            <span className="processing-stock-item" aria-label={`バター ${game.butter}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🧈</span>
-              <span>バター</span>
-              <strong>{game.butter.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`チーズ ${game.cheese}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🧀</span>
-              <span>チーズ</span>
-              <strong>{game.cheese.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`ハム ${game.ham}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🍖</span>
-              <span>ハム</span>
-              <strong>{game.ham.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`ソーセージ ${game.sausage}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🌭</span>
-              <span>ソーセージ</span>
-              <strong>{game.sausage.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`ベーコン ${game.bacon}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🥓</span>
-              <span>ベーコン</span>
-              <strong>{game.bacon.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`ピザ ${game.pizzas}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🍕</span>
-              <span>ピザ</span>
-              <strong>{game.pizzas.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`小麦粉 ${game.wheatFlour}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🌾</span>
-              <span>小麦粉</span>
-              <strong>{game.wheatFlour.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`パン ${game.bread}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🍞</span>
-              <span>パン</span>
-              <strong>{game.bread.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`ホットドック ${game.hotDogs}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🌭</span>
-              <span>ホットドック</span>
-              <strong>{game.hotDogs.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`クロワッサン ${game.croissants}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🥐</span>
-              <span>クロワッサン</span>
-              <strong>{game.croissants.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`ハムサンド ${game.hamSandwiches}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🥪</span>
-              <span>ハムサンド</span>
-              <strong>{game.hamSandwiches.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`おにぎり ${game.onigiri}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🍙</span>
-              <span>おにぎり</span>
-              <strong>{game.onigiri.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`オムライス ${game.omurice}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🍳</span>
-              <span>オムライス</span>
-              <strong>{game.omurice.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`焼き魚 ${game.grilledFish}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🐟</span>
-              <span>焼き魚</span>
-              <strong>{game.grilledFish.toLocaleString("ja-JP")}</strong>
-            </span>
-            <span className="processing-stock-item" aria-label={`海鮮丼 ${game.seafoodBowls}`}>
-              <span className="processing-stock-icon" aria-hidden="true">🍚</span>
-              <span>海鮮丼</span>
-              <strong>{game.seafoodBowls.toLocaleString("ja-JP")}</strong>
-            </span>
-          </div>
+        <div className="farm-control-actions">
+          <button
+            className="farm-control-button"
+            data-action="change-crop"
+            type="button"
+            aria-expanded={isCropSelectorOpen}
+            aria-controls="crop-selector-panel"
+            onClick={openCropSelector}
+          >
+            <span aria-hidden="true">🌱</span>
+            <span>作物変更</span>
+          </button>
+          <button
+            className="farm-control-button"
+            data-action="open-inventory"
+            type="button"
+            aria-expanded={isInventoryOpen}
+            aria-controls="inventory-drawer-panel"
+            onClick={openInventory}
+          >
+            <span aria-hidden="true">🎒</span>
+            <span>在庫</span>
+          </button>
         </div>
       </div>
+      {isCropSelectorOpen && (
+        <div id="crop-selector-panel">
+          <CropSelector
+            game={game}
+            selectedCropType={selectedCropType}
+            onSelect={selectCropType}
+            onClose={() => setCropSelectorOpen(false)}
+          />
+        </div>
+      )}
+      {isInventoryOpen && (
+        <div id="inventory-drawer-panel">
+          <InventoryDrawer game={game} onClose={() => setInventoryOpen(false)} />
+        </div>
+      )}
       <div className="farm-control-row">
         <span className="farm-action-copy">
           {`${getCropName(selectedCropType)}の種を空の畑へ（種を1個使用）。成熟した作物は村画面でタップまたはスワイプして収穫`}

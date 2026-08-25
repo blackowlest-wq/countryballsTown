@@ -35,7 +35,37 @@ describe("FarmControls", () => {
     });
   });
 
-  it("小麦とトマトの在庫を表示し、種を選ぶと種まきへ切り替える", async () => {
+  it("作物モードを離れると開いていたパネルを閉じ、再入場時にコンパクトへ戻る", async () => {
+    useGameStore.setState({ interactionMode: "farm" });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(FarmControls)));
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-action="change-crop"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[data-panel="crop-selector"]')).not.toBeNull();
+
+    await act(async () => useGameStore.setState({ interactionMode: "inspect" }));
+    expect(container.querySelector('[data-panel="crop-selector"]')).toBeNull();
+    await act(async () => useGameStore.setState({ interactionMode: "farm" }));
+    expect(container.querySelector('[data-panel="crop-selector"]')).toBeNull();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-action="open-inventory"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[data-panel="inventory-drawer"]')).not.toBeNull();
+    await act(async () => useGameStore.setState({ interactionMode: "inspect" }));
+    await act(async () => useGameStore.setState({ interactionMode: "farm" }));
+    expect(container.querySelector('[data-panel="inventory-drawer"]')).toBeNull();
+
+    await act(async () => root.unmount());
+  });
+
+  it("通常はコンパクトに表示し、作物変更パネルと在庫ドロワーを開ける", async () => {
     useGameStore.setState({
       game: {
         ...createInitialGameState(0),
@@ -43,6 +73,7 @@ describe("FarmControls", () => {
         wheat: 3,
         tomatoSeeds: 5,
         tomatoes: 2,
+        riceSeeds: 0,
         eggs: 8,
         milk: 7,
         pork: 6,
@@ -60,6 +91,10 @@ describe("FarmControls", () => {
           "sea-bream": 1,
           tuna: 4,
         },
+        miningInventory: {
+          ...createInitialGameState(0).miningInventory,
+          copper: 2,
+        },
       },
       interactionMode: "farm",
       selectedCropType: "wheat",
@@ -69,51 +104,105 @@ describe("FarmControls", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(FarmControls)));
-    const tomatoButton = container.querySelector<HTMLButtonElement>('[data-crop="tomato"]');
-    const harvestButton = container.querySelector<HTMLButtonElement>('[data-action="harvest"]');
+    expect(container.querySelector('[data-panel="crop-selector"]')).toBeNull();
+    expect(container.querySelector('[data-panel="inventory-drawer"]')).toBeNull();
+    expect(container.querySelector('[aria-label="植える作物 小麦"]')).not.toBeNull();
+    expect(container.textContent).toContain("小麦の種を空の畑へ");
 
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-action="change-crop"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[data-panel="crop-selector"]')).not.toBeNull();
     expect(container.querySelector('[data-crop="wheat"]')?.getAttribute("aria-label"))
       .toBe("小麦の種を選ぶ。種 9、収穫 3");
-    expect(tomatoButton?.getAttribute("aria-label"))
+    expect(container.querySelector('[data-crop="tomato"]')?.getAttribute("aria-label"))
       .toBe("トマトの種を選ぶ。種 5、収穫 2");
+    expect(container.querySelector('[data-crop="rice"]')?.getAttribute("aria-label"))
+      .toBe("米の種を選ぶ。種 0、収穫 0。種なし");
+    expect(container.querySelector<HTMLButtonElement>('[data-crop="rice"]')?.disabled).toBe(true);
+    expect(container.querySelector('[aria-label="牛乳 7"]')).toBeNull();
+
+    const tomatoButton = container.querySelector<HTMLButtonElement>('[data-crop="tomato"]');
+    await act(async () => {
+      tomatoButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(useGameStore.getState()).toMatchObject({ selectedCropType: "tomato" });
+    expect(container.querySelector('[data-panel="crop-selector"]')).toBeNull();
+    expect(container.querySelector('[aria-label="植える作物 トマト"]')).not.toBeNull();
+    expect(container.textContent).toContain("トマトの種を空の畑へ");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-action="open-inventory"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[data-panel="inventory-drawer"]')).not.toBeNull();
+    expect(container.querySelector('[data-inventory-category="crops"]')?.getAttribute("aria-selected"))
+      .toBe("true");
+    expect([...container.querySelectorAll<HTMLButtonElement>("[data-inventory-category]")]
+      .every((tab) => tab.getAttribute("aria-controls") === "inventory-panel"))
+      .toBe(true);
+    expect(container.querySelector("#inventory-panel")).not.toBeNull();
+    expect(container.querySelector('[data-inventory-item="wheat"]')).not.toBeNull();
+    expect(container.querySelector('[data-inventory-item="rice"]')).toBeNull();
+    expect(container.querySelector('[aria-label="イワシ 3"]')).toBeNull();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-inventory-category="livestock-fish"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
     expect(container.querySelector('[aria-label="牛乳 7"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="豚肉 6"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="卵 8"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="イワシ 3"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="サバ 2"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="タイ 1"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="マグロ 4"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="焼き魚 2"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="海鮮丼 1"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="バター 4"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="チーズ 2"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="ハム 3"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="ソーセージ 5"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="ベーコン 1"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
-    expect(container.querySelector('[data-crop="rice"]')?.getAttribute("aria-label"))
-      .toBe("米の種を選ぶ。種 5、収穫 0");
-    expect(harvestButton).toBeNull();
 
     await act(async () => {
-      tomatoButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-    expect(useGameStore.getState()).toMatchObject({
-      selectedCropType: "tomato",
-    });
-    expect(tomatoButton?.getAttribute("aria-pressed")).toBe("true");
-    expect(container.textContent).toContain("トマトの種を空の畑へ");
-    expect(container.textContent).toContain("成熟した作物は村画面でタップまたはスワイプして収穫");
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>('[data-crop="rice"]')
+      container.querySelector<HTMLButtonElement>('[data-inventory-category="mining"]')
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(useGameStore.getState()).toMatchObject({ selectedCropType: "rice" });
-    expect(container.textContent).toContain("米の種を空の畑へ");
+    expect(container.querySelector('[aria-label="銅 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="鉄 0"]')).toBeNull();
+    expect(container.querySelector('[data-inventory-item="mining-copper"]')).not.toBeNull();
+    expect(container.querySelector('[data-inventory-category="mining"]')?.getAttribute("aria-controls"))
+      .toBe("inventory-panel");
+    expect(container.querySelector("#inventory-panel")).not.toBeNull();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-inventory-filter="all"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[aria-label="鉄 0"]')).not.toBeNull();
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-inventory-filter="owned"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[aria-label="鉄 0"]')).toBeNull();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-inventory-category="processed"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[aria-label="バター 4"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="おにぎり 0"]')).toBeNull();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-inventory-filter="all"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[aria-label="おにぎり 0"]')).not.toBeNull();
+    expect(container.querySelector('[data-inventory-filter="all"]')?.getAttribute("aria-pressed"))
+      .toBe("true");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[aria-label="在庫を閉じる"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[data-panel="inventory-drawer"]')).toBeNull();
 
     await act(async () => root.unmount());
-  });
+  }, 15_000);
 
   it("下部メニューを小麦から作物へ変更する", async () => {
     const container = document.createElement("div");
