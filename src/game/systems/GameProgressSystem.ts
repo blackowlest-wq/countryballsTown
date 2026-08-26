@@ -1,4 +1,4 @@
-import { advanceEconomy, roundCoins } from "./EconomySystem";
+import { advanceEconomy, creditCoins } from "./EconomySystem";
 import { advanceFactoryProductions } from "./ProductionRegistry";
 import { advanceResidents } from "./ResidentSystem";
 import {
@@ -61,13 +61,11 @@ export function advanceGameProgress(
   const hasProductSales = Object.values(visitorResult.productsSold).some(
     (quantity) => (quantity ?? 0) > 0,
   );
+  const visitorCredit = creditCoins(economy.state, visitorResult.coinsEarned);
   const withVisitorSales = visitorResult.coinsEarned === 0 && !hasProductSales
     ? economy.state
     : consumeCraftedProducts(
-      {
-        ...economy.state,
-        coins: roundCoins(economy.state.coins + visitorResult.coinsEarned),
-      },
+      visitorCredit.state,
       visitorResult.productsSold,
     );
   const withResidents = advanceResidents(withVisitorSales, deltaMs, now, random);
@@ -75,7 +73,7 @@ export function advanceGameProgress(
   const progressNotice = progress.events.map(describeProgressEvent).join(" ") || null;
   const requestProgress = advanceResidentRequest(
     progress.state,
-    { type: "coins-earned", amount: economy.coinsEarned + visitorResult.coinsEarned },
+    { type: "coins-earned", amount: economy.coinsEarned + visitorCredit.coinsEarned },
     now,
     random,
   );

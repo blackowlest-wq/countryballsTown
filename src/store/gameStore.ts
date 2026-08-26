@@ -80,6 +80,7 @@ import {
   type CaveUpgradeKind,
 } from "../game/systems/CaveMiningSystem";
 import type { DigDirection } from "../game/types/Mining";
+import { MAX_COINS } from "../game/constants/gameConstants";
 
 export type InteractionMode = "inspect" | "build" | "move" | "farm";
 
@@ -186,7 +187,8 @@ interface GameStore {
   selectResident: (residentId: string | null) => void;
   save: () => void;
   dismissNotice: () => void;
-  resetForDevelopment: () => void;
+  resetGame: () => void;
+  grantMaxCoinsForDevelopment: () => void;
 }
 
 function persist(state: GameState): GameState {
@@ -1129,11 +1131,12 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   save: () => set({ game: persist(get().game) }),
   dismissNotice: () => set({ notice: null }),
-  resetForDevelopment: () =>
+  resetGame: () => {
+    const now = Date.now();
     set({
-      game: createInitialGameState(),
+      game: persist(createInitialGameState(now)),
       economyRemainderMs: 0,
-      visitorSimulation: createShopVisitorSimulation(),
+      visitorSimulation: createShopVisitorSimulation(now),
       interactionMode: "inspect",
       selectedCropType: "wheat",
       selectedBuildingId: null,
@@ -1153,6 +1156,14 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
       notice: "新しい村を始めました。",
-    }),
+    });
+  },
+  grantMaxCoinsForDevelopment: () => {
+    const current = get();
+    set({
+      game: persist({ ...current.game, coins: MAX_COINS }),
+      notice: "所持コインを10,000にしました（デバッグ）。",
+    });
+  },
   };
 });

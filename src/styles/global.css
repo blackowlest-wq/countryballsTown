@@ -69,6 +69,26 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .bgm-toggle:hover, .bgm-toggle[aria-pressed="true"] { color: #557b47; background: #eef6de; transform: translateY(-1px); }
 .bgm-toggle:disabled { color: #aaa39a; background: rgba(245, 239, 228, .82); cursor: not-allowed; opacity: .8; }
 .bgm-toggle-icon { min-width: 16px; color: #e49d4d; font-size: 16px; line-height: 1; }
+.settings-launcher { display: inline-flex; min-height: 40px; gap: 7px; align-items: center; padding: 8px 13px; color: #6b7e62; background: rgba(255, 250, 238, 0.94); border: 1px solid rgba(255, 255, 255, 0.84); border-radius: 16px; box-shadow: var(--shadow); cursor: pointer; font-size: 11px; font-weight: 900; transition: background .18s ease, color .18s ease, transform .18s ease; }
+.settings-launcher:hover, .settings-launcher[aria-expanded="true"] { color: #557b47; background: #eef6de; transform: translateY(-1px); }
+.settings-launcher > span:first-child { color: #e49d4d; font-size: 17px; line-height: 1; }
+
+.settings-overlay { position: absolute; inset: 0; z-index: 35; display: grid; place-items: center; padding: 16px; background: rgba(38, 76, 95, .34); backdrop-filter: blur(3px); }
+.settings-overlay[hidden] { display: none; }
+.settings-panel { width: min(480px, 100%); max-height: calc(100vh - 32px); padding: 20px; overflow: auto; color: var(--ink); background: rgba(255, 250, 238, .98); border: 1px solid rgba(255, 255, 255, .9); border-radius: 24px; box-shadow: 0 16px 36px rgba(43, 70, 58, .25); }
+.settings-section { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin-top: 14px; padding: 13px; background: rgba(255, 255, 255, .48); border: 1px solid #eee3d0; border-radius: 15px; }
+.settings-section-copy { display: grid; min-width: 0; gap: 4px; }
+.settings-section-copy strong { font-size: 13px; }
+.settings-section-copy small { color: var(--muted); font-size: 10px; line-height: 1.45; }
+.settings-section .bgm-toggle { flex: 0 0 auto; box-shadow: none; }
+.settings-debug-button { flex: 0 0 auto; color: #6e786c; background: #f1eadc; border: 1px solid #e4d9c6; white-space: nowrap; }
+.settings-debug-button:hover { color: #557b47; background: #eef6de; border-color: #b3d28f; }
+.settings-danger-zone { margin-top: 14px; padding: 13px; background: #fff7f2; border: 1px solid #f1d8cc; border-radius: 15px; }
+.settings-danger-zone > .danger-button { display: block; margin-top: 12px; }
+.settings-danger-zone > .danger-button:hover { background: #ffe9e1; border-color: #dfaa9c; }
+.settings-reset-confirmation { margin-top: 12px; padding: 10px; color: #8b5f54; background: #fff0eb; border: 1px solid #f1c6b8; border-radius: 12px; }
+.settings-reset-confirmation p { margin: 0; font-size: 11px; line-height: 1.5; }
+.settings-reset-confirmation > div { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 
 .goal-card { position: absolute; top: 126px; left: 24px; z-index: 5; display: flex; gap: 10px; align-items: center; padding: 10px 15px; border-radius: 18px; }
 .goal-sparkle { display: grid; width: 27px; height: 27px; place-items: center; color: #fff; background: #84b960; border-radius: 50%; font-size: 15px; }
@@ -473,6 +493,14 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .resource-value { font-size: 17px; }
   .resource-label { font-size: 8px; }
   .mood-pill { display: none; }
+  .settings-launcher { min-height: 36px; gap: 5px; padding: 7px 9px; border-radius: 14px; font-size: 10px; }
+  .settings-launcher > span:first-child { font-size: 15px; }
+  .settings-overlay { padding: 10px; }
+  .settings-panel { max-height: calc(100vh - 20px); padding: 16px; border-radius: 20px; }
+  .settings-section { gap: 10px; align-items: flex-start; flex-direction: column; padding: 11px; }
+  .settings-section .bgm-toggle, .settings-debug-button, .settings-danger-zone > .danger-button { width: 100%; justify-content: center; }
+  .settings-reset-confirmation > div { flex-direction: column-reverse; }
+  .settings-reset-confirmation > div > * { width: 100%; }
   .goal-card { top: 76px; left: 10px; padding: 8px 11px; border-radius: 15px; }
   .goal-text { font-size: 10px; }
   .goal-sparkle { width: 23px; height: 23px; font-size: 12px; }

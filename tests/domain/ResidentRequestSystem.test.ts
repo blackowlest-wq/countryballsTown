@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  MAX_COINS,
   RESIDENT_REQUEST_COOLDOWN_MIN_MS,
   RESIDENT_REQUEST_DAILY_LIMIT,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
@@ -274,6 +275,19 @@ describe("ResidentRequestSystem", () => {
     );
     expect(result.event).toMatchObject({ type: "completed", rewardCoins: 3 });
     expect(result.state.coins).toBe(123);
+  });
+
+  it("お願い報酬は所持コイン上限までの差額だけ付与する", () => {
+    const state = withActiveRequest("poland-village-savings", "poland", MAX_COINS - 1);
+    const result = advanceResidentRequest(
+      state,
+      { type: "coins-earned", amount: 20 },
+      5_000,
+      () => 0,
+    );
+
+    expect(result.event).toMatchObject({ type: "completed", rewardCoins: 1 });
+    expect(result.state.coins).toBe(MAX_COINS);
   });
 
   it("お願い達成通知の報酬コインを整数表示する", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
-import { SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
+import { MAX_COINS, SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
 import { advanceGameProgress, type GameProgressState } from "../../src/game/systems/GameProgressSystem";
 import { createShopVisitorSimulation } from "../../src/game/systems/ShopVisitorSystem";
 import type { ShopVisitor } from "../../src/game/types/ShopVisitor";
@@ -90,6 +90,39 @@ describe("GameProgressSystem", () => {
     expect(result.game).toMatchObject({ coins: 103, pizzas: 0 });
     expect(result.visitorSimulation.visitors[0].phase).toBe("leaving");
     expect(result.shouldPersist).toBe(true);
+  });
+
+  it("来訪客の売上は所持コイン上限までの差額だけ反映し、商品は消費する", () => {
+    const pizzaShop = { id: "pizza-shop-cap-test", buildingId: "pizza-shop", gridX: 8, gridY: 8 } as const;
+    const visitor: ShopVisitor = {
+      id: "visitor-cap-test",
+      shopBuildingId: pizzaShop.id,
+      color: "#6fa8dc",
+      position: { x: 10, z: 10 },
+      destination: { x: 10, z: 10 },
+      phase: "buying",
+      joinedAt: 0,
+      serviceUntil: SHOP_VISITOR_SERVICE_MS,
+    };
+    const current = progressState({
+      game: {
+        ...createInitialGameState(0),
+        residents: [],
+        nextResidentRequestAt: Number.POSITIVE_INFINITY,
+        coins: MAX_COINS - 1,
+        buildings: [pizzaShop],
+        pizzas: 1,
+      },
+      visitorSimulation: {
+        visitors: [visitor],
+        nextArrivalAt: Number.POSITIVE_INFINITY,
+        nextSequence: 2,
+      },
+    });
+
+    const result = advanceGameProgress(current, 0, SHOP_VISITOR_SERVICE_MS, () => 0);
+
+    expect(result.game).toMatchObject({ coins: MAX_COINS, pizzas: 0 });
   });
 
   it("村の進行イベントを通知へ変換し、保存を要求する", () => {

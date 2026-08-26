@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
-import { SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
+import { MAX_COINS, SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
 import { createShopVisitorSimulation } from "../../src/game/systems/ShopVisitorSystem";
 import { useGameStore } from "../../src/store/gameStore";
 import type { ShopVisitor } from "../../src/game/types/ShopVisitor";
@@ -108,5 +108,49 @@ describe("gameStore adapter", () => {
       cowProductions: [],
       lastSavedAt: 50_000,
     });
+  });
+
+  it("デバッグ操作で所持コインを上限へ設定する", () => {
+    useGameStore.setState({ game: { ...createInitialGameState(0), coins: 321 } });
+
+    useGameStore.getState().grantMaxCoinsForDevelopment();
+
+    expect(useGameStore.getState().game.coins).toBe(MAX_COINS);
+    expect(useGameStore.getState().notice).toContain("10,000");
+  });
+
+  it("ゲーム状況を初期状態へリセットし、進行用UI状態も閉じる", () => {
+    vi.spyOn(Date, "now").mockReturnValue(50_000);
+    useGameStore.setState({
+      game: { ...createInitialGameState(0), coins: MAX_COINS, villageLevel: 3 },
+      economyRemainderMs: 700,
+      interactionMode: "farm",
+      selectedCropType: "tomato",
+      selectedBuildingId: "tree-1",
+      isBuildMenuOpen: true,
+      isResidentPanelOpen: true,
+      isMapTravelOpen: true,
+      isEncyclopediaOpen: true,
+      isFishingPromptOpen: true,
+      isFishingGameOpen: true,
+      isCaveMiningGameOpen: true,
+    });
+
+    useGameStore.getState().resetGame();
+
+    const state = useGameStore.getState();
+    expect(state.game).toMatchObject({ coins: 100, villageLevel: 1, lastSavedAt: 50_000 });
+    expect(state.economyRemainderMs).toBe(0);
+    expect(state.interactionMode).toBe("inspect");
+    expect(state.selectedCropType).toBe("wheat");
+    expect(state.selectedBuildingId).toBeNull();
+    expect(state.isBuildMenuOpen).toBe(false);
+    expect(state.isResidentPanelOpen).toBe(false);
+    expect(state.isMapTravelOpen).toBe(false);
+    expect(state.isEncyclopediaOpen).toBe(false);
+    expect(state.isFishingPromptOpen).toBe(false);
+    expect(state.isFishingGameOpen).toBe(false);
+    expect(state.isCaveMiningGameOpen).toBe(false);
+    expect(state.notice).toBe("新しい村を始めました。");
   });
 });

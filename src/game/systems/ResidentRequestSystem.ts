@@ -14,7 +14,7 @@ import type { GameState } from "../types/Village";
 import { formatCoinAmount } from "../../utils/coinFormatting";
 import { getLocalDateKey } from "../../utils/date";
 import { celebrateResident } from "./ResidentSystem";
-import { roundCoins } from "./EconomySystem";
+import { creditCoins } from "./EconomySystem";
 
 export type ResidentRequestProgressSource =
   | { type: "building-placed"; buildingId: string }
@@ -197,9 +197,9 @@ export function advanceResidentRequest(
     };
   }
 
+  const reward = creditCoins(state, definition.rewardCoins);
   const rewardedState: GameState = {
-    ...state,
-    coins: roundCoins(state.coins + definition.rewardCoins),
+    ...reward.state,
     activeResidentRequest: null,
     lastResidentRequestDefinitionId: definition.id,
     nextResidentRequestAt: now + randomCooldown(random),
@@ -210,7 +210,7 @@ export function advanceResidentRequest(
       type: "completed",
       definitionId: definition.id,
       residentId: active.residentId,
-      rewardCoins: definition.rewardCoins,
+      rewardCoins: reward.coinsEarned,
     },
   };
 }

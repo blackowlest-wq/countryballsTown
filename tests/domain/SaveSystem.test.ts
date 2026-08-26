@@ -4,6 +4,7 @@ import {
   INITIAL_TOMATO_SEEDS,
   INITIAL_WHEAT_SEEDS,
   INITIAL_RICE_SEEDS,
+  MAX_COINS,
   RESIDENT_REQUEST_INITIAL_DELAY_MS,
 } from "../../src/game/constants/gameConstants";
 import {
@@ -165,6 +166,19 @@ describe("SaveSystem", () => {
       }],
       residentRequestsStartedToday: 2,
     });
+  });
+
+  it("保存境界で所持コインを上限へ正規化する", () => {
+    const storage = memoryStorage();
+    const state = { ...createInitialGameState(0), coins: MAX_COINS + 500 };
+
+    const saved = saveGameState(state, storage, 1_000);
+    const loaded = loadGameState(storage, 2_000);
+
+    expect(saved.coins).toBe(MAX_COINS);
+    expect(loaded.coins).toBe(MAX_COINS);
+    expect(JSON.parse(storage.getItem("world-small-village:save:v1") ?? "{}").coins)
+      .toBe(MAX_COINS);
   });
 
   it("採掘物と地面採掘ゲームの進行状態を保存して復元する", () => {

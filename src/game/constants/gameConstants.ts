@@ -1,6 +1,7 @@
 export const GRID_SIZE = 20;
 export const COIN_INTERVAL_MS = 1_000;
 export const COINS_PER_INTERVAL = 0.1;
+export const MAX_COINS = 10_000;
 export const INITIAL_WHEAT_SEEDS = 9;
 export const INITIAL_TOMATO_SEEDS = 5;
 export const INITIAL_RICE_SEEDS = 5;

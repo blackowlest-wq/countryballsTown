@@ -36,4 +36,28 @@ describe("GameHud", () => {
     expect(container.querySelector(".hud-right")?.textContent).not.toContain("魚");
     await act(async () => root.unmount());
   });
+
+  it("設定ボタンを表示し、BGM切り替えを設定パネルへまとめる", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(GameHud)));
+
+    const launcher = container.querySelector(".settings-launcher");
+    expect(launcher?.getAttribute("aria-label")).toBe("設定を開く");
+    expect(launcher?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector(".hud-right .bgm-toggle")).toBeNull();
+    expect(container.querySelector(".settings-panel .bgm-toggle")).not.toBeNull();
+    expect((container.querySelector(".settings-overlay") as HTMLElement).hidden).toBe(true);
+
+    await act(async () => {
+      (launcher as HTMLButtonElement).click();
+    });
+
+    expect(launcher?.getAttribute("aria-expanded")).toBe("true");
+    expect((container.querySelector(".settings-overlay") as HTMLElement).hidden).toBe(false);
+
+    await act(async () => root.unmount());
+  });
 });

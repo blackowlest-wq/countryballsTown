@@ -19,6 +19,7 @@ import { isMapId } from "./MapSystem";
 import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
 import { normalizeCaveMiningState } from "./CaveMiningSystem";
 import { normalizeProductionCollections } from "./ProductionRegistry";
+import { normalizeCoinBalance } from "./EconomySystem";
 
 interface LegacyCropState {
   wheatCrops?: unknown;
@@ -77,6 +78,7 @@ export function prepareGameStateForSave(
   const caveMining = normalizeCaveMiningState(state.caveMining);
   const normalizedState = syncEncyclopediaCollection({
     ...state,
+    coins: normalizeCoinBalance(state.coins),
     buildings,
     crops,
     fishInventory,
@@ -89,6 +91,7 @@ export function prepareGameStateForSave(
   );
   return {
     ...stateWithoutLegacyCrops,
+    coins: normalizedState.coins,
     buildings,
     crops,
     ...productionCollections,
@@ -175,6 +178,7 @@ export function loadGameState(
     const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = legacyParsed;
     const loadedState: GameState = {
       ...stateWithoutLegacyCrops,
+      coins: normalizeCoinBalance(parsed.coins),
       wheatSeeds: storedWheatSeeds + refundedWheatSeeds,
       wheat:
         typeof parsed.wheat === "number" && Number.isFinite(parsed.wheat)
