@@ -1,7 +1,7 @@
 export type CropType = "wheat" | "tomato" | "rice";
 
 export type CropSeedKey = "wheatSeeds" | "tomatoSeeds" | "riceSeeds";
-export type CropHarvestKey = "wheat" | "tomatoes" | "rice";
+export type CropHarvestKey = "wheat" | "tomato" | "rice";
 
 export interface CropDefinition {
   type: CropType;
@@ -26,7 +26,7 @@ export const cropDefinitions: Record<CropType, CropDefinition> = {
     name: "トマト",
     icon: "🍅",
     seedKey: "tomatoSeeds",
-    harvestKey: "tomatoes",
+    harvestKey: "tomato",
     seedColor: "#b9915f",
   },
   rice: {

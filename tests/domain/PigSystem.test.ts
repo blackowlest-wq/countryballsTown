@@ -30,7 +30,7 @@ describe("PigSystem", () => {
 
     const result = collectPigPork(state, "pig-test", production.porkReadyAt);
     expect(result.outcome).toBe("collected");
-    expect(result.state.pork).toBe(PIG_PORK_AMOUNT);
+    expect(result.state.inventory.pork).toBe(PIG_PORK_AMOUNT);
     expect(result.state.buildings).toContainEqual({
       id: "pig-test",
       buildingId: "pig",

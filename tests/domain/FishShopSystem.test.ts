@@ -5,20 +5,23 @@ import {
   FISH_SHOP_PRODUCT_TYPES,
   getFishShopMaxCraftable,
 } from "../../src/game/systems/FishShopSystem";
+import { withInventory } from "../inventoryFixture";
 
 describe("FishShopSystem", () => {
   it("魚屋で扱う商品と材料から作れる数を公開する", () => {
-    const state = {
-      ...createInitialGameState(0),
-      fishInventory: {
-        sardine: 2,
-        mackerel: 1,
-        "sea-bream": 1,
-        tuna: 1,
-      },
-    };
+    const state = withInventory(createInitialGameState(0), {
+      sardine: 2,
+      mackerel: 1,
+      "sea-bream": 1,
+      tuna: 1,
+    });
 
-    expect(FISH_SHOP_PRODUCT_TYPES).toEqual(["grilled-fish", "seafood-bowl"]);
+    expect(FISH_SHOP_PRODUCT_TYPES).toEqual([
+      "grilled-fish",
+      "seafood-bowl",
+      "sushi",
+      "fish-sandwich",
+    ]);
     expect(getFishShopMaxCraftable(state, "grilled-fish")).toBe(2);
     expect(getFishShopMaxCraftable(state, "seafood-bowl")).toBe(1);
     expect(getFishShopMaxCraftable(state, "pizza")).toBe(0);

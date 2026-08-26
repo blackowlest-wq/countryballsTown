@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FISHING_ROD_COST } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
+import { getInventoryCount } from "../../src/game/systems/InventorySystem";
 import { useGameStore } from "../../src/store/gameStore";
 import { FishingGamePanel } from "../../src/ui/FishingGamePanel";
 import { FishingPromptPanel } from "../../src/ui/FishingPromptPanel";
@@ -161,7 +162,7 @@ describe("fishing panels", () => {
     await act(async () => vi.advanceTimersByTime(1_800 - previousElapsedMs));
 
     expect(container.textContent).toContain("魚を釣り上げました！");
-    expect(useGameStore.getState().game.fishInventory.sardine).toBe(1);
+    expect(getInventoryCount(useGameStore.getState().game, "sardine")).toBe(1);
     const retryButton = [...container.querySelectorAll("button")]
       .find((button) => button.textContent?.includes("もう一度釣る"));
     expect(retryButton?.closest(".fishing-action-slot")).toBe(actionSlot);
@@ -267,7 +268,7 @@ describe("fishing panels", () => {
     await act(async () => vi.advanceTimersByTime(8_000));
 
     expect(container.textContent).toContain("時間切れ！");
-    expect(useGameStore.getState().game.fishInventory.sardine).toBe(0);
+    expect(getInventoryCount(useGameStore.getState().game, "sardine")).toBe(0);
     await act(async () => root.unmount());
   });
 });

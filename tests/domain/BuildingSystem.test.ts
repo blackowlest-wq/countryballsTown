@@ -55,6 +55,70 @@ describe("BuildingSystem", () => {
     });
   });
 
+  it("鉱石工房は必要な採掘素材をまとめて消費し、コインは消費しない", () => {
+    const initial = {
+      ...createInitialGameState(0),
+      miningInventory: {
+        ...createInitialGameState(0).miningInventory,
+        copper: 8,
+        iron: 5,
+        crystal: 3,
+      },
+    };
+
+    const placed = placeBuilding(initial, "ore-workshop", 12, 12, "ore-workshop-test");
+
+    expect(placed).toMatchObject({
+      success: true,
+      building: { buildingId: "ore-workshop", gridX: 12, gridY: 12 },
+      state: {
+        coins: 100,
+        miningInventory: { copper: 0, iron: 0, crystal: 0 },
+      },
+    });
+  });
+
+  it("鉱石工房の素材不足ではコインも素材も消費しない", () => {
+    const initial = {
+      ...createInitialGameState(0),
+      miningInventory: {
+        ...createInitialGameState(0).miningInventory,
+        copper: 7,
+        iron: 5,
+        crystal: 3,
+      },
+    };
+
+    const result = placeBuilding(initial, "ore-workshop", 12, 12, "ore-workshop-test");
+
+    expect(result).toMatchObject({
+      success: false,
+      reason: "not-enough-mining-resources",
+      state: initial,
+    });
+  });
+
+  it("鉱石工房を移動しても採掘素材を再徴収しない", () => {
+    const initial = {
+      ...createInitialGameState(0),
+      miningInventory: {
+        ...createInitialGameState(0).miningInventory,
+        copper: 8,
+        iron: 5,
+        crystal: 3,
+      },
+    };
+    const placed = placeBuilding(initial, "ore-workshop", 12, 12, "ore-workshop-test");
+    expect(placed.success).toBe(true);
+
+    const moved = moveBuilding(placed.state, "ore-workshop-test", 14, 14);
+
+    expect(moved).toMatchObject({
+      success: true,
+      state: { coins: 100, miningInventory: { copper: 0, iron: 0, crystal: 0 } },
+    });
+  });
+
   it("牛を配置すると採乳待ちが始まり、撤去すると生産情報も消える", () => {
     const placed = placeBuilding(
       createInitialGameState(0),

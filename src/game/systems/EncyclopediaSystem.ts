@@ -3,43 +3,28 @@ import {
   getBuildingEncyclopediaId,
   getCropEncyclopediaId,
   getFishEncyclopediaId,
-  getFoodEncyclopediaId,
-  getLivestockEncyclopediaId,
-  getProcessedEncyclopediaId,
 } from "../data/encyclopedia";
 import { fishDefinitions } from "../data/fish";
 import { miningResourceDefinitions } from "../data/mining";
-import type { FishType } from "../types/Fish";
+import { inventoryPresentationDefinitions } from "../data/inventory";
 import type { GameState } from "../types/Village";
+import { cropDefinitions } from "../types/Crop";
+import type { InventoryItemId } from "../types/Inventory";
+import { getInventoryCount } from "./InventorySystem";
 
 const encyclopediaEntryIds = new Set(encyclopediaEntries.map((entry) => entry.id));
 
-const positiveInventoryEntries: ReadonlyArray<[keyof GameState, string]> = [
-  ["wheat", getCropEncyclopediaId("wheat")],
-  ["tomatoes", getCropEncyclopediaId("tomato")],
-  ["rice", getCropEncyclopediaId("rice")],
-  ["milk", getLivestockEncyclopediaId("milk")],
-  ["pork", getLivestockEncyclopediaId("pork")],
-  ["eggs", getLivestockEncyclopediaId("eggs")],
-  ["wheatFlour", getProcessedEncyclopediaId("wheat-flour")],
-  ["butter", getProcessedEncyclopediaId("butter")],
-  ["cheese", getProcessedEncyclopediaId("cheese")],
-  ["ham", getProcessedEncyclopediaId("ham")],
-  ["sausage", getProcessedEncyclopediaId("sausage")],
-  ["bacon", getProcessedEncyclopediaId("bacon")],
-  ["pizzas", getFoodEncyclopediaId("pizza")],
-  ["bread", getFoodEncyclopediaId("bread")],
-  ["hotDogs", getFoodEncyclopediaId("hot-dog")],
-  ["croissants", getFoodEncyclopediaId("croissant")],
-  ["hamSandwiches", getFoodEncyclopediaId("ham-sandwich")],
-  ["onigiri", getFoodEncyclopediaId("onigiri")],
-  ["omurice", getFoodEncyclopediaId("omurice")],
-  ["grilledFish", getFoodEncyclopediaId("grilled-fish")],
-  ["seafoodBowls", getFoodEncyclopediaId("seafood-bowl")],
+const positiveInventoryEntries: ReadonlyArray<readonly [InventoryItemId, string]> = [
+  ...Object.values(cropDefinitions).map((crop) => [
+    crop.harvestKey,
+    getCropEncyclopediaId(crop.type),
+  ] as const),
+  ...inventoryPresentationDefinitions.map((definition) => [
+    definition.countKey,
+    definition.id,
+  ] as const),
+  ...fishDefinitions.map((fish) => [fish.type, getFishEncyclopediaId(fish.type)] as const),
 ];
-
-const fishInventoryEntries: ReadonlyArray<readonly [FishType, string]> =
-  fishDefinitions.map((fish) => [fish.type, getFishEncyclopediaId(fish.type)] as const);
 
 const miningInventoryEntries = miningResourceDefinitions.map((resource) => [
   resource.type,
@@ -67,12 +52,8 @@ export function syncEncyclopediaCollection(state: GameState): GameState {
     if (encyclopediaEntryIds.has(entryId)) collected.add(entryId);
   }
   for (const crop of state.crops) collected.add(getCropEncyclopediaId(crop.type));
-  for (const [key, entryId] of positiveInventoryEntries) {
-    const value = state[key];
-    if (typeof value === "number" && value > 0) collected.add(entryId);
-  }
-  for (const [fishType, entryId] of fishInventoryEntries) {
-    if (state.fishInventory[fishType] > 0) collected.add(entryId);
+  for (const [itemId, entryId] of positiveInventoryEntries) {
+    if (getInventoryCount(state, itemId) > 0) collected.add(entryId);
   }
   for (const [resourceType, entryId] of miningInventoryEntries) {
     if (state.miningInventory[resourceType] > 0) collected.add(entryId);

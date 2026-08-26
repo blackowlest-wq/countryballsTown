@@ -37,7 +37,7 @@ describe("ChickenSystem", () => {
 
     const result = collectChickenEggs(state, "chicken-test", production.eggReadyAt);
     expect(result.outcome).toBe("collected");
-    expect(result.state.eggs).toBe(CHICKEN_EGG_AMOUNT);
+    expect(result.state.inventory.eggs).toBe(CHICKEN_EGG_AMOUNT);
     expect(result.state.buildings).toContainEqual({
       id: "chicken-test",
       buildingId: "chicken",

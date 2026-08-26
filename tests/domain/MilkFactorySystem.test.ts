@@ -6,6 +6,7 @@ import {
   registerMilkFactoryProduction,
 } from "../../src/game/systems/MilkFactorySystem";
 import { placeBuilding } from "../../src/game/systems/BuildingSystem";
+import { withInventory } from "../inventoryFixture";
 
 describe("MilkFactorySystem", () => {
   it("工場を設定すると20秒後の生産予定が登録される", () => {
@@ -34,13 +35,11 @@ describe("MilkFactorySystem", () => {
     let state = createInitialGameState(0);
     state = registerMilkFactoryProduction(state, "factory-test");
     state = configureMilkFactory(state, "factory-test", "cheese", 0).state;
-    state = { ...state, milk: 3 };
+    state = withInventory(state, { milk: 3 });
 
     const advanced = advanceMilkFactoryProductions(state, 60_000);
     expect(advanced).toMatchObject({
-      milk: 0,
-      butter: 0,
-      cheese: 9,
+      inventory: { milk: 0, butter: 0, cheese: 9 },
       milkFactoryProductions: [{
         buildingInstanceId: "factory-test",
         productType: "cheese",
@@ -57,8 +56,8 @@ describe("MilkFactorySystem", () => {
     const waiting = advanceMilkFactoryProductions(state, 20_000);
     expect(waiting).toBe(state);
 
-    const resumed = advanceMilkFactoryProductions({ ...waiting, milk: 1 }, 20_000);
-    expect(resumed).toMatchObject({ milk: 0, butter: 3 });
+    const resumed = advanceMilkFactoryProductions(withInventory(waiting, { milk: 1 }), 20_000);
+    expect(resumed).toMatchObject({ inventory: { milk: 0, butter: 3 } });
     expect(resumed.milkFactoryProductions[0].nextProductionAt).toBe(40_000);
   });
 });

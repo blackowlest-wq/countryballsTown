@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { MAX_COINS, SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
+import { getProductsForStore } from "../../src/game/data/productCatalog";
 import { advanceGameProgress, type GameProgressState } from "../../src/game/systems/GameProgressSystem";
+import { getProductSalePriceForVisitor } from "../../src/game/systems/ProductDemandSystem";
 import { createShopVisitorSimulation } from "../../src/game/systems/ShopVisitorSystem";
 import type { ShopVisitor } from "../../src/game/types/ShopVisitor";
+import { withInventory } from "../inventoryFixture";
 
 function progressState(overrides: Partial<GameProgressState> = {}): GameProgressState {
   return {
@@ -33,23 +36,22 @@ describe("GameProgressSystem", () => {
 
   it("工場の生産を進め、変更があれば即時保存を要求する", () => {
     const current = progressState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         residents: [],
         nextResidentRequestAt: Number.POSITIVE_INFINITY,
-        milk: 1,
         buildings: [{ id: "milk-factory-test", buildingId: "milk-factory", gridX: 8, gridY: 8 }],
         milkFactoryProductions: [{
           buildingInstanceId: "milk-factory-test",
           productType: "butter",
           nextProductionAt: 20_000,
         }],
-      },
+      }, { milk: 1 }),
     });
 
     const result = advanceGameProgress(current, 0, 20_000, () => 0);
 
-    expect(result.game).toMatchObject({ milk: 0, butter: 3 });
+    expect(result.game).toMatchObject({ inventory: { milk: 0, butter: 3 } });
     expect(result.shouldPersist).toBe(true);
   });
 
@@ -66,13 +68,12 @@ describe("GameProgressSystem", () => {
       serviceUntil: SHOP_VISITOR_SERVICE_MS,
     };
     const current = progressState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         residents: [],
         nextResidentRequestAt: Number.POSITIVE_INFINITY,
         buildings: [pizzaShop],
-        pizzas: 1,
-      },
+      }, { pizza: 1 }),
       visitorSimulation: {
         visitors: [visitor],
         nextArrivalAt: Number.POSITIVE_INFINITY,
@@ -87,7 +88,15 @@ describe("GameProgressSystem", () => {
       () => 0,
     );
 
-    expect(result.game).toMatchObject({ coins: 103, pizzas: 0 });
+    expect(result.game).toMatchObject({
+      coins: 100 + getProductSalePriceForVisitor(
+        "pizza",
+        "poland",
+        SHOP_VISITOR_SERVICE_MS,
+        getProductsForStore("pizza-shop"),
+      ),
+      inventory: { pizza: 0 },
+    });
     expect(result.visitorSimulation.visitors[0].phase).toBe("leaving");
     expect(result.shouldPersist).toBe(true);
   });
@@ -105,14 +114,13 @@ describe("GameProgressSystem", () => {
       serviceUntil: SHOP_VISITOR_SERVICE_MS,
     };
     const current = progressState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         residents: [],
         nextResidentRequestAt: Number.POSITIVE_INFINITY,
         coins: MAX_COINS - 1,
         buildings: [pizzaShop],
-        pizzas: 1,
-      },
+      }, { pizza: 1 }),
       visitorSimulation: {
         visitors: [visitor],
         nextArrivalAt: Number.POSITIVE_INFINITY,
@@ -122,7 +130,7 @@ describe("GameProgressSystem", () => {
 
     const result = advanceGameProgress(current, 0, SHOP_VISITOR_SERVICE_MS, () => 0);
 
-    expect(result.game).toMatchObject({ coins: MAX_COINS, pizzas: 0 });
+    expect(result.game).toMatchObject({ coins: MAX_COINS, inventory: { pizza: 0 } });
   });
 
   it("村の進行イベントを通知へ変換し、保存を要求する", () => {

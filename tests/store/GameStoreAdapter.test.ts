@@ -4,6 +4,7 @@ import { MAX_COINS, SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gam
 import { createShopVisitorSimulation } from "../../src/game/systems/ShopVisitorSystem";
 import { useGameStore } from "../../src/store/gameStore";
 import type { ShopVisitor } from "../../src/game/types/ShopVisitor";
+import { withInventory } from "../inventoryFixture";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -43,6 +44,33 @@ describe("gameStore adapter", () => {
     expect(useGameStore.getState().economyRemainderMs).toBe(900);
   });
 
+  it("鉱石工房の配置をBuildingSystemへ委譲し、採掘素材を反映する", () => {
+    const initial = createInitialGameState(0);
+    useGameStore.setState({
+      game: {
+        ...initial,
+        miningInventory: {
+          ...initial.miningInventory,
+          copper: 8,
+          iron: 5,
+          crystal: 3,
+        },
+      },
+    });
+
+    useGameStore.getState().beginBuild("ore-workshop");
+    expect(useGameStore.getState().placeSelectedBuilding(12, 12)).toBe(true);
+
+    expect(useGameStore.getState().game).toMatchObject({
+      coins: 100,
+      miningInventory: { copper: 0, iron: 0, crystal: 0 },
+      buildings: [
+        ...initial.buildings,
+        { buildingId: "ore-workshop", gridX: 12, gridY: 12 },
+      ],
+    });
+  });
+
   it("ショップ販売の売上をStoreのコインへ反映する", () => {
     const pizzaShop = {
       id: "pizza-shop-test",
@@ -61,13 +89,12 @@ describe("gameStore adapter", () => {
       serviceUntil: SHOP_VISITOR_SERVICE_MS,
     };
     useGameStore.setState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         residents: [],
         nextResidentRequestAt: Number.POSITIVE_INFINITY,
         buildings: [pizzaShop],
-        pizzas: 1,
-      },
+      }, { pizza: 1 }),
       visitorSimulation: {
         visitors: [visitor],
         nextArrivalAt: Number.POSITIVE_INFINITY,
@@ -77,23 +104,22 @@ describe("gameStore adapter", () => {
 
     useGameStore.getState().tick(0, SHOP_VISITOR_SERVICE_MS);
 
-    expect(useGameStore.getState().game).toMatchObject({ coins: 103, pizzas: 0 });
+    expect(useGameStore.getState().game).toMatchObject({ coins: 108, inventory: { pizza: 0 } });
   });
 
   it("即時保存が必要なtickでは保存境界のcanonical stateをStoreへ反映する", () => {
-    const game = {
+    const game = withInventory({
       ...createInitialGameState(0),
       residents: [],
       nextResidentRequestAt: Number.POSITIVE_INFINITY,
       buildings: [{ id: "milk-factory-test", buildingId: "milk-factory", gridX: 8, gridY: 8 }],
-      milk: 1,
       milkFactoryProductions: [{
         buildingInstanceId: "milk-factory-test",
         productType: "butter" as const,
         nextProductionAt: 20_000,
       }],
       cowProductions: [{ buildingInstanceId: "orphan-cow", milkReadyAt: 1_000 }],
-    };
+    }, { milk: 1 });
     useGameStore.setState({
       game,
       economyRemainderMs: 0,
@@ -104,7 +130,7 @@ describe("gameStore adapter", () => {
     useGameStore.getState().tick(0, 20_000);
 
     expect(useGameStore.getState().game).toMatchObject({
-      butter: 3,
+      inventory: { butter: 3 },
       cowProductions: [],
       lastSavedAt: 50_000,
     });

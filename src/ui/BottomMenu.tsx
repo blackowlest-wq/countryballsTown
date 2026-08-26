@@ -6,6 +6,7 @@ export function BottomMenu(): JSX.Element {
   const buildOpen = useGameStore((store) => store.isBuildMenuOpen);
   const residentOpen = useGameStore((store) => store.isResidentPanelOpen);
   const mapTravelOpen = useGameStore((store) => store.isMapTravelOpen);
+  const marketOrderOpen = useGameStore((store) => store.isMarketOrderOpen);
   const mode = useGameStore((store) => store.interactionMode);
   const setBuildOpen = useGameStore((store) => store.setBuildMenuOpen);
   const setResidentOpen = useGameStore((store) => store.setResidentPanelOpen);
@@ -13,6 +14,8 @@ export function BottomMenu(): JSX.Element {
   const beginFarming = useGameStore((store) => store.beginFarming);
   const openMapTravel = useGameStore((store) => store.openMapTravel);
   const closeMapTravel = useGameStore((store) => store.closeMapTravel);
+  const openMarketOrderBoard = useGameStore((store) => store.openMarketOrderBoard);
+  const closeMarketOrderBoard = useGameStore((store) => store.closeMarketOrderBoard);
 
   const toggleBuild = (): void => {
     if (!isVillage) return;
@@ -52,6 +55,18 @@ export function BottomMenu(): JSX.Element {
     openMapTravel();
   };
 
+  const toggleOrders = (): void => {
+    setBuildOpen(false);
+    setResidentOpen(false);
+    closeMapTravel();
+    if (mode !== "inspect") cancel();
+    if (marketOrderOpen) {
+      closeMarketOrderBoard();
+    } else {
+      openMarketOrderBoard();
+    }
+  };
+
   return (
     <nav className="bottom-menu" aria-label="マップメニュー">
       <button
@@ -87,6 +102,15 @@ export function BottomMenu(): JSX.Element {
       >
         <span className="menu-icon crop-menu-icon">🧭</span>
         <span>移動</span>
+      </button>
+      <button
+        type="button"
+        className={`bottom-menu-button ${marketOrderOpen ? "is-active" : ""}`}
+        aria-pressed={marketOrderOpen}
+        onClick={toggleOrders}
+      >
+        <span className="menu-icon crop-menu-icon">📋</span>
+        <span>注文</span>
       </button>
     </nav>
   );

@@ -28,7 +28,7 @@ const wheatFactoryProductionModule = createFactoryProductionModule<WheatFactoryP
   inputAmount: WHEAT_FACTORY_WHEAT_COST,
   intervalMs: WHEAT_FACTORY_INTERVAL_MS,
   productAmount: WHEAT_FACTORY_PRODUCT_AMOUNT,
-  products: [{ type: "wheat-flour", outputKey: "wheatFlour" }],
+  products: [{ type: "wheat-flour", outputKey: "wheat-flour" }],
 });
 
 export function getWheatFactoryProductName(_productType: WheatFactoryProductType): string {

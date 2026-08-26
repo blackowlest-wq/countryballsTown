@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CROP_MATURE_STAGE_MS } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
+import { getInventoryCount } from "../../src/game/systems/InventorySystem";
 import { CropRenderer } from "../../src/scene/crops/CropRenderer";
 import { useGameStore } from "../../src/store/gameStore";
 
@@ -55,7 +56,7 @@ describe("CropRenderer", () => {
     });
 
     expect(useGameStore.getState().game.crops).toHaveLength(0);
-    expect(useGameStore.getState().game.wheat).toBe(1);
+    expect(getInventoryCount(useGameStore.getState().game, "wheat")).toBe(1);
     expect(useGameStore.getState().game.wheatSeeds).toBe(9);
     expect(useGameStore.getState().notice).toContain("小麦1個");
 
@@ -91,7 +92,7 @@ describe("CropRenderer", () => {
     });
 
     expect(useGameStore.getState().game.crops).toHaveLength(0);
-    expect(useGameStore.getState().game.wheat).toBe(1);
+    expect(getInventoryCount(useGameStore.getState().game, "wheat")).toBe(1);
 
     await act(async () => root.unmount());
   });
@@ -134,7 +135,7 @@ describe("CropRenderer", () => {
     });
 
     expect(useGameStore.getState().game.crops).toHaveLength(0);
-    expect(useGameStore.getState().game.wheat).toBe(1);
+    expect(getInventoryCount(useGameStore.getState().game, "wheat")).toBe(1);
 
     await act(async () => {
       matureCrop?.dispatchEvent(pointerEvent("pointerup"));

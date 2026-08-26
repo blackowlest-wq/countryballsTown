@@ -14,6 +14,7 @@ import {
 } from "../types/Crop";
 import type { GameState } from "../types/Village";
 import { isGridPositionInside } from "../../utils/grid";
+import { addInventory } from "./InventorySystem";
 
 export type CropAction = "plant" | "harvest";
 export type CropGrowthStage = "seed" | "green" | "mature";
@@ -123,9 +124,9 @@ function plantCrop(
 
 function harvestCrop(state: GameState, crop: Crop): GameState {
   const definition = getCropDefinition(crop.type);
+  const nextState = addInventory(state, definition.harvestKey, CROP_HARVEST_AMOUNT);
   return {
-    ...state,
-    [definition.harvestKey]: state[definition.harvestKey] + CROP_HARVEST_AMOUNT,
+    ...nextState,
     [definition.seedKey]: state[definition.seedKey] + CROP_SEEDS_PER_HARVEST,
     crops: state.crops.filter((candidate) => candidate !== crop),
   };

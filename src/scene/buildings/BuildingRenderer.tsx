@@ -17,6 +17,7 @@ import { WheatFactory } from "./WheatFactory";
 import { Bakery } from "./Bakery";
 import { RiceShop } from "./RiceShop";
 import { FishShop } from "./FishShop";
+import { OreWorkshop } from "./OreWorkshop";
 import { Field } from "./Field";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
@@ -42,6 +43,7 @@ const buildingRenderers: Record<string, ComponentType> = {
   bakery: Bakery,
   "rice-shop": RiceShop,
   "fish-shop": FishShop,
+  "ore-workshop": OreWorkshop,
 };
 
 interface BuildingInstanceRendererProps {

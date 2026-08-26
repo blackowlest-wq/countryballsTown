@@ -6,16 +6,19 @@ import {
   MAX_LIVESTOCK_COUNT,
 } from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
+import type { MiningResourceType } from "../types/Mining";
 import type { GameState } from "../types/Village";
 import {
   registerProductionForBuilding,
   removeProductionForBuilding,
 } from "./ProductionRegistry";
+import { removeBuildingUpgrades } from "./BuildingUpgradeSystem";
 
 export type BuildingOperationReason =
   | "unknown-building"
   | "locked"
   | "not-enough-coins"
+  | "not-enough-mining-resources"
   | "out-of-bounds"
   | "occupied"
   | "not-found"
@@ -82,6 +85,31 @@ function overlapsExisting(
   });
 }
 
+function hasEnoughMiningResources(
+  inventory: GameState["miningInventory"],
+  cost: BuildingDefinition["miningCost"],
+): boolean {
+  if (!cost) return true;
+  return (Object.entries(cost) as Array<[MiningResourceType, number]>).every(
+    ([resourceType, amount]) => inventory[resourceType] >= amount,
+  );
+}
+
+function consumeMiningResources(
+  inventory: GameState["miningInventory"],
+  cost: BuildingDefinition["miningCost"],
+): GameState["miningInventory"] {
+  if (!cost || Object.keys(cost).length === 0) return inventory;
+  const nextInventory = { ...inventory };
+  for (const [resourceType, amount] of Object.entries(cost) as Array<[
+    MiningResourceType,
+    number,
+  ]>) {
+    nextInventory[resourceType] -= amount;
+  }
+  return nextInventory;
+}
+
 function checkPlacement(
   state: GameState,
   buildings: readonly BuildingInstance[],
@@ -121,6 +149,9 @@ function checkPlacement(
   if (!excludeId && state.coins < definition.cost) {
     return { ok: false, reason: "not-enough-coins" };
   }
+  if (!excludeId && !hasEnoughMiningResources(state.miningInventory, definition.miningCost)) {
+    return { ok: false, reason: "not-enough-mining-resources" };
+  }
   return { ok: true };
 }
 
@@ -157,6 +188,7 @@ export function placeBuilding(
   const placedState: GameState = {
     ...state,
     coins: state.coins - definition.cost,
+    miningInventory: consumeMiningResources(state.miningInventory, definition.miningCost),
     buildings: [...collection.buildings, building],
   };
   const productionState = registerProductionForBuilding(
@@ -225,9 +257,10 @@ export function removeBuilding(state: GameState, instanceId: string): BuildingOp
     ...state,
     buildings: collection.buildings.filter((_, index) => index !== lookup.index),
   };
+  const stateWithoutUpgrades = removeBuildingUpgrades(removedState, existing.id);
   return {
     success: true,
-    state: removeProductionForBuilding(removedState, existing.buildingId, existing.id),
+    state: removeProductionForBuilding(stateWithoutUpgrades, existing.buildingId, existing.id),
   };
 }
 
@@ -241,6 +274,8 @@ export function getBuildingOperationMessage(reason?: BuildingOperationReason): s
       return "まだ建築できない建物です。";
     case "not-enough-coins":
       return "コインが足りません。";
+    case "not-enough-mining-resources":
+      return "採掘素材が足りません。";
     case "out-of-bounds":
       return "村の外には配置できません。";
     case "occupied":

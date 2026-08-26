@@ -5,6 +5,7 @@ import {
   configurePorkFactory,
   registerPorkFactoryProduction,
 } from "../../src/game/systems/PorkFactorySystem";
+import { withInventory } from "../inventoryFixture";
 
 describe("PorkFactorySystem", () => {
   it("工場を設定すると20秒後の生産予定が登録される", () => {
@@ -28,10 +29,10 @@ describe("PorkFactorySystem", () => {
       let state = createInitialGameState(0);
       state = registerPorkFactoryProduction(state, "factory-test");
       state = configurePorkFactory(state, "factory-test", productType, 0).state;
-      const advanced = advancePorkFactoryProductions({ ...state, pork: 1 }, 20_000);
+      const advanced = advancePorkFactoryProductions(withInventory(state, { pork: 1 }), 20_000);
 
-      expect(advanced.pork).toBe(0);
-      expect(advanced[productType]).toBe(3);
+      expect(advanced.inventory.pork).toBe(0);
+      expect(advanced.inventory[productType]).toBe(3);
       expect(advanced.porkFactoryProductions[0].nextProductionAt).toBe(40_000);
     }
   });
@@ -44,8 +45,8 @@ describe("PorkFactorySystem", () => {
     const waiting = advancePorkFactoryProductions(state, 20_000);
     expect(waiting).toBe(state);
 
-    const resumed = advancePorkFactoryProductions({ ...waiting, pork: 1 }, 20_000);
-    expect(resumed).toMatchObject({ pork: 0, bacon: 3 });
+    const resumed = advancePorkFactoryProductions(withInventory(waiting, { pork: 1 }), 20_000);
+    expect(resumed).toMatchObject({ inventory: { pork: 0, bacon: 3 } });
     expect(resumed.porkFactoryProductions[0].nextProductionAt).toBe(40_000);
   });
 });

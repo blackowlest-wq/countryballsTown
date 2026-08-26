@@ -1,13 +1,9 @@
 import type { CraftingProductType } from "../types/Crafting";
 import type { GameState } from "../types/Village";
+import { getProductsForStore } from "../data/productCatalog";
 import { craftProduct, getCraftingMaxCraftable } from "./CraftingSystem";
 
-export const BAKERY_PRODUCT_TYPES: readonly CraftingProductType[] = [
-  "bread",
-  "hot-dog",
-  "croissant",
-  "ham-sandwich",
-];
+export const BAKERY_PRODUCT_TYPES: readonly CraftingProductType[] = getProductsForStore("bakery");
 
 export function getBakeryMaxCraftable(
   state: GameState,

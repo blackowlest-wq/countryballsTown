@@ -3,6 +3,7 @@ import { MAX_COINS } from "../game/constants/gameConstants";
 import { useGameStore } from "../store/gameStore";
 import { formatCoinAmount } from "../utils/coinFormatting";
 import { BgmToggle } from "./BgmToggle";
+import { PwaInstallStatus, usePwaInstall } from "./usePwaInstall";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface SettingsPanelProps {
 export function SettingsPanel({ open, onClose }: SettingsPanelProps): JSX.Element {
   const resetGame = useGameStore((store) => store.resetGame);
   const grantMaxCoins = useGameStore((store) => store.grantMaxCoinsForDevelopment);
+  const { canInstall, install, isInstalled, isPrompting, status } = usePwaInstall();
   const [isResetConfirmationOpen, setResetConfirmationOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -51,6 +53,13 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps): JSX.Elemen
     onClose();
   };
 
+  const installDescription = getInstallDescription(status);
+  const installButtonLabel = isInstalled
+    ? "インストール済み"
+    : isPrompting
+      ? "追加中…"
+      : "アプリをダウンロード";
+
   return (
     <div
       className="settings-overlay"
@@ -88,6 +97,22 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps): JSX.Elemen
             <small>村で流れる音楽を切り替えます。</small>
           </div>
           <BgmToggle />
+        </div>
+
+        <div className="settings-section settings-install-section">
+          <div className="settings-section-copy">
+            <strong>アプリをダウンロード</strong>
+            <small>{installDescription}</small>
+          </div>
+          <button
+            className="subtle-button settings-install-button"
+            data-action="install-app"
+            type="button"
+            disabled={!canInstall || isPrompting || isInstalled}
+            onClick={() => { void install(); }}
+          >
+            {installButtonLabel}
+          </button>
         </div>
 
         <div className="settings-section settings-debug-section">
@@ -145,4 +170,21 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps): JSX.Elemen
       </section>
     </div>
   );
+}
+
+function getInstallDescription(status: PwaInstallStatus): string {
+  switch (status) {
+    case "installed":
+      return "この端末にはインストール済みです。";
+    case "available":
+      return "このブラウザからアプリとして追加できます。";
+    case "prompting":
+      return "インストール画面を開いています。";
+    case "awaiting-install":
+      return "インストール処理を確認しています。追加されない場合は再読み込み後にもう一度お試しください。";
+    case "dismissed":
+      return "インストールはキャンセルされました。再読み込み後にもう一度お試しください。";
+    case "unavailable":
+      return "インストール候補が利用できません。再読み込み後にもう一度お試しください。";
+  }
 }

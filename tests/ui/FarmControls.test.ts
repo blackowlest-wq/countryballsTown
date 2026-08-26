@@ -7,6 +7,7 @@ import { useGameStore } from "../../src/store/gameStore";
 import { BottomMenu } from "../../src/ui/BottomMenu";
 import { FarmControls } from "../../src/ui/FarmControls";
 import { MapTravelPanel } from "../../src/ui/MapTravelPanel";
+import { withInventory } from "../inventoryFixture";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -67,13 +68,18 @@ describe("FarmControls", () => {
 
   it("通常はコンパクトに表示し、作物変更パネルと在庫ドロワーを開ける", async () => {
     useGameStore.setState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         wheatSeeds: 9,
-        wheat: 3,
         tomatoSeeds: 5,
-        tomatoes: 2,
         riceSeeds: 0,
+        miningInventory: {
+          ...createInitialGameState(0).miningInventory,
+          copper: 2,
+        },
+      }, {
+        wheat: 3,
+        tomato: 2,
         eggs: 8,
         milk: 7,
         pork: 6,
@@ -82,20 +88,14 @@ describe("FarmControls", () => {
         ham: 3,
         sausage: 5,
         bacon: 1,
-        pizzas: 2,
-        grilledFish: 2,
-        seafoodBowls: 1,
-        fishInventory: {
-          sardine: 3,
-          mackerel: 2,
-          "sea-bream": 1,
-          tuna: 4,
-        },
-        miningInventory: {
-          ...createInitialGameState(0).miningInventory,
-          copper: 2,
-        },
-      },
+        pizza: 2,
+        "grilled-fish": 2,
+        "seafood-bowl": 1,
+        sardine: 3,
+        mackerel: 2,
+        "sea-bream": 1,
+        tuna: 4,
+      }),
       interactionMode: "farm",
       selectedCropType: "wheat",
     });
@@ -184,16 +184,24 @@ describe("FarmControls", () => {
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(container.querySelector('[aria-label="バター 4"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="ピザ 2"]')).toBeNull();
     expect(container.querySelector('[aria-label="おにぎり 0"]')).toBeNull();
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-inventory-filter="all"]')
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(container.querySelector('[aria-label="おにぎり 0"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="小麦粉 0"]')).not.toBeNull();
     expect(container.querySelector('[data-inventory-filter="all"]')?.getAttribute("aria-pressed"))
       .toBe("true");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-inventory-category="food"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.querySelector('[aria-label="ピザ 2"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="バター 4"]')).toBeNull();
+    expect(container.querySelectorAll('[data-inventory-category]')).toHaveLength(5);
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[aria-label="在庫を閉じる"]')

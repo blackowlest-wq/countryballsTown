@@ -7,6 +7,7 @@ import {
 import { inventoryPresentationDefinitions } from "../../src/game/data/inventory";
 import { syncEncyclopediaCollection } from "../../src/game/systems/EncyclopediaSystem";
 import { loadGameState, saveGameState, type StorageLike } from "../../src/game/systems/SaveSystem";
+import { withInventory } from "../inventoryFixture";
 
 function memoryStorage(): StorageLike {
   const values = new Map<string, string>();
@@ -45,18 +46,12 @@ describe("encyclopedia system", () => {
 
   it("keeps a collected star after the item is consumed or removed", () => {
     const initial = createInitialGameState(0);
-    const collected = syncEncyclopediaCollection({
-      ...initial,
-      fishInventory: {
-        sardine: 0,
-        mackerel: 0,
-        "sea-bream": 0,
-        tuna: 1,
-      },
+    const collected = syncEncyclopediaCollection(withInventory(initial, {
+      tuna: 1,
       wheat: 1,
       butter: 1,
-      pizzas: 1,
-    });
+      pizza: 1,
+    }));
 
     expect(collected.encyclopediaCollectedIds).toEqual(expect.arrayContaining([
       "building:house",
@@ -66,19 +61,15 @@ describe("encyclopedia system", () => {
       "food:pizza",
     ]));
 
-    const afterConsumption = syncEncyclopediaCollection({
+    const afterConsumption = syncEncyclopediaCollection(withInventory({
       ...collected,
       buildings: collected.buildings.filter((building) => building.buildingId !== "house"),
-      fishInventory: {
-        sardine: 0,
-        mackerel: 0,
-        "sea-bream": 0,
-        tuna: 0,
-      },
+    }, {
+      tuna: 0,
       wheat: 0,
       butter: 0,
-      pizzas: 0,
-    });
+      pizza: 0,
+    }));
     expect(afterConsumption.encyclopediaCollectedIds).toEqual(
       expect.arrayContaining(["building:house", "fish:tuna", "crop:wheat", "processed:butter", "food:pizza"]),
     );
@@ -130,17 +121,11 @@ describe("encyclopedia system", () => {
 
   it("persists collected stars in the save data", () => {
     const storage = memoryStorage();
-    const collected = syncEncyclopediaCollection({
-      ...createInitialGameState(0),
-      fishInventory: {
-        sardine: 0,
-        mackerel: 0,
-        "sea-bream": 0,
-        tuna: 1,
-      },
+    const collected = syncEncyclopediaCollection(withInventory(createInitialGameState(0), {
+      tuna: 1,
       omurice: 1,
-    });
-    saveGameState({ ...collected, omurice: 0 }, storage);
+    }));
+    saveGameState(withInventory(collected, { omurice: 0 }), storage);
 
     expect(loadGameState(storage, 100).encyclopediaCollectedIds)
       .toContain("food:omurice");

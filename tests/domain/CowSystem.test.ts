@@ -42,7 +42,7 @@ describe("CowSystem", () => {
 
     const first = collectCowMilk(state, "cow-test", readyAt);
     expect(first.outcome).toBe("collected");
-    expect(first.state.milk).toBe(2);
+    expect(first.state.inventory.milk).toBe(2);
     expect(first.state.cowProductions[0].milkReadyAt)
       .toBe(readyAt + COW_MILK_INTERVAL_MS);
 
@@ -51,6 +51,6 @@ describe("CowSystem", () => {
       "cow-test",
       readyAt + COW_MILK_INTERVAL_MS,
     );
-    expect(second.state.milk).toBe(4);
+    expect(second.state.inventory.milk).toBe(4);
   });
 });

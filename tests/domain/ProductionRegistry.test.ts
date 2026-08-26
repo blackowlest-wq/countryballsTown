@@ -14,6 +14,7 @@ import {
   registerProductionForBuilding,
   removeProductionForBuilding,
 } from "../../src/game/systems/ProductionRegistry";
+import { withInventory } from "../inventoryFixture";
 
 const registrationCases = [
   {
@@ -151,11 +152,13 @@ describe("ProductionRegistry", () => {
   });
 
   it("1回のadvanceで3種類の工場をすべて進行する", () => {
-    const initial = {
-      ...createInitialGameState(0),
+    const initial = withInventory(createInitialGameState(0), {
       wheat: 1,
       milk: 1,
       pork: 1,
+    });
+    const configured = {
+      ...initial,
       wheatFactoryProductions: [{
         buildingInstanceId: "wheat-factory-1",
         productType: "wheat-flour" as const,
@@ -173,15 +176,17 @@ describe("ProductionRegistry", () => {
       }],
     };
 
-    const advanced = advanceFactoryProductions(initial, 0);
+    const advanced = advanceFactoryProductions(configured, 0);
 
     expect(advanced).toMatchObject({
-      wheat: 0,
-      wheatFlour: 1,
-      milk: 0,
-      butter: 3,
-      pork: 0,
-      ham: 3,
+      inventory: {
+        wheat: 0,
+        "wheat-flour": 1,
+        milk: 0,
+        butter: 3,
+        pork: 0,
+        ham: 3,
+      },
       wheatFactoryProductions: [{ nextProductionAt: WHEAT_FACTORY_INTERVAL_MS }],
       milkFactoryProductions: [{ nextProductionAt: MILK_FACTORY_INTERVAL_MS }],
       porkFactoryProductions: [{ nextProductionAt: PORK_FACTORY_INTERVAL_MS }],

@@ -4,8 +4,9 @@ import { fishDefinitions } from "../game/data/fish";
 import { inventoryPresentationDefinitions } from "../game/data/inventory";
 import { miningResourceDefinitions } from "../game/data/mining";
 import type { GameState } from "../game/types/Village";
+import { getInventoryCount } from "../game/systems/InventorySystem";
 
-type InventoryCategoryId = "crops" | "livestock-fish" | "mining" | "processed";
+type InventoryCategoryId = "crops" | "livestock-fish" | "mining" | "processed" | "food";
 
 interface InventoryDrawerProps {
   game: GameState;
@@ -30,6 +31,7 @@ const inventoryCategories: readonly InventoryCategory[] = [
   { id: "livestock-fish", label: "畜産・魚", icon: "🐟" },
   { id: "mining", label: "採掘", icon: "⛏️" },
   { id: "processed", label: "加工品", icon: "🏭" },
+  { id: "food", label: "料理", icon: "🍳" },
 ];
 
 function getInventoryItems(game: GameState, category: InventoryCategoryId): InventoryItem[] {
@@ -39,7 +41,7 @@ function getInventoryItems(game: GameState, category: InventoryCategoryId): Inve
         id: definition.type,
         name: definition.name,
         icon: definition.icon,
-        count: game[definition.harvestKey],
+        count: getInventoryCount(game, definition.harvestKey),
       }));
     case "livestock-fish":
       return [
@@ -49,13 +51,13 @@ function getInventoryItems(game: GameState, category: InventoryCategoryId): Inve
             id: definition.id,
             name: definition.name,
             icon: definition.icon,
-            count: game[definition.countKey],
+          count: getInventoryCount(game, definition.countKey),
           })),
         ...fishDefinitions.map((fish) => ({
           id: `fish-${fish.type}`,
           name: fish.name,
           icon: fish.icon,
-          count: game.fishInventory[fish.type],
+          count: getInventoryCount(game, fish.type),
         })),
       ];
     case "mining":
@@ -66,16 +68,23 @@ function getInventoryItems(game: GameState, category: InventoryCategoryId): Inve
         count: game.miningInventory[resource.type],
       }));
     case "processed":
-      return [
-        ...inventoryPresentationDefinitions
-          .filter((definition) => definition.category !== "livestock")
-          .map((definition) => ({
-            id: definition.id,
-            name: definition.name,
-            icon: definition.icon,
-            count: game[definition.countKey],
-          })),
-      ];
+      return inventoryPresentationDefinitions
+        .filter((definition) => definition.category === "processed")
+        .map((definition) => ({
+          id: definition.id,
+          name: definition.name,
+          icon: definition.icon,
+          count: getInventoryCount(game, definition.countKey),
+        }));
+    case "food":
+      return inventoryPresentationDefinitions
+        .filter((definition) => definition.category === "food")
+        .map((definition) => ({
+          id: definition.id,
+          name: definition.name,
+          icon: definition.icon,
+          count: getInventoryCount(game, definition.countKey),
+        }));
   }
 }
 

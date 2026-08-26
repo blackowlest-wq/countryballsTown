@@ -51,7 +51,7 @@ describe("LivestockProductionSystem", () => {
 
     const collected = cowModule.collect(initial, "cow-1", 10_000);
     expect(collected.outcome).toBe("collected");
-    expect(collected.state.milk).toBe(COW_MILK_AMOUNT);
+    expect(collected.state.inventory.milk).toBe(COW_MILK_AMOUNT);
     expect(collected.state.cowProductions[0].milkReadyAt)
       .toBe(10_000 + COW_MILK_INTERVAL_MS);
   });

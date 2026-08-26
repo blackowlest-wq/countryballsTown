@@ -1,31 +1,10 @@
 export interface GameState {
   coins: number;
   wheatSeeds: number;
-  wheat: number;
   tomatoSeeds: number;
-  tomatoes: number;
   riceSeeds: number;
-  rice: number;
   crops: import("./Crop").Crop[];
-  eggs: number;
-  milk: number;
-  pork: number;
-  wheatFlour: number;
-  butter: number;
-  cheese: number;
-  ham: number;
-  sausage: number;
-  bacon: number;
-  pizzas: number;
-  bread: number;
-  hotDogs: number;
-  croissants: number;
-  hamSandwiches: number;
-  onigiri: number;
-  omurice: number;
-  grilledFish: number;
-  seafoodBowls: number;
-  fishInventory: import("./Fish").FishInventory;
+  inventory: import("./Inventory").InventoryState;
   miningInventory: import("./Mining").MiningInventory;
   caveMining: import("./Mining").CaveMiningState;
   hasFishingRod: boolean;
@@ -39,6 +18,7 @@ export interface GameState {
   villageLevel: number;
   residents: import("./Resident").Resident[];
   buildings: import("./Building").BuildingInstance[];
+  buildingUpgrades: import("./BuildingUpgrade").BuildingUpgradeState;
   encyclopediaCollectedIds: string[];
   unlockedCountries: string[];
   unlockedBuildings: string[];
@@ -47,5 +27,7 @@ export interface GameState {
   lastResidentRequestDefinitionId?: string;
   residentRequestDayKey: string;
   residentRequestsStartedToday: number;
+  marketOrders: import("./MarketOrder").MarketOrder[];
+  marketOrderSequence: number;
   lastSavedAt: number;
 }

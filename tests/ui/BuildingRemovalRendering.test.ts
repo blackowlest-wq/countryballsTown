@@ -7,6 +7,7 @@ import {
   placeBuilding,
   removeBuilding,
 } from "../../src/game/systems/BuildingSystem";
+import { getInventoryCount } from "../../src/game/systems/InventorySystem";
 import type { GameState } from "../../src/game/types/Village";
 import { BuildingRenderer } from "../../src/scene/buildings/BuildingRenderer";
 import { useGameStore } from "../../src/store/gameStore";
@@ -41,6 +42,36 @@ afterEach(() => {
 });
 
 describe("BuildingRenderer", () => {
+  it("鉱石工房を専用の外観で描画する", async () => {
+    const initial = createInitialGameState(0);
+    const placed = placeBuilding(
+      {
+        ...initial,
+        miningInventory: {
+          ...initial.miningInventory,
+          copper: 8,
+          iron: 5,
+          crystal: 3,
+        },
+      },
+      "ore-workshop",
+      12,
+      12,
+      "ore-workshop-test",
+    );
+    expect(placed.success).toBe(true);
+    useGameStore.setState({ game: placed.state });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+
+    expect(container.querySelector('[name="鉱石工房"]')).not.toBeNull();
+    await act(async () => root.unmount());
+  });
+
   it("採乳可能な牛へマークを出し、タップで牛乳を受け取る", async () => {
     const placed = placeBuilding(
       createInitialGameState(0),
@@ -68,7 +99,7 @@ describe("BuildingRenderer", () => {
       cowGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(useGameStore.getState().game.milk).toBe(2);
+    expect(getInventoryCount(useGameStore.getState().game, "milk")).toBe(2);
     expect(container.querySelector('[name="牛乳を収穫できます"]')).toBeNull();
     await act(async () => root.unmount());
   });
@@ -100,7 +131,7 @@ describe("BuildingRenderer", () => {
       pigGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(useGameStore.getState().game.pork).toBe(2);
+    expect(getInventoryCount(useGameStore.getState().game, "pork")).toBe(2);
     expect(useGameStore.getState().game.buildings).toContainEqual({
       id: "pig-test",
       buildingId: "pig",
@@ -138,7 +169,7 @@ describe("BuildingRenderer", () => {
       chickenGroup?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(useGameStore.getState().game.eggs).toBe(2);
+    expect(getInventoryCount(useGameStore.getState().game, "eggs")).toBe(2);
     expect(container.querySelector('[name="卵を収穫できます"]')).toBeNull();
     await act(async () => root.unmount());
   });

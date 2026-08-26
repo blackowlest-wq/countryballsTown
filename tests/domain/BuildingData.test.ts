@@ -26,7 +26,7 @@ describe("building definitions", () => {
       visitorService: {
         queueCapacity: 3,
         saleCoins: 3,
-        product: "pizza",
+        products: ["pizza", "mixed-pizza"],
       },
     });
   });
@@ -59,6 +59,18 @@ describe("building definitions", () => {
       cost: 5,
       category: "building",
       residentCollision: "passable",
+    });
+  });
+
+  it("鉱石工房を採掘素材だけで建てる2x2建物として定義する", () => {
+    expect(playerBuildingIds).toContain("ore-workshop");
+    expect(getBuildingDefinition("ore-workshop")).toMatchObject({
+      name: "鉱石工房",
+      width: 2,
+      height: 2,
+      cost: 0,
+      miningCost: { copper: 8, iron: 5, crystal: 3 },
+      category: "building",
     });
   });
 
@@ -124,7 +136,7 @@ describe("building definitions", () => {
       visitorService: {
         queueCapacity: 3,
         saleCoins: 3,
-        products: ["onigiri", "omurice"],
+        products: ["onigiri", "omurice", "butter-rice"],
       },
     });
   });
@@ -140,7 +152,7 @@ describe("building definitions", () => {
       visitorService: {
         queueCapacity: 3,
         saleCoins: 3,
-        products: ["grilled-fish", "seafood-bowl"],
+        products: ["grilled-fish", "seafood-bowl", "sushi", "fish-sandwich"],
       },
     });
   });

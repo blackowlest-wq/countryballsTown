@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { PizzaShopPanel } from "../../src/ui/PizzaShopPanel";
+import { withInventory } from "../inventoryFixture";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -23,14 +24,10 @@ afterEach(() => {
 describe("PizzaShopPanel", () => {
   it("ピザを選び、数量と消費材料を確認して作成できる", async () => {
     useGameStore.setState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         buildings: [{ id: "pizza-shop-test", buildingId: "pizza-shop", gridX: 8, gridY: 8 }],
-        bacon: 2,
-        cheese: 2,
-        tomatoes: 2,
-        wheatFlour: 4,
-      },
+      }, { bacon: 2, cheese: 2, tomato: 2, "wheat-flour": 4 }),
       pizzaShopPanelBuildingId: "pizza-shop-test",
     });
     const container = document.createElement("div");
@@ -57,25 +54,17 @@ describe("PizzaShopPanel", () => {
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(useGameStore.getState().game).toMatchObject({
-      bacon: 1,
-      cheese: 1,
-      tomatoes: 1,
-      wheatFlour: 2,
-      pizzas: 1,
+      inventory: { bacon: 1, cheese: 1, tomato: 1, "wheat-flour": 2, pizza: 1 },
     });
     await act(async () => root.unmount());
   });
 
   it("10個ボタンを押すたびにピザの生産数を10枚ずつ増やせる", async () => {
     useGameStore.setState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         buildings: [{ id: "pizza-shop-test", buildingId: "pizza-shop", gridX: 8, gridY: 8 }],
-        bacon: 30,
-        cheese: 30,
-        tomatoes: 30,
-        wheatFlour: 60,
-      },
+      }, { bacon: 30, cheese: 30, tomato: 30, "wheat-flour": 60 }),
       pizzaShopPanelBuildingId: "pizza-shop-test",
     });
     const container = document.createElement("div");

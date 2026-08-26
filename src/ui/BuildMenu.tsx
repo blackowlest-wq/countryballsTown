@@ -8,6 +8,8 @@ import {
   playerBuildingIds,
 } from "../game/data/buildings";
 import type { BuildingCategory } from "../game/types/Building";
+import type { MiningResourceType } from "../game/types/Mining";
+import { getMiningResourceDefinition } from "../game/data/mining";
 import { useGameStore } from "../store/gameStore";
 import { formatCoinAmount } from "../utils/coinFormatting";
 
@@ -77,6 +79,7 @@ export function BuildMenu(): JSX.Element | null {
             key={building.id}
             type="button"
             className={`building-option ${interactionMode === "build" ? "is-selectable" : ""}`}
+            data-building-id={building.id}
             disabled={isLivestockBuildingId(building.id) && livestockLimitReached}
             onClick={() => beginBuild(building.id)}
           >
@@ -90,8 +93,26 @@ export function BuildMenu(): JSX.Element | null {
               <small>{building.description}</small>
             </span>
             <span className="building-cost">
-              <span className="tiny-coin">✦</span>
-              {formatCoinAmount(building.cost)}
+              {building.cost > 0 && (
+                <span className="building-cost-item" aria-label={`コイン ${formatCoinAmount(building.cost)}`}>
+                  <span className="tiny-coin" aria-hidden="true">✦</span>
+                  {formatCoinAmount(building.cost)}
+                </span>
+              )}
+              {Object.entries(building.miningCost ?? {}).map(([resourceType, amount]) => {
+                const resource = getMiningResourceDefinition(resourceType as MiningResourceType);
+                return (
+                  <span
+                    key={resourceType}
+                    className="building-cost-item building-mining-cost"
+                    aria-label={`${resource.name} ${amount}`}
+                    title={`${resource.name} ${amount}`}
+                  >
+                    <span aria-hidden="true">{resource.icon}</span>
+                    {amount}
+                  </span>
+                );
+              })}
             </span>
           </button>
         ))}

@@ -7,6 +7,7 @@ import { syncEncyclopediaCollection } from "../../src/game/systems/EncyclopediaS
 import { useGameStore } from "../../src/store/gameStore";
 import { BuildingPanel } from "../../src/ui/BuildingPanel";
 import { EncyclopediaPanel } from "../../src/ui/EncyclopediaPanel";
+import { withInventory } from "../inventoryFixture";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -47,18 +48,10 @@ describe("EncyclopediaPanel", () => {
   });
 
   it("収集済みの要素に星を表示し、分類を切り替えられる", async () => {
-    const game = syncEncyclopediaCollection({
+    const game = syncEncyclopediaCollection(withInventory({
       ...createInitialGameState(0),
-      fishInventory: {
-        sardine: 0,
-        mackerel: 0,
-        "sea-bream": 0,
-        tuna: 1,
-      },
-      wheatFlour: 1,
-      pizzas: 1,
       encyclopediaCollectedIds: [],
-    });
+    }, { sardine: 0, mackerel: 0, "sea-bream": 0, tuna: 1, "wheat-flour": 1, pizza: 1 }));
     useGameStore.setState({ game, isEncyclopediaOpen: true });
     const container = document.createElement("div");
     document.body.append(container);

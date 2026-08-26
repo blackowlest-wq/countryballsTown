@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { placeBuilding } from "../../src/game/systems/BuildingSystem";
 import { useGameStore } from "../../src/store/gameStore";
+import { withInventory } from "../inventoryFixture";
 
 afterEach(() => {
   useGameStore.setState({
@@ -16,7 +17,7 @@ afterEach(() => {
 describe("milk factory store interaction", () => {
   it("工場で作るものを選ぶと20秒後から牛乳1個で加工物を3個生産する", () => {
     const placed = placeBuilding(
-      { ...createInitialGameState(0), milk: 1 },
+      withInventory(createInitialGameState(0), { milk: 1 }),
       "milk-factory",
       8,
       8,
@@ -35,6 +36,6 @@ describe("milk factory store interaction", () => {
     });
 
     useGameStore.getState().tick(0, 20_000);
-    expect(useGameStore.getState().game).toMatchObject({ milk: 0, butter: 3 });
+    expect(useGameStore.getState().game).toMatchObject({ inventory: { milk: 0, butter: 3 } });
   });
 });

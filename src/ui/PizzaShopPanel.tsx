@@ -1,7 +1,8 @@
 import { CraftingShopPanel } from "./CraftingShopPanel";
 import { useGameStore } from "../store/gameStore";
+import { PIZZA_SHOP_PRODUCT_TYPES } from "../game/systems/PizzaSystem";
 
-const pizzaProducts = ["pizza"] as const;
+const pizzaProducts = PIZZA_SHOP_PRODUCT_TYPES;
 
 export function PizzaShopPanel(): JSX.Element | null {
   const buildingId = useGameStore((store) => store.pizzaShopPanelBuildingId);

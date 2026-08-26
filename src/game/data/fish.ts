@@ -1,5 +1,5 @@
 import type { FishDefinition } from "../systems/FishGameSystem";
-import type { FishInventory, FishType } from "../types/Fish";
+import type { FishType } from "../types/Fish";
 
 const STANDARD_FISH_SIZE = 0.18;
 
@@ -72,46 +72,3 @@ export const fishDefinitions: readonly FishDefinition[] = [
 
 export const fishDefinitionsByType: Readonly<Record<FishType, FishDefinition>> =
   Object.fromEntries(fishDefinitions.map((fish) => [fish.type, fish])) as Record<FishType, FishDefinition>;
-
-export function createInitialFishInventory(): FishInventory {
-  return {
-    sardine: 0,
-    mackerel: 0,
-    "sea-bream": 0,
-    tuna: 0,
-  };
-}
-
-export function normalizeFishInventory(value: unknown): FishInventory {
-  if (value && typeof value === "object") {
-    const candidate = value as Partial<Record<FishType, unknown>>;
-    if (
-      isValidFishCount(candidate.sardine) &&
-      isValidFishCount(candidate.mackerel) &&
-      isValidFishCount(candidate["sea-bream"]) &&
-      isValidFishCount(candidate.tuna)
-    ) {
-      return value as FishInventory;
-    }
-  }
-
-  const candidate = value && typeof value === "object"
-    ? value as Partial<Record<FishType, unknown>>
-    : {};
-  return {
-    sardine: normalizeFishCount(candidate.sardine),
-    mackerel: normalizeFishCount(candidate.mackerel),
-    "sea-bream": normalizeFishCount(candidate["sea-bream"]),
-    tuna: normalizeFishCount(candidate.tuna),
-  };
-}
-
-function isValidFishCount(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && Number.isInteger(value) && value >= 0;
-}
-
-function normalizeFishCount(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value)
-    ? Math.max(0, Math.floor(value))
-    : 0;
-}

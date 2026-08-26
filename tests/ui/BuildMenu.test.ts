@@ -47,6 +47,30 @@ describe("BuildMenu", () => {
     }
   });
 
+  it("鉱石工房はコインではなく必要な採掘素材を表示する", async () => {
+    useGameStore.setState({
+      game: createInitialGameState(0),
+      isBuildMenuOpen: true,
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(BuildMenu)));
+
+    const workshop = container.querySelector<HTMLButtonElement>('[data-building-id="ore-workshop"]');
+    expect(workshop).not.toBeNull();
+    expect(workshop?.querySelector(".building-cost")?.textContent).toContain("🟤8");
+    expect(workshop?.querySelector(".building-cost")?.textContent).toContain("⚙️5");
+    expect(workshop?.querySelector(".building-cost")?.textContent).toContain("🔷3");
+    expect(workshop?.querySelector('[aria-label="コイン 0"]')).toBeNull();
+    expect(workshop?.querySelector('[aria-label="銅 8"]')).not.toBeNull();
+    expect(workshop?.querySelector('[aria-label="鉄 5"]')).not.toBeNull();
+    expect(workshop?.querySelector('[aria-label="水晶 3"]')).not.toBeNull();
+
+    await act(async () => root.unmount());
+  });
+
   it("最初に畑を表示し、カテゴリで建築物を絞り込む", async () => {
     useGameStore.setState({
       game: {

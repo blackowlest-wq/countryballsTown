@@ -1,5 +1,10 @@
 import type { GameState } from "../types/Village";
 import { craftProduct, getCraftingMaxCraftable } from "./CraftingSystem";
+import { getProductsForStore } from "../data/productCatalog";
+import type { CraftingProductType } from "../types/Crafting";
+
+export const PIZZA_SHOP_PRODUCT_TYPES: readonly CraftingProductType[] =
+  getProductsForStore("pizza-shop");
 
 export type PizzaCraftOutcome =
   | "crafted"
@@ -15,19 +20,19 @@ export interface PizzaCraftResult {
 export interface PizzaRecipeCost {
   bacon: number;
   cheese: number;
-  tomatoes: number;
-  wheatFlour: number;
+  tomato: number;
+  "wheat-flour": number;
 }
 
 export const PIZZA_RECIPE: PizzaRecipeCost = {
   bacon: 1,
   cheese: 1,
-  tomatoes: 1,
-  wheatFlour: 2,
+  tomato: 1,
+  "wheat-flour": 2,
 };
 
-export function getPizzaMaxCraftable(state: Pick<GameState, keyof PizzaRecipeCost>): number {
-  return getCraftingMaxCraftable(state as GameState, "pizza");
+export function getPizzaMaxCraftable(state: GameState): number {
+  return getCraftingMaxCraftable(state, "pizza");
 }
 
 export function craftPizza(state: GameState, quantity: number): PizzaCraftResult {

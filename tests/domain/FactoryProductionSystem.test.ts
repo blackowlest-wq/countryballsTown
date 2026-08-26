@@ -6,6 +6,7 @@ import type {
   FactoryProductionRecord,
 } from "../../src/game/systems/FactoryProductionSystem";
 import { createFactoryProductionModule } from "../../src/game/systems/FactoryProductionSystem";
+import { withInventory } from "../inventoryFixture";
 
 type TestProductType = "alpha" | "beta";
 type TestProduction = FactoryProductionRecord<TestProductType>;
@@ -35,11 +36,10 @@ function withProductions(
   productions: TestProduction[],
   milk = 0,
 ): GameState {
-  return {
+  return withInventory({
     ...createInitialGameState(0),
-    milk,
     milkFactoryProductions: productions,
-  } as unknown as GameState;
+  } as GameState, { milk });
 }
 
 describe("FactoryProductionSystem", () => {
@@ -106,9 +106,7 @@ describe("FactoryProductionSystem", () => {
 
     const advanced = factoryModule.advance(state, 20_000);
     expect(advanced).toMatchObject({
-      milk: 0,
-      butter: 6,
-      cheese: 0,
+      inventory: { milk: 0, butter: 6, cheese: 0 },
       milkFactoryProductions: [
         { buildingInstanceId: "factory-1", productType: "alpha", nextProductionAt: 30_000 },
         { buildingInstanceId: "factory-2", productType: "beta", nextProductionAt: 0 },
@@ -122,14 +120,43 @@ describe("FactoryProductionSystem", () => {
     ]);
     expect(factoryModule.advance(waiting, 10_000)).toBe(waiting);
 
-    const resumed = factoryModule.advance({ ...waiting, milk: 1 }, 10_000);
+    const resumed = factoryModule.advance(withInventory(waiting, { milk: 1 }), 10_000);
     expect(resumed).toMatchObject({
-      milk: 0,
-      butter: 2,
+      inventory: { milk: 0, butter: 2 },
       milkFactoryProductions: [{
         buildingInstanceId: "factory-1",
         nextProductionAt: 20_000,
       }],
     });
+  });
+
+  it("工場インスタンスの生産速度強化を設定時刻とcatch-up間隔へ適用する", () => {
+    const state = {
+      ...withProductions([
+        { buildingInstanceId: "factory-1", productType: "alpha", nextProductionAt: 0 },
+      ], 2),
+      buildingUpgrades: { "factory-1": { "production-speed": 2 as const } },
+    };
+
+    const advanced = factoryModule.advance(state, 21_000);
+    expect(advanced).toMatchObject({
+      inventory: { milk: 0, butter: 4 },
+      milkFactoryProductions: [{
+        buildingInstanceId: "factory-1",
+        nextProductionAt: 14_000,
+      }],
+    });
+
+    const configured = factoryModule.configure(
+      { ...state, milkFactoryProductions: [{
+        buildingInstanceId: "factory-1",
+        productType: null,
+        nextProductionAt: null,
+      }] },
+      "factory-1",
+      "alpha",
+      1_000,
+    );
+    expect(configured.state.milkFactoryProductions[0].nextProductionAt).toBe(8_000);
   });
 });

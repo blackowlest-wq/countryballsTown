@@ -5,6 +5,7 @@ import { MAX_COINS } from "../../src/game/constants/gameConstants";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { SettingsPanel } from "../../src/ui/SettingsPanel";
+import type { BeforeInstallPromptEvent } from "../../src/ui/usePwaInstall";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -56,6 +57,10 @@ describe("SettingsPanel", () => {
     await act(async () => root.render(createElement(SettingsPanel, { open: true, onClose })));
 
     expect(container.querySelector(".settings-panel .bgm-toggle")).not.toBeNull();
+    const installButton = container.querySelector("[data-action='install-app']") as HTMLButtonElement;
+    expect(installButton).not.toBeNull();
+    expect(installButton.disabled).toBe(true);
+    expect(container.textContent).toContain("インストール候補が利用できません");
     expect(container.querySelector("[data-action='grant-max-coins']")).not.toBeNull();
     expect(container.textContent).toContain("上限の10,000");
 
@@ -75,6 +80,152 @@ describe("SettingsPanel", () => {
     });
     expect(useGameStore.getState().game.coins).toBe(100);
     expect(onClose).toHaveBeenCalledOnce();
+
+    await act(async () => root.unmount());
+  });
+
+  it("beforeinstallpromptを設定から実行し、インストール完了後は状態を表示する", async () => {
+    vi.stubGlobal("Audio", class {
+      public constructor() {
+        return new FakeAudioElement();
+      }
+    } as unknown as typeof Audio);
+    let resolveUserChoice: ((choice: { outcome: "accepted"; platform: string }) => void) | undefined;
+    const userChoice = new Promise<{ outcome: "accepted"; platform: string }>((resolve) => {
+      resolveUserChoice = resolve;
+    });
+    const prompt = vi.fn(() => Promise.resolve());
+    const beforeInstallPrompt = new Event("beforeinstallprompt", { cancelable: true }) as BeforeInstallPromptEvent;
+    Object.defineProperties(beforeInstallPrompt, {
+      prompt: { configurable: true, value: prompt },
+      userChoice: { configurable: true, value: userChoice },
+    });
+
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(createElement(SettingsPanel, { open: true, onClose: vi.fn() })));
+
+    await act(async () => {
+      window.dispatchEvent(beforeInstallPrompt);
+    });
+    const installButton = container.querySelector("[data-action='install-app']") as HTMLButtonElement;
+    expect(beforeInstallPrompt.defaultPrevented).toBe(true);
+    expect(installButton.disabled).toBe(false);
+    expect(container.textContent).toContain("このブラウザからアプリとして追加できます");
+
+    await act(async () => {
+      installButton.click();
+    });
+    expect(prompt).toHaveBeenCalledOnce();
+    expect(installButton.disabled).toBe(true);
+    expect(container.textContent).toContain("追加中…");
+
+    resolveUserChoice?.({ outcome: "accepted", platform: "webapp" });
+    await act(async () => {
+      await userChoice;
+    });
+    expect(container.textContent).toContain("インストール処理を確認しています");
+    expect(container.textContent).not.toContain("この端末にはインストール済みです");
+
+    await act(async () => {
+      window.dispatchEvent(new Event("appinstalled"));
+    });
+    expect(container.textContent).toContain("この端末にはインストール済みです");
+    expect(installButton.textContent).toContain("インストール済み");
+
+    await act(async () => root.unmount());
+  });
+
+  it("インストールをキャンセルすると追加中表示から戻り、再試行の案内を表示する", async () => {
+    vi.stubGlobal("Audio", class {
+      public constructor() {
+        return new FakeAudioElement();
+      }
+    } as unknown as typeof Audio);
+    const prompt = vi.fn(() => Promise.resolve());
+    const beforeInstallPrompt = new Event("beforeinstallprompt", { cancelable: true }) as BeforeInstallPromptEvent;
+    Object.defineProperties(beforeInstallPrompt, {
+      prompt: { configurable: true, value: prompt },
+      userChoice: {
+        configurable: true,
+        value: Promise.resolve({ outcome: "dismissed" as const, platform: "webapp" }),
+      },
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(createElement(SettingsPanel, { open: true, onClose: vi.fn() })));
+
+    await act(async () => window.dispatchEvent(beforeInstallPrompt));
+    const installButton = container.querySelector("[data-action='install-app']") as HTMLButtonElement;
+    await act(async () => installButton.click());
+
+    expect(prompt).toHaveBeenCalledOnce();
+    expect(installButton.disabled).toBe(true);
+    expect(container.textContent).not.toContain("追加中…");
+    expect(container.textContent).toContain("インストールはキャンセルされました");
+    expect(container.textContent).toContain("再読み込み後にもう一度お試しください");
+
+    await act(async () => root.unmount());
+  });
+
+  it("プロンプトが例外になっても追加中表示から戻り、再試行の案内を表示する", async () => {
+    vi.stubGlobal("Audio", class {
+      public constructor() {
+        return new FakeAudioElement();
+      }
+    } as unknown as typeof Audio);
+    const prompt = vi.fn(() => {
+      throw new Error("installation prompt is unavailable");
+    });
+    const beforeInstallPrompt = new Event("beforeinstallprompt", { cancelable: true }) as BeforeInstallPromptEvent;
+    Object.defineProperties(beforeInstallPrompt, {
+      prompt: { configurable: true, value: prompt },
+      userChoice: {
+        configurable: true,
+        value: Promise.resolve({ outcome: "accepted" as const, platform: "webapp" }),
+      },
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(createElement(SettingsPanel, { open: true, onClose: vi.fn() })));
+
+    await act(async () => window.dispatchEvent(beforeInstallPrompt));
+    const installButton = container.querySelector("[data-action='install-app']") as HTMLButtonElement;
+    await act(async () => installButton.click());
+
+    expect(prompt).toHaveBeenCalledOnce();
+    expect(installButton.disabled).toBe(true);
+    expect(container.textContent).not.toContain("追加中…");
+    expect(container.textContent).toContain("インストール候補が利用できません");
+    expect(container.textContent).toContain("再読み込み後にもう一度お試しください");
+
+    await act(async () => root.unmount());
+  });
+
+  it("standalone表示中はインストール済みとしてボタンを無効にする", async () => {
+    vi.stubGlobal("Audio", class {
+      public constructor() {
+        return new FakeAudioElement();
+      }
+    } as unknown as typeof Audio);
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(SettingsPanel, { open: true, onClose: vi.fn() })));
+
+    const installButton = container.querySelector("[data-action='install-app']") as HTMLButtonElement;
+    expect(installButton.disabled).toBe(true);
+    expect(installButton.textContent).toContain("インストール済み");
+    expect(container.textContent).toContain("この端末にはインストール済みです");
 
     await act(async () => root.unmount());
   });

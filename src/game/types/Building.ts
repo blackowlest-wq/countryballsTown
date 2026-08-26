@@ -1,4 +1,5 @@
 import type { CraftingProductType } from "./Crafting";
+import type { MiningResourceCost } from "./Mining";
 
 export type BuildingCategory = "building" | "nature";
 export type ResidentCollision = "blocking" | "passable";
@@ -29,6 +30,7 @@ export interface BuildingDefinition {
   width: number;
   height: number;
   cost: number;
+  miningCost?: MiningResourceCost;
   category: BuildingCategory;
   menuIcon: string;
   residentCollision: ResidentCollision;

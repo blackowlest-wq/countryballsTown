@@ -3,6 +3,7 @@ import type { ChickenProduction } from "../types/Chicken";
 import type { CowProduction } from "../types/Cow";
 import type { PigProduction } from "../types/Pig";
 import type { GameState } from "../types/Village";
+import { addInventory } from "./InventorySystem";
 
 export interface LivestockProductionRecord {
   buildingInstanceId: string;
@@ -113,11 +114,11 @@ export function createLivestockProductionModule<
           }
           : candidate
       );
+      const nextState = addInventory(state, definition.inventoryKey, definition.amount);
       return {
         outcome: "collected",
         state: {
-          ...state,
-          [definition.inventoryKey]: state[definition.inventoryKey] + definition.amount,
+          ...nextState,
           [definition.stateKey]: nextProductions,
         } as GameState,
       };

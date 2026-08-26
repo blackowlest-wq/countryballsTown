@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { placeBuilding } from "../../src/game/systems/BuildingSystem";
 import { useGameStore } from "../../src/store/gameStore";
+import { getInventoryCount } from "../../src/game/systems/InventorySystem";
 
 afterEach(() => {
   useGameStore.setState({
@@ -27,7 +28,7 @@ describe("pig store interaction", () => {
     const readyAt = placed.state.pigProductions[0].porkReadyAt;
 
     expect(useGameStore.getState().collectPigPork("pig-test", readyAt)).toBe("collected");
-    expect(useGameStore.getState().game.pork).toBe(2);
+    expect(getInventoryCount(useGameStore.getState().game, "pork")).toBe(2);
     expect(useGameStore.getState().game.buildings).toContainEqual({
       id: "pig-test",
       buildingId: "pig",

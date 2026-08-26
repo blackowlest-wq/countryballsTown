@@ -12,6 +12,15 @@ import { getBuildingDefinition } from "../data/buildings";
 import {
   getCraftedProductStock,
 } from "./CraftingSystem";
+import {
+  DEFAULT_VISITOR_COUNTRY_ID,
+  getProductSalePriceForVisitor,
+  selectDemandProduct,
+} from "./ProductDemandSystem";
+import {
+  getBuildingQueueCapacity,
+  getBuildingUpgradeServiceDuration,
+} from "./BuildingUpgradeSystem";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
 import type {
   CraftingProductSales,
@@ -83,6 +92,14 @@ function getShopProductTypes(shop: ActiveShop): readonly CraftingProductType[] {
   return service?.product ? [service.product] : [];
 }
 
+function getShopQueueCapacity(shop: ActiveShop, state: GameState): number {
+  return getBuildingQueueCapacity(
+    state,
+    shop.building.id,
+    shop.definition.visitorService?.queueCapacity ?? 0,
+  );
+}
+
 function getShopProductStock(
   shop: ActiveShop,
   state: GameState,
@@ -103,10 +120,20 @@ function getAvailableShopProduct(
   shop: ActiveShop,
   state: GameState,
   productsSold: CraftingProductSales,
+  visitor: ShopVisitor,
+  now: number,
+  random: RandomSource,
 ): CraftingProductType | null {
-  return getShopProductTypes(shop).find((productType) =>
+  const availableProducts = getShopProductTypes(shop).filter((productType) =>
     getCraftedProductStock(state, productType) - (productsSold[productType] ?? 0) > 0,
-  ) ?? null;
+  );
+  return selectDemandProduct(
+    availableProducts,
+    visitor.countryId ?? DEFAULT_VISITOR_COUNTRY_ID,
+    now,
+    random,
+    getShopProductTypes(shop),
+  );
 }
 
 function getShopFocus(shop: ActiveShop): GridPosition {
@@ -249,15 +276,26 @@ function beginLeaving(
 
 function createVisitor(
   shop: ActiveShop,
+  state: GameState,
   simulation: ShopVisitorSimulation,
   now: number,
   random: RandomSource,
 ): ShopVisitor {
-  const layout = getQueueLayout(shop, shop.definition.visitorService?.queueCapacity ?? 1);
+  const layout = getQueueLayout(shop, getShopQueueCapacity(shop, state));
   const position = getMapEdgePosition(layout, -0.65 + random() * 0.35);
+  const unlockedCountries = state.unlockedCountries.filter(
+    (countryId): countryId is string => typeof countryId === "string" && countryId.length > 0,
+  );
+  const countryId = unlockedCountries.length === 0
+    ? DEFAULT_VISITOR_COUNTRY_ID
+    : unlockedCountries[Math.min(
+      unlockedCountries.length - 1,
+      Math.floor(Math.min(0.999999999999, Math.max(0, random())) * unlockedCountries.length),
+    )] ?? DEFAULT_VISITOR_COUNTRY_ID;
   return {
     id: `visitor-${simulation.nextSequence}`,
     shopBuildingId: shop.building.id,
+    countryId,
     color: VISITOR_COLORS[Math.min(
       VISITOR_COLORS.length - 1,
       Math.floor(random() * VISITOR_COLORS.length),
@@ -298,11 +336,27 @@ export function advanceShopVisitors(
       if (productStock !== null && productStock <= 0) {
         return beginLeaving(visitor);
       }
-      const productType = getAvailableShopProduct(shop, state, productsSold);
+      const productType = getAvailableShopProduct(
+        shop,
+        state,
+        productsSold,
+        visitor,
+        now,
+        random,
+      );
       if (productStock !== null && !productType) return beginLeaving(visitor);
-      if (productType) productsSold[productType] = (productsSold[productType] ?? 0) + 1;
-      coinsEarned = roundCoins(coinsEarned + (shop.definition.visitorService?.saleCoins ?? 0));
-      const layout = getQueueLayout(shop, shop.definition.visitorService?.queueCapacity ?? 1);
+      if (productType) {
+        productsSold[productType] = (productsSold[productType] ?? 0) + 1;
+        coinsEarned = roundCoins(
+          coinsEarned + getProductSalePriceForVisitor(
+            productType,
+            visitor.countryId ?? DEFAULT_VISITOR_COUNTRY_ID,
+            now,
+            getShopProductTypes(shop),
+          ),
+        );
+      }
+      const layout = getQueueLayout(shop, getShopQueueCapacity(shop, state));
       return beginLeaving(visitor, getMapEdgePosition(layout, 1.25));
     }
     return visitor;
@@ -313,7 +367,7 @@ export function advanceShopVisitors(
       .filter((visitor) => visitor.shopBuildingId === shop.building.id && visitor.phase !== "leaving")
       .sort((left, right) => left.joinedAt - right.joinedAt || left.id.localeCompare(right.id));
     const productStock = getShopProductStock(shop, state, productsSold);
-    const queueCapacity = shop.definition.visitorService?.queueCapacity ?? 0;
+    const queueCapacity = getShopQueueCapacity(shop, state);
     const availableQueueCapacity = productStock === null
       ? queueCapacity
       : Math.min(queueCapacity, productStock);
@@ -356,7 +410,11 @@ export function advanceShopVisitors(
         visitor = {
           ...visitor,
           phase: "buying",
-          serviceUntil: now + SHOP_VISITOR_SERVICE_MS,
+          serviceUntil: now + getBuildingUpgradeServiceDuration(
+            state,
+            shop.building.id,
+            SHOP_VISITOR_SERVICE_MS,
+          ),
         };
         buyerAssigned = true;
       } else {
@@ -384,7 +442,7 @@ export function advanceShopVisitors(
         (visitor) => visitor.shopBuildingId === shop.building.id && visitor.phase !== "leaving",
       ).length;
       const productStock = getShopProductStock(shop, state, productsSold);
-      const queueCapacity = shop.definition.visitorService?.queueCapacity ?? 0;
+      const queueCapacity = getShopQueueCapacity(shop, state);
       const availableQueueCapacity = productStock === null
         ? queueCapacity
         : Math.min(queueCapacity, productStock);
@@ -395,7 +453,7 @@ export function advanceShopVisitors(
         availableShops.length - 1,
         Math.floor(random() * availableShops.length),
       )];
-      visitors = [...visitors, createVisitor(shop, simulation, now, random)];
+      visitors = [...visitors, createVisitor(shop, state, simulation, now, random)];
       nextSequence += 1;
       nextArrivalAt = now + randomBetween(
         SHOP_VISITOR_ARRIVAL_MIN_MS,

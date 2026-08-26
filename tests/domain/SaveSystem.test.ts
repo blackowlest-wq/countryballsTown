@@ -14,6 +14,7 @@ import {
   type StorageLike,
 } from "../../src/game/systems/SaveSystem";
 import { getLocalDateKey } from "../../src/utils/date";
+import { withInventory } from "../inventoryFixture";
 
 function memoryStorage(): StorageLike {
   const values = new Map<string, string>();
@@ -70,30 +71,13 @@ describe("SaveSystem", () => {
 
   it("ゲーム状態を保存して復元できる", () => {
     const storage = memoryStorage();
-    const original = {
+    const original = withInventory({
       ...createInitialGameState(0),
       coins: 321.4,
       villageLevel: 2,
       hasFishingRod: true,
       wheatSeeds: 4,
-      wheat: 4,
       tomatoSeeds: 3,
-      tomatoes: 2,
-      eggs: 7,
-      milk: 6,
-      pork: 5,
-      butter: 4,
-      cheese: 3,
-      ham: 2,
-      sausage: 4,
-      bacon: 1,
-      pizzas: 2,
-      fishInventory: {
-        sardine: 3,
-        mackerel: 2,
-        "sea-bream": 1,
-        tuna: 4,
-      },
       crops: [
         { type: "wheat" as const, gridX: 8, gridY: 8, plantedAt: 50 },
         { type: "tomato" as const, gridX: 10, gridY: 10, plantedAt: 60 },
@@ -122,16 +106,9 @@ describe("SaveSystem", () => {
         nextProductionAt: 30_000,
       }],
       residentRequestsStartedToday: 2,
-    };
-    saveGameState(original, storage);
-    expect(loadGameState(storage, 100)).toMatchObject({
-      coins: 321.4,
-      villageLevel: 2,
-      hasFishingRod: true,
-      wheatSeeds: 4,
+    }, {
       wheat: 4,
-      tomatoSeeds: 3,
-      tomatoes: 2,
+      tomato: 2,
       eggs: 7,
       milk: 6,
       pork: 5,
@@ -140,8 +117,31 @@ describe("SaveSystem", () => {
       ham: 2,
       sausage: 4,
       bacon: 1,
-      pizzas: 2,
-      fishInventory: {
+      pizza: 2,
+      sardine: 3,
+      mackerel: 2,
+      "sea-bream": 1,
+      tuna: 4,
+    });
+    saveGameState(original, storage);
+    expect(loadGameState(storage, 100)).toMatchObject({
+      coins: 321.4,
+      villageLevel: 2,
+      hasFishingRod: true,
+      wheatSeeds: 4,
+      tomatoSeeds: 3,
+      inventory: {
+        wheat: 4,
+        tomato: 2,
+        eggs: 7,
+        milk: 6,
+        pork: 5,
+        butter: 4,
+        cheese: 3,
+        ham: 2,
+        sausage: 4,
+        bacon: 1,
+        pizza: 2,
         sardine: 3,
         mackerel: 2,
         "sea-bream": 1,
@@ -231,13 +231,9 @@ describe("SaveSystem", () => {
     });
   });
 
-  it("作物情報がない旧セーブデータを移行する", () => {
+  it("作物情報がないcanonicalセーブデータは空の作物として読み込む", () => {
     const storage = memoryStorage();
     const {
-      wheatSeeds: _wheatSeeds,
-      wheat: _wheat,
-      tomatoSeeds: _tomatoSeeds,
-      tomatoes: _tomatoes,
       crops: _crops,
       ...legacyState
     } = createInitialGameState(0);
@@ -245,62 +241,53 @@ describe("SaveSystem", () => {
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
       wheatSeeds: INITIAL_WHEAT_SEEDS,
-      wheat: 0,
       tomatoSeeds: INITIAL_TOMATO_SEEDS,
-      tomatoes: 0,
+      inventory: { wheat: 0, tomato: 0 },
       crops: [],
     });
   });
 
-  it("小麦専用の旧セーブを共通作物へ移行し、トマトの種を5個追加する", () => {
+  it("canonical作物を保存して小麦の在庫と一緒に復元する", () => {
     const storage = memoryStorage();
-    const {
-      tomatoSeeds: _tomatoSeeds,
-      tomatoes: _tomatoes,
-      crops: _crops,
-      ...legacyState
-    } = createInitialGameState(0);
+    const state = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify({
-      ...legacyState,
+      ...state,
       wheatSeeds: 4,
-      wheat: 3,
-      wheatCrops: [{ gridX: 8, gridY: 8, plantedAt: 50 }],
+      inventory: { ...state.inventory, wheat: 3 },
+      crops: [{ type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 }],
       buildings: [
-        ...legacyState.buildings,
+        ...state.buildings,
         { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
       ],
     }));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
       wheatSeeds: 4,
-      wheat: 3,
       tomatoSeeds: INITIAL_TOMATO_SEEDS,
-      tomatoes: 0,
+      inventory: { wheat: 3, tomato: 0 },
       crops: [{ type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 }],
     });
   });
 
-  it("旧仕様の畑外作物を除き、失わないよう種として返す", () => {
+  it("畑外作物だけを除き、失わないよう種として返す", () => {
     const storage = memoryStorage();
-    const {
-      wheatSeeds: _wheatSeeds,
-      tomatoSeeds: _tomatoSeeds,
-      tomatoes: _tomatoes,
-      crops: _crops,
-      ...legacyState
-    } = createInitialGameState(0);
+    const state = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify({
-      ...legacyState,
-      wheatCrops: [
-        { gridX: 8, gridY: 8, plantedAt: 50 },
-        { gridX: 12, gridY: 12, plantedAt: 60 },
+      ...state,
+      crops: [
+        { type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 },
+        { type: "wheat", gridX: 12, gridY: 12, plantedAt: 60 },
+      ],
+      buildings: [
+        ...state.buildings,
+        { id: "field-test", buildingId: "field", gridX: 8, gridY: 8 },
       ],
     }));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
-      wheatSeeds: INITIAL_WHEAT_SEEDS + 2,
+      wheatSeeds: INITIAL_WHEAT_SEEDS + 1,
       tomatoSeeds: INITIAL_TOMATO_SEEDS,
-      crops: [],
+      crops: [{ type: "wheat", gridX: 8, gridY: 8, plantedAt: 50 }],
     });
   });
 
@@ -318,48 +305,48 @@ describe("SaveSystem", () => {
     });
   });
 
-  it("牛乳情報がない旧セーブデータを移行する", () => {
+  it("inventoryがない旧セーブデータは牛乳を含む初期在庫へ戻す", () => {
     const storage = memoryStorage();
     const {
-      milk: _milk,
+      inventory: _inventory,
       cowProductions: _cowProductions,
       ...legacyState
     } = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
-      milk: 0,
+      inventory: { milk: 0 },
       cowProductions: [],
     });
   });
 
-  it("卵情報がない旧セーブデータを移行する", () => {
+  it("inventoryがない旧セーブデータは卵を含む初期在庫へ戻す", () => {
     const storage = memoryStorage();
     const {
-      eggs: _eggs,
+      inventory: _inventory,
       chickenProductions: _chickenProductions,
       ...legacyState
     } = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
-      eggs: 0,
+      inventory: { eggs: 0 },
       chickenProductions: [],
     });
   });
 
-  it("米情報がない旧セーブデータを移行する", () => {
+  it("inventoryがない旧セーブデータは米を含む初期在庫へ戻す", () => {
     const storage = memoryStorage();
     const {
       riceSeeds: _riceSeeds,
-      rice: _rice,
+      inventory: _inventory,
       ...legacyState
     } = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
       riceSeeds: INITIAL_RICE_SEEDS,
-      rice: 0,
+      inventory: { rice: 0 },
     });
   });
 
@@ -387,17 +374,10 @@ describe("SaveSystem", () => {
     expect(loadGameState(storage, 1_000).hasFishingRod).toBe(false);
   });
 
-  it("加工物情報がない旧セーブデータを0個へ移行する", () => {
+  it("inventoryがない旧セーブデータは加工物を含む初期在庫へ戻す", () => {
     const storage = memoryStorage();
     const {
-      milk: _milk,
-      pork: _pork,
-      butter: _butter,
-      cheese: _cheese,
-      ham: _ham,
-      sausage: _sausage,
-      bacon: _bacon,
-      pizzas: _pizzas,
+      inventory: _inventory,
       milkFactoryProductions: _milkFactoryProductions,
       pigProductions: _pigProductions,
       porkFactoryProductions: _porkFactoryProductions,
@@ -406,32 +386,32 @@ describe("SaveSystem", () => {
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
-      milk: 0,
-      pork: 0,
-      butter: 0,
-      cheese: 0,
-      ham: 0,
-      sausage: 0,
-      bacon: 0,
-      pizzas: 0,
+      inventory: {
+        milk: 0,
+        pork: 0,
+        butter: 0,
+        cheese: 0,
+        ham: 0,
+        sausage: 0,
+        bacon: 0,
+        pizza: 0,
+      },
       milkFactoryProductions: [],
       pigProductions: [],
       porkFactoryProductions: [],
     });
   });
 
-  it("魚料理情報がない旧セーブデータを0個へ移行する", () => {
+  it("inventoryがない旧セーブデータは魚料理を含む初期在庫へ戻す", () => {
     const storage = memoryStorage();
     const {
-      grilledFish: _grilledFish,
-      seafoodBowls: _seafoodBowls,
+      inventory: _inventory,
       ...legacyState
     } = createInitialGameState(0);
     storage.setItem("world-small-village:save:v1", JSON.stringify(legacyState));
 
     expect(loadGameState(storage, 1_000)).toMatchObject({
-      grilledFish: 0,
-      seafoodBowls: 0,
+      inventory: { "grilled-fish": 0, "seafood-bowl": 0 },
     });
   });
 

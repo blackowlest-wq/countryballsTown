@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { placeBuilding } from "../../src/game/systems/BuildingSystem";
 import { useGameStore } from "../../src/store/gameStore";
+import { getInventoryCount } from "../../src/game/systems/InventorySystem";
 
 afterEach(() => {
   useGameStore.setState({
@@ -26,7 +27,7 @@ describe("cow store interaction", () => {
     const readyAt = placed.state.cowProductions[0].milkReadyAt;
 
     expect(useGameStore.getState().collectCowMilk("cow-test", readyAt)).toBe("collected");
-    expect(useGameStore.getState().game.milk).toBe(2);
+    expect(getInventoryCount(useGameStore.getState().game, "milk")).toBe(2);
     expect(useGameStore.getState().notice).toBe("牛乳を2個しぼりました！");
   });
 });

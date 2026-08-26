@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { BakeryPanel } from "../../src/ui/BakeryPanel";
+import { withInventory } from "../inventoryFixture";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -23,12 +24,10 @@ afterEach(() => {
 describe("BakeryPanel", () => {
   it("パン屋で商品を選び、共通の加工処理で作れる", async () => {
     useGameStore.setState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         buildings: [{ id: "bakery-test", buildingId: "bakery", gridX: 8, gridY: 8 }],
-        wheatFlour: 2,
-        butter: 1,
-      },
+      }, { "wheat-flour": 2, butter: 1 }),
       bakeryPanelBuildingId: "bakery-test",
     });
     const container = document.createElement("div");
@@ -55,9 +54,7 @@ describe("BakeryPanel", () => {
     });
 
     expect(useGameStore.getState().game).toMatchObject({
-      wheatFlour: 0,
-      butter: 0,
-      croissants: 1,
+      inventory: { "wheat-flour": 0, butter: 0, croissant: 1 },
     });
     await act(async () => root.unmount());
   });

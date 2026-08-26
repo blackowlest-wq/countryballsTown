@@ -3,16 +3,18 @@ import type { MilkFactoryProductType } from "../types/MilkFactory";
 import type { PorkFactoryProductType } from "../types/PorkFactory";
 import type { WheatFactoryProductType } from "../types/WheatFactory";
 import type { GameState } from "../types/Village";
+import type { InventoryItemId } from "../types/Inventory";
+import {
+  getInventoryCount,
+  setInventoryCount,
+} from "./InventorySystem";
+import { getBuildingProductionInterval } from "./BuildingUpgradeSystem";
 
-type NumericGameStateKey = {
-  [Key in keyof GameState]-?: GameState[Key] extends number ? Key : never;
-}[keyof GameState] & string;
-
-export type FactoryInputKey = Extract<NumericGameStateKey, "milk" | "pork" | "wheat">;
+export type FactoryInputKey = Extract<InventoryItemId, "milk" | "pork" | "wheat">;
 
 export type FactoryOutputKey = Extract<
-  NumericGameStateKey,
-  "butter" | "cheese" | "ham" | "sausage" | "bacon" | "wheatFlour"
+  InventoryItemId,
+  "butter" | "cheese" | "ham" | "sausage" | "bacon" | "wheat-flour"
 >;
 
 export interface FactoryProductionRecord<ProductType extends string = string> {
@@ -49,7 +51,7 @@ export type FactoryOutputKeyFor<ProductType extends string> =
       ProductType extends "ham" ? "ham" :
         ProductType extends "sausage" ? "sausage" :
           ProductType extends "bacon" ? "bacon" :
-            ProductType extends "wheat-flour" ? "wheatFlour" :
+    ProductType extends "wheat-flour" ? "wheat-flour" :
               FactoryOutputKey;
 
 export type FactoryProductDefinition<ProductType extends string> =
@@ -242,7 +244,11 @@ export function createFactoryProductionModule<ProductType extends string>(
               ? {
                 ...production,
                 productType,
-                nextProductionAt: now + definition.intervalMs,
+                nextProductionAt: now + getBuildingProductionInterval(
+                  state,
+                  buildingInstanceId,
+                  definition.intervalMs,
+                ),
               }
               : production
           ),
@@ -254,7 +260,7 @@ export function createFactoryProductionModule<ProductType extends string>(
 
     advance: (state, now) => {
       const productions = getProductions(state, definition);
-      let input = state[definition.inputKey];
+      let input = getInventoryCount(state, definition.inputKey);
       const outputChanges: Partial<Record<FactoryOutputKey, number>> = {};
       let changed = false;
       const nextProductions = productions.map((production) => {
@@ -267,14 +273,19 @@ export function createFactoryProductionModule<ProductType extends string>(
         ) ?? definition.products[definition.products.length - 1];
         if (!product) return production;
 
+        const intervalMs = getBuildingProductionInterval(
+          state,
+          production.buildingInstanceId,
+          definition.intervalMs,
+        );
         let nextProductionAt = production.nextProductionAt;
         let produced = false;
         while (nextProductionAt <= now && input >= definition.inputAmount) {
           input -= definition.inputAmount;
           outputChanges[product.outputKey] =
-            (outputChanges[product.outputKey] ?? state[product.outputKey]) +
+            (outputChanges[product.outputKey] ?? getInventoryCount(state, product.outputKey)) +
             definition.productAmount;
-          nextProductionAt += definition.intervalMs;
+          nextProductionAt += intervalMs;
           produced = true;
         }
         if (!produced) return production;
@@ -282,14 +293,18 @@ export function createFactoryProductionModule<ProductType extends string>(
         return { ...production, nextProductionAt };
       });
 
-      return changed
-        ? {
-          ...state,
-          [definition.inputKey]: input,
-          ...outputChanges,
-          [definition.stateKey]: nextProductions,
-        } as GameState
-        : state;
+      if (!changed) return state;
+      let nextState = setInventoryCount(state, definition.inputKey, input);
+      for (const [outputKey, amount] of Object.entries(outputChanges) as Array<[
+        FactoryOutputKey,
+        number,
+      ]>) {
+        nextState = setInventoryCount(nextState, outputKey, amount);
+      }
+      return {
+        ...nextState,
+        [definition.stateKey]: nextProductions,
+      } as GameState;
     },
 
     normalize,

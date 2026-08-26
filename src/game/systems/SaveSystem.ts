@@ -13,17 +13,18 @@ import type { ActiveResidentRequest } from "../types/ResidentRequest";
 import type { GameState } from "../types/Village";
 import { getLocalDateKey } from "../../utils/date";
 import { isCellInField, normalizeCrops } from "./CropSystem";
-import { normalizeFishInventory } from "../data/fish";
 import { normalizeMiningInventory } from "../data/mining";
 import { isMapId } from "./MapSystem";
 import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
 import { normalizeCaveMiningState } from "./CaveMiningSystem";
 import { normalizeProductionCollections } from "./ProductionRegistry";
 import { normalizeCoinBalance } from "./EconomySystem";
-
-interface LegacyCropState {
-  wheatCrops?: unknown;
-}
+import {
+  isCanonicalInventory,
+  normalizeInventory,
+} from "./InventorySystem";
+import { normalizeMarketOrders } from "./MarketOrderSystem";
+import { normalizeBuildingUpgrades } from "./BuildingUpgradeSystem";
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -36,10 +37,14 @@ function isGameState(value: unknown): value is GameState {
   return (
     typeof candidate.coins === "number" &&
     typeof candidate.villageLevel === "number" &&
+    isCanonicalInventory(candidate.inventory) &&
     Array.isArray(candidate.residents) &&
     Array.isArray(candidate.buildings) &&
     Array.isArray(candidate.unlockedCountries) &&
-    Array.isArray(candidate.unlockedBuildings)
+    Array.isArray(candidate.unlockedBuildings) &&
+    Array.isArray(candidate.marketOrders) &&
+    typeof candidate.marketOrderSequence === "number" &&
+    candidate.buildingUpgrades !== undefined
   );
 }
 
@@ -59,6 +64,12 @@ function getBrowserStorage(): StorageLike | undefined {
   return window.localStorage;
 }
 
+function normalizeStoredSeed(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, Math.floor(value))
+    : fallback;
+}
+
 export function prepareGameStateForSave(
   state: GameState,
   now = Date.now(),
@@ -73,31 +84,38 @@ export function prepareGameStateForSave(
     porkFactoryProductions: state.porkFactoryProductions,
     wheatFactoryProductions: state.wheatFactoryProductions,
   }, buildings, now);
-  const fishInventory = normalizeFishInventory(state.fishInventory);
+  const inventory = normalizeInventory(state.inventory);
   const miningInventory = normalizeMiningInventory(state.miningInventory);
   const caveMining = normalizeCaveMiningState(state.caveMining);
+  const marketOrders = normalizeMarketOrders(
+    state.marketOrders,
+    state.marketOrderSequence,
+    state,
+  );
+  const buildingUpgrades = normalizeBuildingUpgrades(state.buildingUpgrades, buildings);
   const normalizedState = syncEncyclopediaCollection({
     ...state,
     coins: normalizeCoinBalance(state.coins),
     buildings,
     crops,
-    fishInventory,
+    inventory,
     miningInventory,
     caveMining,
+    ...marketOrders,
+    buildingUpgrades,
     hasFishingRod: state.hasFishingRod === true,
   });
-  const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = (
-    normalizedState as GameState & LegacyCropState
-  );
   return {
-    ...stateWithoutLegacyCrops,
+    ...normalizedState,
     coins: normalizedState.coins,
     buildings,
     crops,
     ...productionCollections,
-    fishInventory,
+    inventory,
     miningInventory,
     caveMining,
+    ...marketOrders,
+    buildingUpgrades,
     hasFishingRod: normalizedState.hasFishingRod,
     encyclopediaCollectedIds: normalizedState.encyclopediaCollectedIds,
     lastSavedAt: now,
@@ -134,7 +152,10 @@ export function loadGameState(
     const raw = storage.getItem(SAVE_KEY);
     if (!raw) return createInitialGameState(now);
     const parsed: unknown = JSON.parse(raw);
+    // Old scalar saves intentionally start a fresh game. This keeps the
+    // canonical inventory shape unambiguous during the current test phase.
     if (!isGameState(parsed)) return createInitialGameState(now);
+
     const activeResidentRequest = isActiveResidentRequest(parsed.activeResidentRequest)
       ? parsed.activeResidentRequest
       : null;
@@ -150,12 +171,7 @@ export function loadGameState(
         ? 1
         : 0;
     const buildings = createBuildingCollection(parsed.buildings).buildings;
-    const legacyParsed = parsed as GameState & LegacyCropState;
-    const hasCurrentCrops = Array.isArray(parsed.crops);
-    const normalizedCrops = normalizeCrops(
-      hasCurrentCrops ? parsed.crops : legacyParsed.wheatCrops,
-      hasCurrentCrops ? undefined : "wheat",
-    );
+    const normalizedCrops = normalizeCrops(parsed.crops);
     const crops = normalizedCrops.filter((crop) =>
       isCellInField(buildings, crop.gridX, crop.gridY)
     );
@@ -163,115 +179,35 @@ export function loadGameState(
     const refundedWheatSeeds = discardedCrops.filter((crop) => crop.type === "wheat").length;
     const refundedTomatoSeeds = discardedCrops.filter((crop) => crop.type === "tomato").length;
     const refundedRiceSeeds = discardedCrops.filter((crop) => crop.type === "rice").length;
-    const storedWheatSeeds =
-      typeof parsed.wheatSeeds === "number" && Number.isFinite(parsed.wheatSeeds)
-        ? Math.max(0, Math.floor(parsed.wheatSeeds))
-        : INITIAL_WHEAT_SEEDS;
-    const storedTomatoSeeds =
-      typeof parsed.tomatoSeeds === "number" && Number.isFinite(parsed.tomatoSeeds)
-        ? Math.max(0, Math.floor(parsed.tomatoSeeds))
-        : INITIAL_TOMATO_SEEDS;
-    const storedRiceSeeds =
-      typeof parsed.riceSeeds === "number" && Number.isFinite(parsed.riceSeeds)
-        ? Math.max(0, Math.floor(parsed.riceSeeds))
-        : INITIAL_RICE_SEEDS;
-    const { wheatCrops: _legacyWheatCrops, ...stateWithoutLegacyCrops } = legacyParsed;
+    const storedWheatSeeds = normalizeStoredSeed(parsed.wheatSeeds, INITIAL_WHEAT_SEEDS);
+    const storedTomatoSeeds = normalizeStoredSeed(parsed.tomatoSeeds, INITIAL_TOMATO_SEEDS);
+    const storedRiceSeeds = normalizeStoredSeed(parsed.riceSeeds, INITIAL_RICE_SEEDS);
+    const unlockedBuildings = [
+      ...new Set([
+        ...parsed.unlockedBuildings,
+        ...getUnlockedBuildingIdsForLevel(parsed.villageLevel),
+      ]),
+    ];
+    const marketOrders = normalizeMarketOrders(
+      parsed.marketOrders,
+      parsed.marketOrderSequence,
+      { unlockedBuildings },
+    );
+    const buildingUpgrades = normalizeBuildingUpgrades(parsed.buildingUpgrades, buildings);
     const loadedState: GameState = {
-      ...stateWithoutLegacyCrops,
+      ...parsed,
       coins: normalizeCoinBalance(parsed.coins),
       wheatSeeds: storedWheatSeeds + refundedWheatSeeds,
-      wheat:
-        typeof parsed.wheat === "number" && Number.isFinite(parsed.wheat)
-          ? Math.max(0, Math.floor(parsed.wheat))
-          : 0,
       tomatoSeeds: storedTomatoSeeds + refundedTomatoSeeds,
-      tomatoes:
-        typeof parsed.tomatoes === "number" && Number.isFinite(parsed.tomatoes)
-          ? Math.max(0, Math.floor(parsed.tomatoes))
-          : 0,
       riceSeeds: storedRiceSeeds + refundedRiceSeeds,
-      rice:
-        typeof parsed.rice === "number" && Number.isFinite(parsed.rice)
-          ? Math.max(0, Math.floor(parsed.rice))
-          : 0,
       crops,
-      eggs:
-        typeof parsed.eggs === "number" && Number.isFinite(parsed.eggs)
-          ? Math.max(0, Math.floor(parsed.eggs))
-          : 0,
-      milk:
-        typeof parsed.milk === "number" && Number.isFinite(parsed.milk)
-          ? Math.max(0, Math.floor(parsed.milk))
-          : 0,
-      pork:
-        typeof parsed.pork === "number" && Number.isFinite(parsed.pork)
-          ? Math.max(0, Math.floor(parsed.pork))
-          : 0,
-      wheatFlour:
-        typeof parsed.wheatFlour === "number" && Number.isFinite(parsed.wheatFlour)
-          ? Math.max(0, Math.floor(parsed.wheatFlour))
-          : 0,
-      butter:
-        typeof parsed.butter === "number" && Number.isFinite(parsed.butter)
-          ? Math.max(0, Math.floor(parsed.butter))
-          : 0,
-      cheese:
-        typeof parsed.cheese === "number" && Number.isFinite(parsed.cheese)
-          ? Math.max(0, Math.floor(parsed.cheese))
-          : 0,
-      ham:
-        typeof parsed.ham === "number" && Number.isFinite(parsed.ham)
-          ? Math.max(0, Math.floor(parsed.ham))
-          : 0,
-      sausage:
-        typeof parsed.sausage === "number" && Number.isFinite(parsed.sausage)
-          ? Math.max(0, Math.floor(parsed.sausage))
-          : 0,
-      bacon:
-        typeof parsed.bacon === "number" && Number.isFinite(parsed.bacon)
-          ? Math.max(0, Math.floor(parsed.bacon))
-          : 0,
-      pizzas:
-        typeof parsed.pizzas === "number" && Number.isFinite(parsed.pizzas)
-          ? Math.max(0, Math.floor(parsed.pizzas))
-          : 0,
-      bread:
-        typeof parsed.bread === "number" && Number.isFinite(parsed.bread)
-          ? Math.max(0, Math.floor(parsed.bread))
-          : 0,
-      hotDogs:
-        typeof parsed.hotDogs === "number" && Number.isFinite(parsed.hotDogs)
-          ? Math.max(0, Math.floor(parsed.hotDogs))
-          : 0,
-      croissants:
-        typeof parsed.croissants === "number" && Number.isFinite(parsed.croissants)
-          ? Math.max(0, Math.floor(parsed.croissants))
-          : 0,
-      hamSandwiches:
-        typeof parsed.hamSandwiches === "number" && Number.isFinite(parsed.hamSandwiches)
-          ? Math.max(0, Math.floor(parsed.hamSandwiches))
-          : 0,
-      onigiri:
-        typeof parsed.onigiri === "number" && Number.isFinite(parsed.onigiri)
-          ? Math.max(0, Math.floor(parsed.onigiri))
-          : 0,
-      omurice:
-        typeof parsed.omurice === "number" && Number.isFinite(parsed.omurice)
-          ? Math.max(0, Math.floor(parsed.omurice))
-          : 0,
-      grilledFish:
-        typeof parsed.grilledFish === "number" && Number.isFinite(parsed.grilledFish)
-          ? Math.max(0, Math.floor(parsed.grilledFish))
-          : 0,
-      seafoodBowls:
-        typeof parsed.seafoodBowls === "number" && Number.isFinite(parsed.seafoodBowls)
-          ? Math.max(0, Math.floor(parsed.seafoodBowls))
-          : 0,
-      fishInventory: normalizeFishInventory(parsed.fishInventory),
+      inventory: normalizeInventory(parsed.inventory),
       miningInventory: normalizeMiningInventory(parsed.miningInventory),
       caveMining: normalizeCaveMiningState(parsed.caveMining),
+      buildingUpgrades,
       hasFishingRod: parsed.hasFishingRod === true,
       currentMap: isMapId(parsed.currentMap) ? parsed.currentMap : "village",
+      ...marketOrders,
       ...normalizeProductionCollections({
         cowProductions: parsed.cowProductions,
         pigProductions: parsed.pigProductions,
@@ -281,12 +217,7 @@ export function loadGameState(
         wheatFactoryProductions: parsed.wheatFactoryProductions,
       }, buildings, now),
       buildings,
-      unlockedBuildings: [
-        ...new Set([
-          ...parsed.unlockedBuildings,
-          ...getUnlockedBuildingIdsForLevel(parsed.villageLevel),
-        ]),
-      ],
+      unlockedBuildings,
       activeResidentRequest,
       nextResidentRequestAt:
         typeof parsed.nextResidentRequestAt === "number"

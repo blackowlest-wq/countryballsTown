@@ -5,6 +5,8 @@ export type ShopVisitorPhase = "arriving" | "waiting" | "buying" | "leaving";
 export interface ShopVisitor {
   id: string;
   shopBuildingId: string;
+  /** Country assigned when the visitor enters the village. */
+  countryId?: string;
   color: string;
   position: GridPosition;
   destination: GridPosition;

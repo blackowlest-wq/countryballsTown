@@ -9,11 +9,15 @@ import {
   getCraftingProductUnit,
   getCraftingRecipe,
 } from "../game/systems/CraftingSystem";
+import { getFoodProductDefinition } from "../game/data/productCatalog";
+import { getDailyPopularProduct } from "../game/systems/ProductDemandSystem";
+import { getCountryDefinition } from "../game/data/countries";
 import type {
   CraftingIngredientKey,
   CraftingProductType,
 } from "../game/types/Crafting";
 import { useGameStore } from "../store/gameStore";
+import { UpgradeControls } from "./UpgradeControls";
 
 interface CraftingShopPanelProps {
   buildingId: string | null;
@@ -41,6 +45,7 @@ export function CraftingShopPanel({
   const [selectedProduct, setSelectedProduct] = useState<CraftingProductType>(products[0]);
   const [quantity, setQuantity] = useState(1);
   const [confirming, setConfirming] = useState(false);
+  const dailyPopular = getDailyPopularProduct(products, Date.now());
   const productName = getCraftingProductName(selectedProduct);
   const productUnit = getCraftingProductUnit(selectedProduct);
   const maxCraftable = getCraftingMaxCraftable(game, selectedProduct);
@@ -98,7 +103,20 @@ export function CraftingShopPanel({
             <span className="factory-product-icon" aria-hidden="true">
               {getCraftingProductIcon(productType)}
             </span>
-            <span>{getCraftingProductName(productType)}</span>
+            <span className="crafting-product-copy">
+              <strong>{getCraftingProductName(productType)}</strong>
+              <small>💰 {getFoodProductDefinition(productType).basePrice}コイン</small>
+              {getFoodProductDefinition(productType).favoriteCountries.length > 0 && (
+                <small className="crafting-product-favorites">
+                  好物：{getFoodProductDefinition(productType).favoriteCountries.map((countryId) =>
+                    getCountryDefinition(countryId)?.flagEmoji ?? countryId,
+                  ).join(" ")}
+                </small>
+              )}
+              {dailyPopular === productType && (
+                <small className="crafting-product-popular">本日の人気</small>
+              )}
+            </span>
           </button>
         ))}
       </div>
@@ -196,6 +214,10 @@ export function CraftingShopPanel({
           材料を確認する
         </button>
       )}
+      <UpgradeControls
+        buildingId={buildingId}
+        upgradeTypes={["sale-speed", "queue-capacity"]}
+      />
     </section>
   );
 }

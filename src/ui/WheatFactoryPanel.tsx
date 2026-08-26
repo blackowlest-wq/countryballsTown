@@ -1,6 +1,7 @@
 import { getWheatFactoryProductName } from "../game/systems/WheatFactorySystem";
 import type { WheatFactoryProductType } from "../game/types/WheatFactory";
 import { useGameStore } from "../store/gameStore";
+import { UpgradeControls } from "./UpgradeControls";
 
 const products: Array<{ type: WheatFactoryProductType; icon: string }> = [
   { type: "wheat-flour", icon: "🌾" },
@@ -44,6 +45,7 @@ export function WheatFactoryPanel(): JSX.Element | null {
           </button>
         ))}
       </div>
+      <UpgradeControls buildingId={buildingId} upgradeTypes={["production-speed"]} />
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { FishShopPanel } from "../../src/ui/FishShopPanel";
+import { withInventory } from "../inventoryFixture";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -22,16 +23,10 @@ afterEach(() => {
 describe("FishShopPanel", () => {
   it("焼き魚と海鮮丼を選び、魚の材料を確認して作れる", async () => {
     useGameStore.setState({
-      game: {
+      game: withInventory({
         ...createInitialGameState(0),
         buildings: [{ id: "fish-shop-test", buildingId: "fish-shop", gridX: 8, gridY: 8 }],
-        fishInventory: {
-          sardine: 1,
-          mackerel: 1,
-          "sea-bream": 1,
-          tuna: 1,
-        },
-      },
+      }, { sardine: 1, mackerel: 1, "sea-bream": 1, tuna: 1 }),
       fishShopPanelBuildingId: "fish-shop-test",
     });
     const container = document.createElement("div");
@@ -63,8 +58,8 @@ describe("FishShopPanel", () => {
     });
 
     expect(useGameStore.getState().game).toMatchObject({
-      seafoodBowls: 1,
-      fishInventory: {
+      inventory: {
+        "seafood-bowl": 1,
         sardine: 1,
         mackerel: 0,
         "sea-bream": 0,

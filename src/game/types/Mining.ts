@@ -13,6 +13,9 @@ export type MiningResourceCategory = "mineral" | "fossil" | "artifact" | "cave-l
 
 export type MiningInventory = Record<MiningResourceType, number>;
 
+/** A sparse cost expressed in mined resource units. */
+export type MiningResourceCost = Partial<Record<MiningResourceType, number>>;
+
 export interface CavePosition {
   x: number;
   depth: number;

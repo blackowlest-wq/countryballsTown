@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { useGameStore } from "../../src/store/gameStore";
 import { GameHud } from "../../src/ui/GameHud";
+import { withInventory } from "../inventoryFixture";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -16,15 +17,12 @@ afterEach(() => {
 describe("GameHud", () => {
   it("右上に魚の合計数を表示しない", async () => {
     useGameStore.setState({
-      game: {
-        ...createInitialGameState(0),
-        fishInventory: {
-          sardine: 2,
-          mackerel: 1,
-          "sea-bream": 1,
-          tuna: 3,
-        },
-      },
+      game: withInventory(createInitialGameState(0), {
+        sardine: 2,
+        mackerel: 1,
+        "sea-bream": 1,
+        tuna: 3,
+      }),
     });
     const container = document.createElement("div");
     document.body.append(container);

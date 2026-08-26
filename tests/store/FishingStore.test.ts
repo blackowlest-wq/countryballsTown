@@ -60,7 +60,7 @@ describe("fishing store interaction", () => {
     useGameStore.getState().recordFishCatch("tuna");
     useGameStore.getState().recordFishCatch("tuna");
 
-    expect(useGameStore.getState().game.fishInventory).toEqual({
+    expect(useGameStore.getState().game.inventory).toMatchObject({
       sardine: 0,
       mackerel: 0,
       "sea-bream": 0,

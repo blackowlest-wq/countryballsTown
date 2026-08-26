@@ -37,6 +37,7 @@ import {
   getCraftingProductName,
 } from "../game/systems/CraftingSystem";
 import { BAKERY_PRODUCT_TYPES } from "../game/systems/BakerySystem";
+import { PIZZA_SHOP_PRODUCT_TYPES } from "../game/systems/PizzaSystem";
 import { RICE_SHOP_PRODUCT_TYPES } from "../game/systems/RiceShopSystem";
 import { FISH_SHOP_PRODUCT_TYPES } from "../game/systems/FishShopSystem";
 import {
@@ -49,6 +50,7 @@ import {
 import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/VillageProgressSystem";
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { getMapDefinition } from "../game/data/maps";
+import { getBuildingDefinition } from "../game/data/buildings";
 import { getMiningResourceDefinition } from "../game/data/mining";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
@@ -81,6 +83,19 @@ import {
 } from "../game/systems/CaveMiningSystem";
 import type { DigDirection } from "../game/types/Mining";
 import { MAX_COINS } from "../game/constants/gameConstants";
+import { addInventory, getInventoryCount } from "../game/systems/InventorySystem";
+import {
+  fulfillMarketOrder,
+} from "../game/systems/MarketOrderSystem";
+import {
+  upgradeBuilding,
+} from "../game/systems/BuildingUpgradeSystem";
+import {
+  getFoodProductDefinition,
+  getProductDefinition,
+} from "../game/data/productCatalog";
+import type { BuildingUpgradeType } from "../game/types/BuildingUpgrade";
+import type { MarketOrderItem } from "../game/types/MarketOrder";
 
 export type InteractionMode = "inspect" | "build" | "move" | "farm";
 
@@ -106,6 +121,7 @@ interface GameStore {
   isFishingPromptOpen: boolean;
   isFishingGameOpen: boolean;
   isCaveMiningGameOpen: boolean;
+  isMarketOrderOpen: boolean;
   notice: string | null;
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
@@ -122,10 +138,14 @@ interface GameStore {
   recordFishCatch: (fishType: FishType) => void;
   openCaveMiningGame: () => boolean;
   closeCaveMiningGame: () => void;
+  openMarketOrderBoard: () => void;
+  closeMarketOrderBoard: () => void;
+  fulfillMarketOrder: (orderId: string) => boolean;
   digCave: (direction: DigDirection) => CaveDigOutcome | null;
   resetCaveMining: () => boolean;
   purchaseCaveFuel: () => boolean;
   upgradeCave: (kind: CaveUpgradeKind) => boolean;
+  upgradeBuilding: (buildingInstanceId: string, upgradeType: BuildingUpgradeType) => boolean;
   travelToMap: (mapId: MapId, now?: number) => void;
   beginBuild: (buildingId: string) => void;
   beginMove: (buildingId: string) => void;
@@ -241,6 +261,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   isFishingPromptOpen: false,
   isFishingGameOpen: false,
   isCaveMiningGameOpen: false,
+  isMarketOrderOpen: false,
   notice: null,
 
   tick: (deltaMs, now) => {
@@ -267,6 +288,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
+      isMarketOrderOpen: false,
     }
     : { isBuildMenuOpen: false }),
   setResidentPanelOpen: (open) => set(open
@@ -277,6 +299,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
+      isMarketOrderOpen: false,
     }
     : { isResidentPanelOpen: false }),
 
@@ -298,6 +321,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
     isCaveMiningGameOpen: false,
+    isMarketOrderOpen: false,
     notice: null,
   }),
 
@@ -321,6 +345,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
     isCaveMiningGameOpen: false,
+    isMarketOrderOpen: false,
     notice: null,
   }),
 
@@ -344,6 +369,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isFishingPromptOpen: true,
     isFishingGameOpen: false,
     isCaveMiningGameOpen: false,
+    isMarketOrderOpen: false,
     notice: null,
   }),
 
@@ -379,12 +405,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   recordFishCatch: (fishType) => {
     const current = get();
-    const fishInventory = {
-      ...current.game.fishInventory,
-      [fishType]: (current.game.fishInventory?.[fishType] ?? 0) + 1,
-    };
     set({
-      game: persist({ ...current.game, fishInventory }),
+      game: persist(addInventory(current.game, fishType, 1)),
       notice: null,
     });
   },
@@ -413,12 +435,63 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: true,
+      isMarketOrderOpen: false,
       notice: null,
     });
     return true;
   },
 
   closeCaveMiningGame: () => set({ isCaveMiningGameOpen: false }),
+
+  openMarketOrderBoard: () => set({
+    interactionMode: "inspect",
+    selectedBuildingId: null,
+    milkFactoryPanelBuildingId: null,
+    porkFactoryPanelBuildingId: null,
+    wheatFactoryPanelBuildingId: null,
+    pizzaShopPanelBuildingId: null,
+    bakeryPanelBuildingId: null,
+    riceShopPanelBuildingId: null,
+    fishShopPanelBuildingId: null,
+    selectedResidentId: null,
+    isBuildMenuOpen: false,
+    isResidentPanelOpen: false,
+    isMapTravelOpen: false,
+    isEncyclopediaOpen: false,
+    isFishingPromptOpen: false,
+    isFishingGameOpen: false,
+    isCaveMiningGameOpen: false,
+    isMarketOrderOpen: true,
+    notice: null,
+  }),
+
+  closeMarketOrderBoard: () => set({ isMarketOrderOpen: false }),
+
+  fulfillMarketOrder: (orderId) => {
+    const current = get();
+    const result = fulfillMarketOrder(current.game, orderId);
+    if (result.outcome === "order-not-found") {
+      set({ notice: "その注文は見つかりません。注文板を更新してください。" });
+      return false;
+    }
+    if (result.outcome === "not-enough-inventory") {
+      const shortage = result.missingItems.map((item: MarketOrderItem) => {
+        const definition = getProductDefinition(item.productType);
+        const stock = getInventoryCount(current.game, item.productType);
+        return `${definition?.name ?? item.productType}（所持${stock}／必要${item.quantity}）`;
+      }).join("、");
+      set({ notice: shortage ? `材料が足りません：${shortage}` : "材料が足りません。" });
+      return false;
+    }
+    const orderDescription = result.order?.items.map((item) =>
+      getFoodProductDefinition(item.productType).name,
+    ).join("・") ?? "注文";
+    set({
+      game: persist(result.state),
+      notice: `${orderDescription}を納品しました！${result.coinsEarned}コインを獲得しました。`,
+    });
+    return true;
+  },
 
   resetCaveMining: () => {
     const current = get();
@@ -493,6 +566,36 @@ export const useGameStore = create<GameStore>((setState, get) => {
     set({
       game: persist(result.state),
       notice: `${upgradeName}を強化しました！`,
+    });
+    return true;
+  },
+
+  upgradeBuilding: (buildingInstanceId, upgradeType) => {
+    const current = get();
+    const building = current.game.buildings.find((candidate) => candidate.id === buildingInstanceId);
+    const result = upgradeBuilding(current.game, buildingInstanceId, upgradeType);
+    const buildingName = building
+      ? getBuildingDefinition(building.buildingId)?.name ?? "建物"
+      : "建物";
+    const upgradeName = upgradeType === "production-speed"
+      ? "生産速度"
+      : upgradeType === "sale-speed"
+        ? "販売速度"
+        : "行列上限";
+    if (!result.success) {
+      const notice = result.reason === "not-enough-resources"
+        ? "採掘素材が足りません。"
+        : result.reason === "max-level"
+          ? `${buildingName}の${upgradeName}は最大レベルです。`
+          : result.reason === "unsupported-type"
+            ? `${buildingName}では${upgradeName}を強化できません。`
+            : "強化対象の建物が見つかりません。";
+      set({ notice });
+      return false;
+    }
+    set({
+      game: persist(result.state),
+      notice: `${buildingName}の${upgradeName}をレベル${result.level}に強化しました！`,
     });
     return true;
   },
@@ -1013,7 +1116,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
     const current = get();
     const building = current.game.buildings.find((candidate) => candidate.id === buildingInstanceId);
     const allowedProducts = building?.buildingId === "pizza-shop"
-      ? ["pizza"] as const
+      ? PIZZA_SHOP_PRODUCT_TYPES
       : building?.buildingId === "bakery"
         ? BAKERY_PRODUCT_TYPES
           : building?.buildingId === "rice-shop"
@@ -1030,7 +1133,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
         : `${productName}の作る数を確認してください。` });
       return false;
     }
-    const unit = productType === "pizza" ? "枚" : "個";
+    const unit = getFoodProductDefinition(productType).unit;
     set({
       game: persist(result.state),
       wheatFactoryPanelBuildingId: null,
@@ -1155,6 +1258,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
+      isMarketOrderOpen: false,
       notice: "新しい村を始めました。",
     });
   },

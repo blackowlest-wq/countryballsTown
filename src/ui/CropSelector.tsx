@@ -1,5 +1,6 @@
 import type { GameState } from "../game/types/Village";
 import { cropDefinitions, type CropType } from "../game/types/Crop";
+import { getInventoryCount } from "../game/systems/InventorySystem";
 
 interface CropSelectorProps {
   game: GameState;
@@ -39,7 +40,7 @@ export function CropSelector({
       <div className="crop-inventory" role="group" aria-label="植える作物の一覧">
         {definitions.map((definition) => {
           const seeds = game[definition.seedKey];
-          const harvested = game[definition.harvestKey];
+          const harvested = getInventoryCount(game, definition.harvestKey);
           const isSelected = selectedCropType === definition.type;
           const isUnavailable = seeds <= 0;
           const label = `${definition.name}の種を選ぶ。種 ${seeds}、収穫 ${harvested}${

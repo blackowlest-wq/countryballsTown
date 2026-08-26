@@ -49,7 +49,7 @@ describe("CropSystem", () => {
       cropType: "tomato",
       state: {
         tomatoSeeds: 4,
-        tomatoes: 0,
+        inventory: { tomato: 0 },
         crops: [{ type: "tomato", gridX: 8, gridY: 8, plantedAt: 1_000 }],
       },
     });
@@ -106,9 +106,9 @@ describe("CropSystem", () => {
     expect(harvested).toMatchObject({
       outcome: "harvested",
       cropType: "tomato",
-      state: { tomatoes: 1, tomatoSeeds: 6, crops: [] },
+      state: { inventory: { tomato: 1 }, tomatoSeeds: 6, crops: [] },
     });
-    expect(harvested.state.wheat).toBe(0);
+    expect(harvested.state.inventory.wheat).toBe(0);
   });
 
   it("成熟した小麦から小麦1個と種2個を得る", () => {
@@ -132,7 +132,7 @@ describe("CropSystem", () => {
     expect(harvested).toMatchObject({
       outcome: "harvested",
       cropType: "wheat",
-      state: { wheat: 1, wheatSeeds: 10, crops: [] },
+      state: { inventory: { wheat: 1 }, wheatSeeds: 10, crops: [] },
     });
   });
 
@@ -163,7 +163,7 @@ describe("CropSystem", () => {
     expect(harvested).toMatchObject({
       outcome: "harvested",
       cropType: "rice",
-      state: { rice: 1, riceSeeds: INITIAL_RICE_SEEDS + 1, crops: [] },
+      state: { inventory: { rice: 1 }, riceSeeds: INITIAL_RICE_SEEDS + 1, crops: [] },
     });
   });
 

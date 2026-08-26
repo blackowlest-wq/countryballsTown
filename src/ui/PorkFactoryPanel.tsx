@@ -1,6 +1,7 @@
 import { getPorkFactoryProductName } from "../game/systems/PorkFactorySystem";
 import type { PorkFactoryProductType } from "../game/types/PorkFactory";
 import { useGameStore } from "../store/gameStore";
+import { UpgradeControls } from "./UpgradeControls";
 
 const products: Array<{ type: PorkFactoryProductType; icon: string }> = [
   { type: "ham", icon: "🍖" },
@@ -29,7 +30,7 @@ export function PorkFactoryPanel(): JSX.Element | null {
       <p className="panel-hint">
         {production.productType
           ? `${getPorkFactoryProductName(production.productType)}を作っています。作るものを変更できます。`
-          : "何を作るか選んでください。豚肉1個から20秒ごとに1個作ります。"}
+          : "何を作るか選んでください。豚肉1個から20秒ごとに3個作ります。"}
       </p>
       <div className="factory-product-options" role="group" aria-label="作る加工物を選ぶ">
         {products.map(({ type, icon }) => (
@@ -46,6 +47,7 @@ export function PorkFactoryPanel(): JSX.Element | null {
           </button>
         ))}
       </div>
+      <UpgradeControls buildingId={buildingId} upgradeTypes={["production-speed"]} />
     </section>
   );
 }
