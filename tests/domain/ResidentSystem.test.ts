@@ -44,7 +44,7 @@ describe("ResidentSystem", () => {
     expect(destination.position.z).toBeLessThan(20);
   });
 
-  it("日本は温泉、イタリアはピザ屋を行動候補にできる", () => {
+  it("国別の住民は対応する店舗や施設を行動候補にできる", () => {
     const japanState = stateWithBuilding(createInitialGameState(0), "onsen", 12, 7);
     const japan = createInitialResident("japan", { x: 4, z: 4 });
     expect(chooseResidentDestination(japanState, japan, () => 0.9)).toMatchObject({
@@ -56,6 +56,20 @@ describe("ResidentSystem", () => {
     const italy = createInitialResident("italy", { x: 4, z: 4 });
     expect(chooseResidentDestination(italyState, italy, () => 0.9)).toMatchObject({
       actionBuildingId: "pizza-shop",
+      motion: "use-building",
+    });
+
+    const chinaState = stateWithBuilding(createInitialGameState(0), "chinese-restaurant", 12, 7);
+    const china = createInitialResident("china", { x: 4, z: 4 });
+    expect(chooseResidentDestination(chinaState, china, () => 0.9)).toMatchObject({
+      actionBuildingId: "chinese-restaurant",
+      motion: "use-building",
+    });
+
+    const usaState = stateWithBuilding(createInitialGameState(0), "burger-shop", 12, 7);
+    const usa = createInitialResident("usa", { x: 4, z: 4 });
+    expect(chooseResidentDestination(usaState, usa, () => 0.9)).toMatchObject({
+      actionBuildingId: "burger-shop",
       motion: "use-building",
     });
   });

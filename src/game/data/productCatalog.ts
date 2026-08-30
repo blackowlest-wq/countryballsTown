@@ -18,9 +18,15 @@ export type { ProductInventoryKey } from "../types/Inventory";
 
 export type ProductIngredientKey = Exclude<InventoryItemId, FoodProductType>;
 
-export type ProductStoreId = "pizza-shop" | "bakery" | "rice-shop" | "fish-shop";
+export type ProductStoreId =
+  | "pizza-shop"
+  | "bakery"
+  | "rice-shop"
+  | "fish-shop"
+  | "chinese-restaurant"
+  | "burger-shop";
 export type ProductUnit = "個" | "枚";
-export type ProductFavoriteCountryId = "poland" | "japan" | "italy";
+export type ProductFavoriteCountryId = "poland" | "japan" | "italy" | "china" | "usa";
 export type ProductCategory = "livestock" | "processed" | "food";
 
 export interface ProductRecipe {
@@ -374,6 +380,38 @@ const productDefinitions: readonly ProductCatalogEntry[] = [
       outputKey: "fish-sandwich",
       outputAmount: 1,
       ingredients: { "wheat-flour": 1, sardine: 1 },
+    },
+  }),
+  food({
+    id: "fried-rice",
+    name: "チャーハン",
+    icon: "🍳",
+    unit: "個",
+    inventoryKey: "fried-rice",
+    description: "米と卵で作る中国の定番料理。",
+    stores: ["chinese-restaurant"],
+    basePrice: 6,
+    favoriteCountries: ["china"],
+    recipe: {
+      outputKey: "fried-rice",
+      outputAmount: 1,
+      ingredients: { rice: 1, eggs: 1 },
+    },
+  }),
+  food({
+    id: "hamburger",
+    name: "ハンバーガー",
+    icon: "🍔",
+    unit: "個",
+    inventoryKey: "hamburger",
+    description: "小麦粉と豚肉で作るアメリカの定番料理。",
+    stores: ["burger-shop"],
+    basePrice: 7,
+    favoriteCountries: ["usa"],
+    recipe: {
+      outputKey: "hamburger",
+      outputAmount: 1,
+      ingredients: { "wheat-flour": 1, pork: 1 },
     },
   }),
 ];

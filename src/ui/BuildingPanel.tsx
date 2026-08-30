@@ -14,6 +14,8 @@ export function BuildingPanel(): JSX.Element | null {
   const openBakeryPanel = useGameStore((store) => store.openBakeryPanel);
   const openRiceShopPanel = useGameStore((store) => store.openRiceShopPanel);
   const openFishShopPanel = useGameStore((store) => store.openFishShopPanel);
+  const openChineseRestaurantPanel = useGameStore((store) => store.openChineseRestaurantPanel);
+  const openBurgerShopPanel = useGameStore((store) => store.openBurgerShopPanel);
   const openEncyclopedia = useGameStore((store) => store.openEncyclopedia);
   const cancel = useGameStore((store) => store.cancelInteraction);
   if (!building || mode === "build") return null;
@@ -26,6 +28,8 @@ export function BuildingPanel(): JSX.Element | null {
   const isBakery = building.buildingId === "bakery";
   const isRiceShop = building.buildingId === "rice-shop";
   const isFishShop = building.buildingId === "fish-shop";
+  const isChineseRestaurant = building.buildingId === "chinese-restaurant";
+  const isBurgerShop = building.buildingId === "burger-shop";
 
   return (
     <section className="floating-panel building-panel" aria-label="建物の操作">
@@ -102,6 +106,24 @@ export function BuildingPanel(): JSX.Element | null {
               onClick={() => openFishShopPanel(building.id)}
             >
               魚料理を作る
+            </button>
+          )}
+          {isChineseRestaurant && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => openChineseRestaurantPanel(building.id)}
+            >
+              チャーハンを作る
+            </button>
+          )}
+          {isBurgerShop && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => openBurgerShopPanel(building.id)}
+            >
+              ハンバーガーを作る
             </button>
           )}
           {building.buildingId === "house" && (

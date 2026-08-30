@@ -43,9 +43,9 @@ function withActiveRequest(
 }
 
 describe("ResidentRequestSystem", () => {
-  it("10種類のお願いを重複なしで定義する", () => {
-    expect(residentRequestDefinitions).toHaveLength(10);
-    expect(new Set(residentRequestDefinitions.map((definition) => definition.id)).size).toBe(10);
+  it("12種類のお願いを重複なしで定義する", () => {
+    expect(residentRequestDefinitions).toHaveLength(12);
+    expect(new Set(residentRequestDefinitions.map((definition) => definition.id)).size).toBe(12);
 
     const base = createInitialGameState(0);
     const allUnlocked = {

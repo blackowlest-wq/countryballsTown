@@ -54,6 +54,8 @@ export const INVENTORY_ITEM_IDS: readonly InventoryItemId[] = [
   "mixed-pizza",
   "butter-rice",
   "fish-sandwich",
+  "fried-rice",
+  "hamburger",
   "sardine",
   "mackerel",
   "sea-bream",

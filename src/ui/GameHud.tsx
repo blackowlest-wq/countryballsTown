@@ -15,6 +15,8 @@ export function GameHud(): JSX.Element {
   const treeCount = countBuildings(game, "tree");
   const flowerCount = countBuildings(game, "flower");
   const onsenCount = countBuildings(game, "onsen");
+  const pizzaShopCount = countBuildings(game, "pizza-shop");
+  const chineseRestaurantCount = countBuildings(game, "chinese-restaurant");
   const isVillage = game.currentMap === "village";
   const mapDefinition = getMapDefinition(game.currentMap);
   const nextGoal = !isVillage
@@ -23,7 +25,11 @@ export function GameHud(): JSX.Element {
       ? `木 ${treeCount}/3  ・  花 ${flowerCount}/3`
       : game.villageLevel === 2
         ? `住民 ${game.residents.length}/2  ・  温泉 ${onsenCount}/1`
-        : "村のみんなが楽しく暮らしています";
+        : game.villageLevel === 3
+          ? `ピザ屋 ${pizzaShopCount}/1  ・  イタリアの住民をおもてなし`
+          : game.villageLevel === 4
+            ? `中華食堂 ${chineseRestaurantCount}/1  ・  中国の住民をおもてなし`
+            : "5つの国の住民が楽しく暮らしています";
 
   return (
     <>

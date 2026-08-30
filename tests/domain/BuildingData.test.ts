@@ -156,4 +156,31 @@ describe("building definitions", () => {
       },
     });
   });
+
+  it("中華食堂とハンバーガーショップを国別の店舗として定義する", () => {
+    expect(playerBuildingIds).toEqual(expect.arrayContaining([
+      "chinese-restaurant",
+      "burger-shop",
+    ]));
+    expect(getBuildingDefinition("chinese-restaurant")).toMatchObject({
+      name: "中華食堂",
+      width: 3,
+      height: 2,
+      category: "building",
+      countryId: "china",
+      visitorService: {
+        products: ["fried-rice"],
+      },
+    });
+    expect(getBuildingDefinition("burger-shop")).toMatchObject({
+      name: "ハンバーガーショップ",
+      width: 3,
+      height: 2,
+      category: "building",
+      countryId: "usa",
+      visitorService: {
+        products: ["hamburger"],
+      },
+    });
+  });
 });

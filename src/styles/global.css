@@ -43,6 +43,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .showcase-dot.poland { background: linear-gradient(#fffaf2 50%, #e94f64 50%); }
 .showcase-dot.japan { background: radial-gradient(circle at center, #ed5a67 0 38%, #fffaf2 40%); }
 .showcase-dot.italy { background: linear-gradient(90deg, #61a978 0 33%, #fffaf2 33% 66%, #e56a62 66%); }
+.showcase-dot.china { background: radial-gradient(circle at 28% 28%, #ffde00 0 18%, #d40000 20%); }
+.showcase-dot.usa { background: linear-gradient(#3c3b6e 0 42%, #fffaf2 42% 50%, #b22234 50% 58%, #fffaf2 58% 66%, #b22234 66%); }
 .motion-showcase-legend { position: absolute; right: 24px; bottom: 24px; z-index: 2; display: grid; grid-template-columns: repeat(3, auto); gap: 6px 12px; padding: 11px 14px; color: var(--ink); background: rgba(255, 250, 238, .94); border: 1px solid rgba(255,255,255,.84); border-radius: 16px; box-shadow: var(--shadow); font-size: 11px; font-weight: 800; }
 .motion-showcase-legend span::before { display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; content: ""; background: #ed9aa8; border-radius: 50%; }
 
@@ -126,6 +128,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .bakery-panel { right: 24px; bottom: 116px; width: min(500px, calc(100vw - 32px)); }
 .rice-shop-panel { right: 24px; bottom: 116px; width: min(440px, calc(100vw - 32px)); }
 .fish-shop-panel { right: 24px; bottom: 116px; width: min(460px, calc(100vw - 32px)); }
+.chinese-restaurant-panel { right: 24px; bottom: 116px; width: min(410px, calc(100vw - 32px)); }
+.burger-shop-panel { right: 24px; bottom: 116px; width: min(430px, calc(100vw - 32px)); }
 .order-board-panel { left: 50%; bottom: 116px; width: min(520px, calc(100vw - 32px)); transform: translateX(-50%); }
 .map-travel-panel { left: 50%; bottom: 116px; width: min(460px, calc(100vw - 32px)); transform: translateX(-50%); }
 .encyclopedia-panel { left: 50%; bottom: 116px; width: min(660px, calc(100vw - 32px)); transform: translateX(-50%); }
@@ -323,6 +327,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .bakery-panel .pizza-product-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .rice-shop-panel .pizza-product-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .fish-shop-panel .pizza-product-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.chinese-restaurant-panel .pizza-product-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.burger-shop-panel .pizza-product-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 
 .pizza-product-selection { display: grid; grid-template-columns: minmax(0, 1fr); margin-bottom: 12px; }
 .pizza-product-option { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 58px; color: #557b47; background: #eef6de; border: 2px solid #83b967; border-radius: 14px; cursor: pointer; font-size: 13px; font-weight: 900; }
@@ -554,7 +560,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .request-message { font-size: 11px; }
   .request-progress-row { margin-top: 7px; font-size: 9px; }
   .floating-panel { left: 10px; right: 10px; bottom: 93px; width: auto; max-height: calc(100vh - 160px); padding: 16px; border-radius: 19px; }
-  .building-panel, .milk-factory-panel, .pork-factory-panel, .wheat-factory-panel, .pizza-shop-panel, .bakery-panel, .rice-shop-panel, .fish-shop-panel, .order-board-panel, .map-travel-panel, .encyclopedia-panel { left: 10px; right: 10px; width: auto; transform: none; }
+  .building-panel, .milk-factory-panel, .pork-factory-panel, .wheat-factory-panel, .pizza-shop-panel, .bakery-panel, .rice-shop-panel, .fish-shop-panel, .chinese-restaurant-panel, .burger-shop-panel, .order-board-panel, .map-travel-panel, .encyclopedia-panel { left: 10px; right: 10px; width: auto; transform: none; }
   .cave-mining-launcher { right: 10px; bottom: 91px; left: 10px; width: auto; padding: 9px; }
   .cave-mining-overlay { padding: 10px; }
   .cave-mining-window { max-height: calc(100vh - 20px); padding: 16px; border-radius: 20px; }

@@ -17,6 +17,8 @@ const shopCases = [
   { buildingId: "bakery", panelKey: "bakeryPanelBuildingId" },
   { buildingId: "rice-shop", panelKey: "riceShopPanelBuildingId" },
   { buildingId: "fish-shop", panelKey: "fishShopPanelBuildingId" },
+  { buildingId: "chinese-restaurant", panelKey: "chineseRestaurantPanelBuildingId" },
+  { buildingId: "burger-shop", panelKey: "burgerShopPanelBuildingId" },
 ] as const;
 
 afterEach(() => {
@@ -28,6 +30,8 @@ afterEach(() => {
     bakeryPanelBuildingId: null,
     riceShopPanelBuildingId: null,
     fishShopPanelBuildingId: null,
+    chineseRestaurantPanelBuildingId: null,
+    burgerShopPanelBuildingId: null,
     notice: null,
   });
   document.body.replaceChildren();

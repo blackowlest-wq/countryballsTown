@@ -37,6 +37,30 @@ export const countries: CountryDefinition[] = [
     unlockedBuildingIds: ["pizza-shop"],
     accentColor: "#e56a62",
   },
+  {
+    id: "china",
+    name: "中国",
+    flagEmoji: "🇨🇳",
+    flagTexture: "/assets/textures/flags/china.webp",
+    flagColors: ["#d40000", "#ffde00"],
+    flagLayout: "horizontal",
+    flagPattern: "circle",
+    favoriteBuildingIds: ["chinese-restaurant"],
+    unlockedBuildingIds: ["chinese-restaurant"],
+    accentColor: "#d40000",
+  },
+  {
+    id: "usa",
+    name: "アメリカ",
+    flagEmoji: "🇺🇸",
+    flagTexture: "/assets/textures/flags/usa.webp",
+    flagColors: ["#b22234", "#fffaf2", "#3c3b6e"],
+    flagLayout: "horizontal",
+    flagPattern: "canton-stripes",
+    favoriteBuildingIds: ["burger-shop"],
+    unlockedBuildingIds: ["burger-shop"],
+    accentColor: "#3c3b6e",
+  },
 ];
 
 export const countriesById = Object.fromEntries(

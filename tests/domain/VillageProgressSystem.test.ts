@@ -52,4 +52,37 @@ describe("VillageProgressSystem", () => {
     expect(first.state.unlockedBuildings).toContain("pizza-shop");
     expect(second.events).toHaveLength(0);
   });
+
+  it("ピザ屋と中華食堂を節目に中国・アメリカの住民を順番に迎える", () => {
+    let state: GameState = {
+      ...createInitialGameState(0),
+      coins: 1_000,
+      unlockedBuildings: [...createInitialGameState(0).unlockedBuildings, "cherry-tree"],
+    };
+    state = place(state, "cherry-tree", 8, 2, "cherry-tree-1");
+    state = place(state, "flower", 8, 4, "flower-1");
+    state = place(state, "flower", 9, 4, "flower-2");
+    state = place(state, "flower", 10, 4, "flower-3");
+    state = evaluateVillageProgress(state).state;
+    state = place(state, "onsen", 12, 7, "onsen-1");
+    state = evaluateVillageProgress(state).state;
+    expect(state.villageLevel).toBe(3);
+    expect(state.unlockedCountries).toContain("italy");
+
+    state = place(state, "pizza-shop", 12, 10, "pizza-shop-1");
+    const china = evaluateVillageProgress(state);
+    expect(china.state.villageLevel).toBe(4);
+    expect(china.state.unlockedCountries).toContain("china");
+    expect(china.state.residents.map((resident) => resident.countryId))
+      .toEqual(["poland", "japan", "italy", "china"]);
+    expect(china.state.unlockedBuildings).toContain("chinese-restaurant");
+
+    state = place({ ...china.state, coins: 1_000 }, "chinese-restaurant", 12, 13, "chinese-restaurant-1");
+    const usa = evaluateVillageProgress(state);
+    expect(usa.state.villageLevel).toBe(5);
+    expect(usa.state.unlockedCountries).toContain("usa");
+    expect(usa.state.residents.map((resident) => resident.countryId))
+      .toEqual(["poland", "japan", "italy", "china", "usa"]);
+    expect(usa.state.unlockedBuildings).toContain("burger-shop");
+  });
 });

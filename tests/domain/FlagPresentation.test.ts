@@ -24,4 +24,10 @@ describe("Flag presentation", () => {
     expect(getSphereFlagColorIndex("vertical", { x: 0, y: 0, z: 0.48 })).toBe(1);
     expect(getSphereFlagColorIndex("vertical", { x: 0.3, y: 0, z: 0.4 })).toBe(2);
   });
+
+  it("maps the USA canton to blue and keeps seven red-white stripes", () => {
+    expect(getSphereFlagColorIndex("canton-stripes", { x: -0.3, y: 0.2, z: 0.4 })).toBe(2);
+    expect(getSphereFlagColorIndex("canton-stripes", { x: 0, y: 0, z: 0.48 })).toBe(1);
+    expect(getSphereFlagColorIndex("canton-stripes", { x: 0, y: -0.35, z: 0.4 })).toBe(0);
+  });
 });

@@ -36,10 +36,6 @@ import {
   craftProduct,
   getCraftingProductName,
 } from "../game/systems/CraftingSystem";
-import { BAKERY_PRODUCT_TYPES } from "../game/systems/BakerySystem";
-import { PIZZA_SHOP_PRODUCT_TYPES } from "../game/systems/PizzaSystem";
-import { RICE_SHOP_PRODUCT_TYPES } from "../game/systems/RiceShopSystem";
-import { FISH_SHOP_PRODUCT_TYPES } from "../game/systems/FishShopSystem";
 import {
   createShopVisitorSimulation,
 } from "../game/systems/ShopVisitorSystem";
@@ -113,6 +109,8 @@ interface GameStore {
   bakeryPanelBuildingId: string | null;
   riceShopPanelBuildingId: string | null;
   fishShopPanelBuildingId: string | null;
+  chineseRestaurantPanelBuildingId: string | null;
+  burgerShopPanelBuildingId: string | null;
   selectedResidentId: string | null;
   isBuildMenuOpen: boolean;
   isResidentPanelOpen: boolean;
@@ -197,6 +195,10 @@ interface GameStore {
   closeRiceShopPanel: () => void;
   openFishShopPanel: (buildingInstanceId: string) => void;
   closeFishShopPanel: () => void;
+  openChineseRestaurantPanel: (buildingInstanceId: string) => void;
+  closeChineseRestaurantPanel: () => void;
+  openBurgerShopPanel: (buildingInstanceId: string) => void;
+  closeBurgerShopPanel: () => void;
   craftShopProduct: (
     buildingInstanceId: string,
     productType: CraftingProductType,
@@ -209,6 +211,22 @@ interface GameStore {
   dismissNotice: () => void;
   resetGame: () => void;
   grantMaxCoinsForDevelopment: () => void;
+}
+
+const panelStateKeys: ReadonlyArray<keyof GameStore> = [
+  "milkFactoryPanelBuildingId",
+  "porkFactoryPanelBuildingId",
+  "wheatFactoryPanelBuildingId",
+  "pizzaShopPanelBuildingId",
+  "bakeryPanelBuildingId",
+  "riceShopPanelBuildingId",
+  "fishShopPanelBuildingId",
+  "chineseRestaurantPanelBuildingId",
+  "burgerShopPanelBuildingId",
+];
+
+function includesPanelState(update: Partial<GameStore>): boolean {
+  return panelStateKeys.some((key) => Object.prototype.hasOwnProperty.call(update, key));
 }
 
 function persist(state: GameState): GameState {
@@ -228,15 +246,22 @@ function combineNotices(...notices: Array<string | null>): string | null {
 export const useGameStore = create<GameStore>((setState, get) => {
   const set = (update: Partial<GameStore>): void => {
     const current = get();
-    if (current.isCaveMiningGameOpen && update.isCaveMiningGameOpen === false) {
-      const game = update.game ?? current.game;
+    const nextUpdate = includesPanelState(update)
+      ? {
+          ...update,
+          chineseRestaurantPanelBuildingId: update.chineseRestaurantPanelBuildingId ?? null,
+          burgerShopPanelBuildingId: update.burgerShopPanelBuildingId ?? null,
+        }
+      : update;
+    if (current.isCaveMiningGameOpen && nextUpdate.isCaveMiningGameOpen === false) {
+      const game = nextUpdate.game ?? current.game;
       setState({
-        ...update,
+        ...nextUpdate,
         game: persist(finishCaveMiningSession(game)),
       });
       return;
     }
-    setState(update);
+    setState(nextUpdate);
   };
 
   return {
@@ -253,6 +278,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
   bakeryPanelBuildingId: null,
   riceShopPanelBuildingId: null,
   fishShopPanelBuildingId: null,
+  chineseRestaurantPanelBuildingId: null,
+  burgerShopPanelBuildingId: null,
   selectedResidentId: null,
   isBuildMenuOpen: false,
   isResidentPanelOpen: false,
@@ -1112,18 +1139,68 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   closeFishShopPanel: () => set({ fishShopPanelBuildingId: null }),
 
+  openChineseRestaurantPanel: (buildingInstanceId) => {
+    const current = get();
+    if (!current.game.buildings.some(
+      (building) => building.id === buildingInstanceId && building.buildingId === "chinese-restaurant",
+    )) return;
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      porkFactoryPanelBuildingId: null,
+      wheatFactoryPanelBuildingId: null,
+      pizzaShopPanelBuildingId: null,
+      bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
+      chineseRestaurantPanelBuildingId: buildingInstanceId,
+      burgerShopPanelBuildingId: null,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      isMapTravelOpen: false,
+      notice: null,
+    });
+  },
+
+  closeChineseRestaurantPanel: () => set({ chineseRestaurantPanelBuildingId: null }),
+
+  openBurgerShopPanel: (buildingInstanceId) => {
+    const current = get();
+    if (!current.game.buildings.some(
+      (building) => building.id === buildingInstanceId && building.buildingId === "burger-shop",
+    )) return;
+    set({
+      interactionMode: "inspect",
+      selectedBuildingId: null,
+      milkFactoryPanelBuildingId: null,
+      porkFactoryPanelBuildingId: null,
+      wheatFactoryPanelBuildingId: null,
+      pizzaShopPanelBuildingId: null,
+      bakeryPanelBuildingId: null,
+      riceShopPanelBuildingId: null,
+      fishShopPanelBuildingId: null,
+      chineseRestaurantPanelBuildingId: null,
+      burgerShopPanelBuildingId: buildingInstanceId,
+      selectedResidentId: null,
+      isBuildMenuOpen: false,
+      isResidentPanelOpen: false,
+      isMapTravelOpen: false,
+      notice: null,
+    });
+  },
+
+  closeBurgerShopPanel: () => set({ burgerShopPanelBuildingId: null }),
+
   craftShopProduct: (buildingInstanceId, productType, quantity) => {
     const current = get();
     const building = current.game.buildings.find((candidate) => candidate.id === buildingInstanceId);
-    const allowedProducts = building?.buildingId === "pizza-shop"
-      ? PIZZA_SHOP_PRODUCT_TYPES
-      : building?.buildingId === "bakery"
-        ? BAKERY_PRODUCT_TYPES
-          : building?.buildingId === "rice-shop"
-            ? RICE_SHOP_PRODUCT_TYPES
-            : building?.buildingId === "fish-shop"
-              ? FISH_SHOP_PRODUCT_TYPES
-              : [] as const;
+    const visitorService = building
+      ? getBuildingDefinition(building.buildingId)?.visitorService
+      : undefined;
+    const allowedProducts: readonly CraftingProductType[] = visitorService?.products
+      ?? (visitorService?.product ? [visitorService.product] : []);
     if (!building || !allowedProducts.includes(productType)) return false;
     const result = craftProduct(current.game, productType, quantity);
     if (result.outcome !== "crafted") {
@@ -1141,6 +1218,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       bakeryPanelBuildingId: null,
       riceShopPanelBuildingId: null,
       fishShopPanelBuildingId: null,
+      chineseRestaurantPanelBuildingId: null,
+      burgerShopPanelBuildingId: null,
       notice: `${getCraftingProductName(productType)}を${result.quantity}${unit}作りました！`,
     });
     return true;

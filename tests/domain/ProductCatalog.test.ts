@@ -8,8 +8,8 @@ import {
 import { CRAFTING_RECIPES } from "../../src/game/types/Crafting";
 
 describe("ProductCatalog", () => {
-  it("15種類の料理を価格・単位・レシピと一緒に定義する", () => {
-    expect(FOOD_PRODUCT_TYPES).toHaveLength(15);
+  it("17種類の料理を価格・単位・レシピと一緒に定義する", () => {
+    expect(FOOD_PRODUCT_TYPES).toHaveLength(17);
     expect(PRODUCT_CATALOG["pizza"]).toMatchObject({
       unit: "枚",
       basePrice: 8,
@@ -32,6 +32,20 @@ describe("ProductCatalog", () => {
         },
       },
     });
+    expect(PRODUCT_CATALOG["fried-rice"]).toMatchObject({
+      name: "チャーハン",
+      basePrice: 6,
+      stores: ["chinese-restaurant"],
+      favoriteCountries: ["china"],
+      recipe: { ingredients: { rice: 1, eggs: 1 } },
+    });
+    expect(PRODUCT_CATALOG["hamburger"]).toMatchObject({
+      name: "ハンバーガー",
+      basePrice: 7,
+      stores: ["burger-shop"],
+      favoriteCountries: ["usa"],
+      recipe: { ingredients: { "wheat-flour": 1, pork: 1 } },
+    });
   });
 
   it("店舗の取扱商品と国別好物をCatalogから導出できる", () => {
@@ -49,6 +63,8 @@ describe("ProductCatalog", () => {
       "sushi",
       "fish-sandwich",
     ]);
+    expect(getProductsForStore("chinese-restaurant")).toEqual(["fried-rice"]);
+    expect(getProductsForStore("burger-shop")).toEqual(["hamburger"]);
     expect(getFavoriteProductsForCountry("poland")).toEqual([
       "bread",
       "hot-dog",
@@ -65,6 +81,8 @@ describe("ProductCatalog", () => {
       "butter-rice",
       "fish-sandwich",
     ]);
+    expect(getFavoriteProductsForCountry("china")).toEqual(["fried-rice"]);
+    expect(getFavoriteProductsForCountry("usa")).toEqual(["hamburger"]);
   });
 
   it("Crafting recipe projection is generated from the Catalog", () => {

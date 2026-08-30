@@ -1,4 +1,4 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import type { Resident } from "../game/types/Resident";
 import { CountryBall } from "../scene/residents/CountryBall";
 
@@ -6,24 +6,45 @@ const showcaseResidents: Resident[] = [
   {
     id: "showcase-poland",
     countryId: "poland",
-    position: { x: 7, z: 10 },
+    position: { x: 4, z: 10 },
     state: "idle",
   },
   {
     id: "showcase-japan",
     countryId: "japan",
-    position: { x: 10, z: 10 },
+    position: { x: 7, z: 10 },
     state: "idle",
   },
   {
     id: "showcase-italy",
     countryId: "italy",
+    position: { x: 10, z: 10 },
+    state: "idle",
+  },
+  {
+    id: "showcase-china",
+    countryId: "china",
     position: { x: 13, z: 10 },
+    state: "idle",
+  },
+  {
+    id: "showcase-usa",
+    countryId: "usa",
+    position: { x: 16, z: 10 },
     state: "idle",
   },
 ];
 
 function ShowcaseScene(): JSX.Element {
+  const { size } = useThree();
+  const isNarrow = size.width < 600;
+  const residents = showcaseResidents.map((resident, index) => isNarrow
+    ? {
+        ...resident,
+        position: { x: 7.2 + index * 1.4, z: resident.position.z },
+      }
+    : resident);
+
   return (
     <>
       <color attach="background" args={["#9bd2ed"]} />
@@ -40,7 +61,7 @@ function ShowcaseScene(): JSX.Element {
         <planeGeometry args={[18, 10]} />
         <meshStandardMaterial color="#b7d18b" roughness={1} />
       </mesh>
-      {showcaseResidents.map((resident) => (
+      {residents.map((resident) => (
         <CountryBall key={resident.id} resident={resident} />
       ))}
     </>
@@ -59,6 +80,8 @@ export function CharacterShowcase(): JSX.Element {
         <span><i className="showcase-dot poland" />ポーランド</span>
         <span><i className="showcase-dot japan" />日本</span>
         <span><i className="showcase-dot italy" />イタリア</span>
+        <span><i className="showcase-dot china" />中国</span>
+        <span><i className="showcase-dot usa" />アメリカ</span>
       </div>
       <Canvas
         orthographic

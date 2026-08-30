@@ -1,9 +1,15 @@
 import { Color, MeshStandardMaterial } from "three";
 import type { FlagPattern } from "../../game/types/Country";
 import {
+  BALL_RADIUS,
   CIRCLE_CENTER_Y,
   CIRCLE_FRONT_Z,
   CIRCLE_RADIUS,
+  USA_CANTON_BOTTOM_BOUNDARY,
+  USA_CANTON_FRONT_Z,
+  USA_CANTON_LEFT_BOUNDARY,
+  USA_STRIPE_COUNT,
+  USA_STRIPE_HEIGHT,
   VERTICAL_STRIPE_BOUNDARY,
 } from "./flagPresentation";
 
@@ -11,6 +17,7 @@ const FLAG_PATTERN_INDEX: Record<FlagPattern, number> = {
   horizontal: 0,
   circle: 1,
   vertical: 2,
+  "canton-stripes": 3,
 };
 
 function toGlslNumber(value: number): string {
@@ -61,10 +68,19 @@ if (uCountryBallPattern == 0) {
   float circleDistance = distance(vCountryBallPosition.xy, vec2(0.0, ${toGlslNumber(CIRCLE_CENTER_Y)}));
   bool isFront = vCountryBallPosition.z > ${toGlslNumber(CIRCLE_FRONT_Z)};
   countryBallFlagColor = isFront && circleDistance < ${toGlslNumber(CIRCLE_RADIUS)} ? uFlagColorB : uFlagColorA;
-} else {
+} else if (uCountryBallPattern == 2) {
   countryBallFlagColor = vCountryBallPosition.x < -${toGlslNumber(VERTICAL_STRIPE_BOUNDARY)}
     ? uFlagColorA
     : vCountryBallPosition.x > ${toGlslNumber(VERTICAL_STRIPE_BOUNDARY)} ? uFlagColorC : uFlagColorB;
+} else {
+  bool isCanton = vCountryBallPosition.z > ${toGlslNumber(USA_CANTON_FRONT_Z)}
+    && vCountryBallPosition.x < ${toGlslNumber(USA_CANTON_LEFT_BOUNDARY)}
+    && vCountryBallPosition.y > ${toGlslNumber(USA_CANTON_BOTTOM_BOUNDARY)};
+  float stripeIndex = min(${toGlslNumber(USA_STRIPE_COUNT - 1)}, max(0.0,
+    floor((vCountryBallPosition.y + ${toGlslNumber(BALL_RADIUS)}) / ${toGlslNumber(USA_STRIPE_HEIGHT)})));
+  countryBallFlagColor = isCanton
+    ? uFlagColorC
+    : mod(stripeIndex, 2.0) < 1.0 ? uFlagColorA : uFlagColorB;
 }
 vec4 diffuseColor = vec4( countryBallFlagColor, opacity );`,
       );

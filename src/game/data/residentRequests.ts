@@ -119,6 +119,30 @@ export const residentRequestDefinitions: ResidentRequestDefinition[] = [
     },
     rewardCoins: 7,
   },
+  {
+    id: "china-restaurant-work",
+    countryId: "china",
+    message: "中華食堂で腕をふるいたい",
+    goal: {
+      type: "building-count",
+      buildingIds: ["chinese-restaurant"],
+      target: 1,
+      progressLabel: "中華食堂を建てる",
+    },
+    rewardCoins: 13,
+  },
+  {
+    id: "usa-burger-shop",
+    countryId: "usa",
+    message: "ハンバーガーを売りたい",
+    goal: {
+      type: "building-count",
+      buildingIds: ["burger-shop"],
+      target: 1,
+      progressLabel: "ハンバーガーショップを建てる",
+    },
+    rewardCoins: 14,
+  },
 ];
 
 export const residentRequestsById = Object.fromEntries(

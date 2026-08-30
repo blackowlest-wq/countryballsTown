@@ -107,4 +107,20 @@ describe("CraftingSystem", () => {
       },
     });
   });
+
+  it("中華食堂とハンバーガーショップの料理を既存素材から作れる", () => {
+    const state = withInventory(createInitialGameState(0), {
+      rice: 1,
+      eggs: 1,
+      "wheat-flour": 1,
+      pork: 1,
+    });
+
+    expect(craftProduct(state, "fried-rice", 1).state).toMatchObject({
+      inventory: { rice: 0, eggs: 0, "fried-rice": 1 },
+    });
+    expect(craftProduct(state, "hamburger", 1).state).toMatchObject({
+      inventory: { "wheat-flour": 0, pork: 0, hamburger: 1 },
+    });
+  });
 });

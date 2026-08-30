@@ -14,6 +14,8 @@ import { WheatFactoryPanel } from "../ui/WheatFactoryPanel";
 import { BakeryPanel } from "../ui/BakeryPanel";
 import { RiceShopPanel } from "../ui/RiceShopPanel";
 import { FishShopPanel } from "../ui/FishShopPanel";
+import { ChineseRestaurantPanel } from "../ui/ChineseRestaurantPanel";
+import { BurgerShopPanel } from "../ui/BurgerShopPanel";
 import { MapTravelPanel } from "../ui/MapTravelPanel";
 import { ResidentPanel } from "../ui/ResidentPanel";
 import { EncyclopediaPanel } from "../ui/EncyclopediaPanel";
@@ -50,6 +52,8 @@ export function App(): JSX.Element {
       <BakeryPanel />
       <RiceShopPanel />
       <FishShopPanel />
+      <ChineseRestaurantPanel />
+      <BurgerShopPanel />
       <MapTravelPanel />
       <EncyclopediaPanel />
       <FishingPromptPanel />
