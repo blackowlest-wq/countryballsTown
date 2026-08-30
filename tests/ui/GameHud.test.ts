@@ -58,4 +58,24 @@ describe("GameHud", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("地区ごとの重複目標を表示する", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(GameHud)));
+
+    const districtGoals = container.querySelector('[aria-label="地区の目標"]');
+    expect(districtGoals).not.toBeNull();
+    expect(districtGoals?.textContent).toContain("農業地区");
+    expect(districtGoals?.textContent).toContain("畑 0/3");
+    expect(districtGoals?.textContent).toContain("商業地区");
+    expect(districtGoals?.textContent).toContain("店舗3種類 0/3");
+    expect(districtGoals?.textContent).toContain("自然公園");
+    expect(districtGoals?.textContent).toContain("木 2/5");
+    expect(districtGoals?.textContent).toContain("工業地区");
+
+    await act(async () => root.unmount());
+  });
 });

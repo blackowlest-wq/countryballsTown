@@ -20,6 +20,7 @@ export const villageLevels: VillageLevelDefinition[] = [
     unlockCountries: ["poland"],
     unlockBuildings: [
       "field",
+      "warehouse",
       "fence",
       "road",
       "ore-workshop",

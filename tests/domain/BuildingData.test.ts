@@ -42,6 +42,17 @@ describe("building definitions", () => {
     });
   });
 
+  it("倉庫を農業地区の2マス建物として定義する", () => {
+    expect(playerBuildingIds).toContain("warehouse");
+    expect(getBuildingDefinition("warehouse")).toMatchObject({
+      name: "倉庫",
+      width: 2,
+      height: 2,
+      cost: 100,
+      category: "building",
+    });
+  });
+
   it("柵と道路を1マスの建物として定義する", () => {
     expect(playerBuildingIds).toEqual(expect.arrayContaining(["fence", "road"]));
     expect(getBuildingDefinition("fence")).toMatchObject({

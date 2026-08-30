@@ -23,6 +23,7 @@ import { GreatWall } from "./GreatWall";
 import { StatueOfLiberty } from "./StatueOfLiberty";
 import { OreWorkshop } from "./OreWorkshop";
 import { Field } from "./Field";
+import { Warehouse } from "./Warehouse";
 import { Onsen } from "./Onsen";
 import { PizzaShop } from "./PizzaShop";
 import { Torii } from "./Torii";
@@ -36,6 +37,7 @@ const buildingRenderers: Record<string, ComponentType> = {
   house: House,
   fountain: Fountain,
   field: Field,
+  warehouse: Warehouse,
   tree: Tree,
   "cherry-tree": CherryTree,
   flower: Flower,

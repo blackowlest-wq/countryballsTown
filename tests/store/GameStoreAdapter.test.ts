@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import { MAX_COINS, SHOP_VISITOR_SERVICE_MS } from "../../src/game/constants/gameConstants";
+import { playerBuildingIds } from "../../src/game/data/buildings";
 import { createShopVisitorSimulation } from "../../src/game/systems/ShopVisitorSystem";
 import { useGameStore } from "../../src/store/gameStore";
 import type { ShopVisitor } from "../../src/game/types/ShopVisitor";
@@ -14,6 +15,7 @@ afterEach(() => {
     visitorSimulation: createShopVisitorSimulation(0),
     interactionMode: "inspect",
     selectedCropType: "wheat",
+    selectedDistrictId: "agriculture",
     notice: null,
   });
 });
@@ -69,6 +71,26 @@ describe("gameStore adapter", () => {
         { buildingId: "ore-workshop", gridX: 12, gridY: 12 },
       ],
     });
+  });
+
+  it("選択した地区を建築開始と配置判定へ渡す", () => {
+    useGameStore.setState({
+      game: {
+        ...createInitialGameState(0),
+        coins: MAX_COINS,
+        unlockedBuildings: [...playerBuildingIds],
+      },
+    });
+
+    useGameStore.getState().selectDistrict("agriculture");
+    useGameStore.getState().beginBuild("pizza-shop", "agriculture");
+    expect(useGameStore.getState().interactionMode).toBe("inspect");
+    expect(useGameStore.getState().notice).toContain("この地区では建築できない");
+
+    useGameStore.getState().beginBuild("pizza-shop", "commercial");
+    expect(useGameStore.getState().interactionMode).toBe("build");
+    expect(useGameStore.getState().selectedDistrictId).toBe("commercial");
+    expect(useGameStore.getState().placeSelectedBuilding(12, 12)).toBe(true);
   });
 
   it("ショップ販売の売上をStoreのコインへ反映する", () => {
@@ -153,6 +175,7 @@ describe("gameStore adapter", () => {
       interactionMode: "farm",
       selectedCropType: "tomato",
       selectedBuildingId: "tree-1",
+      selectedDistrictId: "industrial",
       isBuildMenuOpen: true,
       isResidentPanelOpen: true,
       isMapTravelOpen: true,
@@ -170,6 +193,7 @@ describe("gameStore adapter", () => {
     expect(state.interactionMode).toBe("inspect");
     expect(state.selectedCropType).toBe("wheat");
     expect(state.selectedBuildingId).toBeNull();
+    expect(state.selectedDistrictId).toBe("agriculture");
     expect(state.isBuildMenuOpen).toBe(false);
     expect(state.isResidentPanelOpen).toBe(false);
     expect(state.isMapTravelOpen).toBe(false);

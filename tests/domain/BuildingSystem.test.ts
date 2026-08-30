@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGameState } from "../../src/game/core/GameState";
 import {
+  canPlaceBuilding,
   moveBuilding,
   placeBuilding,
   removeBuilding,
@@ -37,6 +38,24 @@ describe("BuildingSystem", () => {
       building: { buildingId: "field", gridX: 8, gridY: 8 },
       state: { coins: 90 },
     });
+  });
+
+  it("地区を指定すると関連する建物だけ配置できる", () => {
+    const initial = {
+      ...createInitialGameState(0),
+      coins: 1_000,
+      unlockedBuildings: [...new Set([
+        ...createInitialGameState(0).unlockedBuildings,
+        "pizza-shop",
+        "warehouse",
+      ])],
+    };
+
+    expect(canPlaceBuilding(initial, "field", 8, 8, undefined, "agriculture").ok).toBe(true);
+    expect(canPlaceBuilding(initial, "pizza-shop", 8, 8, undefined, "agriculture"))
+      .toMatchObject({ ok: false, reason: "not-allowed-in-district" });
+    expect(placeBuilding(initial, "pizza-shop", 12, 12, "pizza-test", 0, "commercial").success)
+      .toBe(true);
   });
 
   it("柵と道路を1マス単位で配置できる", () => {

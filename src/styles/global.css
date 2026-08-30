@@ -95,10 +95,24 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .settings-reset-confirmation p { margin: 0; font-size: 11px; line-height: 1.5; }
 .settings-reset-confirmation > div { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 
-.goal-card { position: absolute; top: 126px; left: 24px; z-index: 5; display: flex; gap: 10px; align-items: center; padding: 10px 15px; border-radius: 18px; }
+.goal-card { position: absolute; top: 126px; left: 24px; z-index: 5; display: flex; width: min(410px, calc(100vw - 48px)); gap: 10px; align-items: flex-start; padding: 10px 15px; border-radius: 18px; }
 .goal-sparkle { display: grid; width: 27px; height: 27px; place-items: center; color: #fff; background: #84b960; border-radius: 50%; font-size: 15px; }
+.goal-copy { min-width: 0; flex: 1; }
 .goal-label { margin: 0; color: #a0988a; font-size: 10px; font-weight: 800; }
 .goal-text { margin: 2px 0 0; color: #4c5c4b; font-size: 12px; font-weight: 900; }
+.district-goals { margin-top: 7px; }
+.district-goals summary { display: flex; align-items: center; justify-content: space-between; color: #70935b; cursor: pointer; font-size: 10px; font-weight: 900; list-style: none; }
+.district-goals summary::-webkit-details-marker { display: none; }
+.district-goals summary::after { content: "＋"; color: #8bad70; font-size: 14px; line-height: 1; }
+.district-goals[open] summary::after { content: "−"; }
+.district-goal-list { display: grid; gap: 5px; margin-top: 7px; }
+.district-goal { padding: 6px 8px; background: rgba(247, 239, 225, .78); border: 1px solid #eadfc9; border-radius: 10px; }
+.district-goal.is-complete { background: #eef6de; border-color: #c8dfac; }
+.district-goal-heading { display: flex; gap: 5px; align-items: center; color: var(--ink); font-size: 10px; }
+.district-goal-heading > span:first-child { font-size: 13px; }
+.district-goal-heading > span:last-child { margin-left: auto; color: #70935b; font-size: 9px; font-weight: 900; }
+.district-goal-requirements { display: flex; flex-wrap: wrap; gap: 3px 7px; margin-top: 4px; color: var(--muted); font-size: 9px; }
+.district-goal-requirements span.is-complete { color: #557b47; font-weight: 900; }
 
 .request-card { position: absolute; top: 196px; left: 24px; z-index: 5; width: min(338px, calc(100vw - 48px)); padding: 12px 14px; border-radius: 19px; }
 .request-speaker { display: flex; gap: 10px; align-items: center; }
@@ -138,7 +152,18 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .icon-button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; color: #8b857c; background: #f5ecdc; border: 0; border-radius: 50%; cursor: pointer; font-size: 20px; }
 .panel-hint { margin: 9px 0 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 
-.building-category-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 5px; background: #f2eadc; border-radius: 15px; }
+.district-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 5px; background: #f2eadc; border-radius: 15px; }
+.district-tab { display: flex; min-width: 0; gap: 5px; align-items: center; justify-content: center; padding: 8px 5px; color: #847c70; background: transparent; border: 0; border-radius: 11px; cursor: pointer; font-size: 10px; font-weight: 900; transition: color .18s ease, background .18s ease, transform .18s ease; }
+.district-tab:hover { color: #557b47; transform: translateY(-1px); }
+.district-tab[aria-selected="true"] { color: #557b47; background: #fffdf6; box-shadow: 0 2px 8px rgba(88, 106, 78, .12); }
+.district-tab span { flex: 0 0 auto; font-size: 15px; line-height: 1; }
+.district-description { margin: 8px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.district-progress { display: grid; gap: 7px; margin-top: 9px; padding: 9px 10px; background: #f7efe1; border: 1px solid #eadfc9; border-radius: 13px; }
+.district-progress-heading { display: flex; gap: 8px; align-items: center; justify-content: space-between; color: var(--ink); font-size: 11px; }
+.district-progress-heading span { color: #70935b; font-size: 9px; font-weight: 900; }
+.district-progress-list { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--muted); font-size: 9px; font-weight: 800; }
+.district-progress-list span.is-complete { color: #557b47; }
+.building-category-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 10px; padding: 5px; background: #f2eadc; border-radius: 15px; }
 .building-category-tab { display: flex; gap: 5px; align-items: center; justify-content: center; min-width: 0; padding: 8px 6px; color: #847c70; background: transparent; border: 0; border-radius: 11px; cursor: pointer; font-size: 11px; font-weight: 900; transition: color .18s ease, background .18s ease, transform .18s ease; }
 .building-category-tab:hover { color: #557b47; transform: translateY(-1px); }
 .building-category-tab[aria-selected="true"] { color: #557b47; background: #fffdf6; box-shadow: 0 2px 8px rgba(88, 106, 78, .12); }
@@ -167,6 +192,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-icon-fish-shop { background: #315f70; }
 .building-icon-great-wall { background: #b97d49; }
 .building-icon-statue-of-liberty { background: #5d8774; }
+.building-icon-warehouse { background: #a46e43; }
 .building-option-copy { display: grid; gap: 2px; }
 .building-option-copy strong { font-size: 14px; }
 .building-option-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }
@@ -557,7 +583,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .settings-section .bgm-toggle, .settings-install-button, .settings-debug-button, .settings-danger-zone > .danger-button { width: 100%; justify-content: center; }
   .settings-reset-confirmation > div { flex-direction: column-reverse; }
   .settings-reset-confirmation > div > * { width: 100%; }
-  .goal-card { top: 76px; left: 10px; padding: 8px 11px; border-radius: 15px; }
+  .goal-card { top: 76px; left: 10px; width: calc(100vw - 20px); padding: 8px 11px; border-radius: 15px; }
   .goal-text { font-size: 10px; }
   .goal-sparkle { width: 23px; height: 23px; font-size: 12px; }
   .request-card { top: 137px; left: 10px; width: min(322px, calc(100vw - 20px)); padding: 10px 11px; border-radius: 16px; }

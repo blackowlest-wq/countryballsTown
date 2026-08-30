@@ -9,6 +9,7 @@ export function PlacementGrid(): JSX.Element | null {
   const game = useGameStore((store) => store.game);
   const mode = useGameStore((store) => store.interactionMode);
   const selectedBuildingId = useGameStore((store) => store.selectedBuildingId);
+  const selectedDistrictId = useGameStore((store) => store.selectedDistrictId);
 
   const selectedForMove = useMemo(() => {
     if (mode !== "move" || !selectedBuildingId) return undefined;
@@ -24,11 +25,18 @@ export function PlacementGrid(): JSX.Element | null {
         ? Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => {
             const x = index % GRID_SIZE;
             const z = Math.floor(index / GRID_SIZE);
-            const result = canPlaceBuilding(game, resolvedBuildingId, x, z, mode === "move" ? selectedBuildingId ?? undefined : undefined);
+            const result = canPlaceBuilding(
+              game,
+              resolvedBuildingId,
+              x,
+              z,
+              mode === "move" ? selectedBuildingId ?? undefined : undefined,
+              mode === "build" ? selectedDistrictId : undefined,
+            );
             return { x, z, valid: result.ok };
           })
         : [],
-    [resolvedBuildingId, definition, game, mode, selectedBuildingId],
+    [resolvedBuildingId, definition, game, mode, selectedBuildingId, selectedDistrictId],
   );
 
   if (!definition || (mode !== "build" && mode !== "move")) return null;

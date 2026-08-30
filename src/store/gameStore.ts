@@ -47,6 +47,7 @@ import { describeProgressEvent, evaluateVillageProgress } from "../game/systems/
 import { travelToMap as travelToMapSystem } from "../game/systems/MapSystem";
 import { getMapDefinition } from "../game/data/maps";
 import { getBuildingDefinition } from "../game/data/buildings";
+import { getDistrictForBuilding } from "../game/data/districts";
 import { getMiningResourceDefinition } from "../game/data/mining";
 import { loadGameState, saveGameState } from "../game/systems/SaveSystem";
 import {
@@ -80,6 +81,7 @@ import {
 import type { DigDirection } from "../game/types/Mining";
 import { MAX_COINS } from "../game/constants/gameConstants";
 import { addInventory, getInventoryCount } from "../game/systems/InventorySystem";
+import { isBuildingAllowedInDistrict } from "../game/systems/DistrictSystem";
 import {
   fulfillMarketOrder,
 } from "../game/systems/MarketOrderSystem";
@@ -91,6 +93,7 @@ import {
   getProductDefinition,
 } from "../game/data/productCatalog";
 import type { BuildingUpgradeType } from "../game/types/BuildingUpgrade";
+import type { BuildDistrictId } from "../game/types/District";
 import type { MarketOrderItem } from "../game/types/MarketOrder";
 
 export type InteractionMode = "inspect" | "build" | "move" | "farm";
@@ -102,6 +105,7 @@ interface GameStore {
   interactionMode: InteractionMode;
   selectedCropType: CropType;
   selectedBuildingId: string | null;
+  selectedDistrictId: BuildDistrictId;
   milkFactoryPanelBuildingId: string | null;
   porkFactoryPanelBuildingId: string | null;
   wheatFactoryPanelBuildingId: string | null;
@@ -122,6 +126,7 @@ interface GameStore {
   notice: string | null;
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
+  selectDistrict: (districtId: BuildDistrictId) => void;
   setResidentPanelOpen: (open: boolean) => void;
   openMapTravel: () => void;
   closeMapTravel: () => void;
@@ -142,7 +147,7 @@ interface GameStore {
   upgradeCave: (kind: CaveUpgradeKind) => boolean;
   upgradeBuilding: (buildingInstanceId: string, upgradeType: BuildingUpgradeType) => boolean;
   travelToMap: (mapId: MapId, now?: number) => void;
-  beginBuild: (buildingId: string) => void;
+  beginBuild: (buildingId: string, districtId?: BuildDistrictId) => void;
   beginMove: (buildingId: string) => void;
   beginFarming: () => void;
   selectCropType: (cropType: CropType) => void;
@@ -268,6 +273,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
   interactionMode: "inspect",
   selectedCropType: "wheat",
   selectedBuildingId: null,
+  selectedDistrictId: "agriculture",
   milkFactoryPanelBuildingId: null,
   porkFactoryPanelBuildingId: null,
   wheatFactoryPanelBuildingId: null,
@@ -313,6 +319,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isCaveMiningGameOpen: false,
     }
     : { isBuildMenuOpen: false }),
+  selectDistrict: (districtId) => set({ selectedDistrictId: districtId, notice: null }),
   setResidentPanelOpen: (open) => set(open
     ? {
       isResidentPanelOpen: true,
@@ -625,10 +632,16 @@ export const useGameStore = create<GameStore>((setState, get) => {
     });
   },
 
-  beginBuild: (buildingId) =>
+  beginBuild: (buildingId, requestedDistrictId) => {
+    const districtId = requestedDistrictId ?? getDistrictForBuilding(buildingId) ?? "common";
+    if (!isBuildingAllowedInDistrict(districtId, buildingId)) {
+      set({ notice: "この地区では建築できない建物です。地区を選び直してください。" });
+      return;
+    }
     set({
       interactionMode: "build",
       selectedBuildingId: buildingId,
+      selectedDistrictId: districtId,
       milkFactoryPanelBuildingId: null,
       porkFactoryPanelBuildingId: null,
       wheatFactoryPanelBuildingId: null,
@@ -645,7 +658,8 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
       notice: null,
-    }),
+    });
+  },
 
   beginMove: (buildingId) =>
     set({
@@ -774,7 +788,15 @@ export const useGameStore = create<GameStore>((setState, get) => {
   placeSelectedBuilding: (gridX, gridY) => {
     const current = get();
     if (current.interactionMode !== "build" || !current.selectedBuildingId) return false;
-    const result = placeBuilding(current.game, current.selectedBuildingId, gridX, gridY);
+    const result = placeBuilding(
+      current.game,
+      current.selectedBuildingId,
+      gridX,
+      gridY,
+      undefined,
+      Date.now(),
+      current.selectedDistrictId,
+    );
     if (!result.success) {
       set({ notice: getBuildingOperationMessage(result.reason) });
       return false;
@@ -1288,6 +1310,7 @@ export const useGameStore = create<GameStore>((setState, get) => {
       interactionMode: "inspect",
       selectedCropType: "wheat",
       selectedBuildingId: null,
+      selectedDistrictId: "agriculture",
       milkFactoryPanelBuildingId: null,
       porkFactoryPanelBuildingId: null,
       wheatFactoryPanelBuildingId: null,

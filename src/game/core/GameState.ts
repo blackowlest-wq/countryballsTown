@@ -51,6 +51,7 @@ export function createInitialGameState(now = Date.now()): GameState {
     unlockedCountries: ["poland"],
     unlockedBuildings: [
       "field",
+      "warehouse",
       "fence",
       "road",
       "ore-workshop",

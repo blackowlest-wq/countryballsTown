@@ -60,6 +60,19 @@ export const buildingDefinitions: BuildingDefinition[] = [
     removable: true,
   },
   {
+    id: "warehouse",
+    name: "倉庫",
+    width: 2,
+    height: 2,
+    cost: 100,
+    category: "building",
+    menuIcon: "📦",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.5, z: 0.5 },
+    description: "農作物や加工品を保管する農業地区の倉庫。",
+    removable: true,
+  },
+  {
     id: "fence",
     name: "柵",
     width: 1,
@@ -409,6 +422,7 @@ export function getBuildingDefinition(buildingId: string): BuildingDefinition | 
 
 export const playerBuildingIds = [
   "field",
+  "warehouse",
   "fence",
   "road",
   "ore-workshop",

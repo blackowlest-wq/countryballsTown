@@ -6,8 +6,10 @@ import {
   MAX_LIVESTOCK_COUNT,
 } from "../data/buildings";
 import type { BuildingDefinition, BuildingInstance } from "../types/Building";
+import type { BuildDistrictId } from "../types/District";
 import type { MiningResourceType } from "../types/Mining";
 import type { GameState } from "../types/Village";
+import { isBuildingAllowedInDistrict } from "./DistrictSystem";
 import {
   registerProductionForBuilding,
   removeProductionForBuilding,
@@ -19,6 +21,7 @@ export type BuildingOperationReason =
   | "locked"
   | "not-enough-coins"
   | "not-enough-mining-resources"
+  | "not-allowed-in-district"
   | "out-of-bounds"
   | "occupied"
   | "not-found"
@@ -117,11 +120,15 @@ function checkPlacement(
   gridX: number,
   gridY: number,
   excludeId?: string,
+  districtId?: BuildDistrictId,
 ): { ok: boolean; reason?: BuildingOperationReason } {
   const definition = getBuildingDefinition(buildingId);
   if (!definition) return { ok: false, reason: "unknown-building" };
   if (!excludeId && !state.unlockedBuildings.includes(buildingId)) {
     return { ok: false, reason: "locked" };
+  }
+  if (!excludeId && districtId && !isBuildingAllowedInDistrict(districtId, buildingId)) {
+    return { ok: false, reason: "not-allowed-in-district" };
   }
   if (
     !excludeId &&
@@ -161,9 +168,10 @@ export function canPlaceBuilding(
   gridX: number,
   gridY: number,
   excludeId?: string,
+  districtId?: BuildDistrictId,
 ): { ok: boolean; reason?: BuildingOperationReason } {
   const collection = createBuildingCollection(state.buildings);
-  return checkPlacement(state, collection.buildings, buildingId, gridX, gridY, excludeId);
+  return checkPlacement(state, collection.buildings, buildingId, gridX, gridY, excludeId, districtId);
 }
 
 export function placeBuilding(
@@ -173,10 +181,11 @@ export function placeBuilding(
   gridY: number,
   instanceId?: string,
   now = Date.now(),
+  districtId?: BuildDistrictId,
 ): BuildingOperationResult {
   const collection = createBuildingCollection(state.buildings);
   const resolvedInstanceId = instanceId ?? collection.nextId();
-  const check = checkPlacement(state, collection.buildings, buildingId, gridX, gridY);
+  const check = checkPlacement(state, collection.buildings, buildingId, gridX, gridY, undefined, districtId);
   if (!check.ok) return { success: false, state, reason: check.reason };
   if (collection.findUnique(resolvedInstanceId).status !== "not-found") {
     return { success: false, state, reason: "duplicate-id" };
@@ -276,6 +285,8 @@ export function getBuildingOperationMessage(reason?: BuildingOperationReason): s
       return "コインが足りません。";
     case "not-enough-mining-resources":
       return "採掘素材が足りません。";
+    case "not-allowed-in-district":
+      return "この地区では建築できない建物です。地区を選び直してください。";
     case "out-of-bounds":
       return "村の外には配置できません。";
     case "occupied":

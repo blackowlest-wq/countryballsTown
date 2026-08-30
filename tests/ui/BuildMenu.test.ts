@@ -15,6 +15,7 @@ afterEach(() => {
     game: createInitialGameState(0),
     interactionMode: "inspect",
     selectedBuildingId: null,
+    selectedDistrictId: "agriculture",
     isBuildMenuOpen: false,
   });
   document.body.replaceChildren();
@@ -50,6 +51,7 @@ describe("BuildMenu", () => {
   it("鉱石工房はコインではなく必要な採掘素材を表示する", async () => {
     useGameStore.setState({
       game: createInitialGameState(0),
+      selectedDistrictId: "common",
       isBuildMenuOpen: true,
     });
     const container = document.createElement("div");
@@ -71,13 +73,13 @@ describe("BuildMenu", () => {
     await act(async () => root.unmount());
   });
 
-  it("最初に畑を表示し、カテゴリで建築物を絞り込む", async () => {
+  it("地区を選ぶと関連する建築物だけを表示し、地区目標を確認できる", async () => {
     useGameStore.setState({
       game: {
         ...createInitialGameState(0),
-        villageLevel: 3,
         unlockedBuildings: [...playerBuildingIds],
       },
+      selectedDistrictId: "agriculture",
       isBuildMenuOpen: true,
     });
     const container = document.createElement("div");
@@ -86,22 +88,25 @@ describe("BuildMenu", () => {
 
     await act(async () => root.render(createElement(BuildMenu)));
     expect(container.textContent).toContain("畑");
-    expect(container.textContent).toContain("ピザ屋");
-    expect(container.textContent).toContain("牛乳工場");
-    expect(container.textContent).toContain("豚肉工場");
-    expect(container.textContent).not.toContain("桜の木");
-    expect([...container.querySelectorAll('[role="tab"]')]
-      .some((tab) => tab.textContent?.includes("食べ物"))).toBe(false);
+    expect(container.textContent).toContain("パン屋");
+    expect(container.textContent).toContain("倉庫");
+    expect(container.textContent).toContain("畑 0/3");
+    expect(container.textContent).toContain("倉庫 0/1");
+    expect(container.textContent).not.toContain("ピザ屋");
+    expect(container.querySelector('[data-district-id="agriculture"]')?.getAttribute("aria-selected"))
+      .toBe("true");
 
-    const natureTab = [...container.querySelectorAll('[role="tab"]')]
-      .find((tab) => tab.textContent?.includes("自然"));
-    await act(async () => {
-      natureTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-    expect(container.textContent).toContain("桜の木");
-    expect(container.textContent).toContain("牛");
-    expect(container.textContent).toContain("豚");
-    expect(container.textContent).toContain("鶏");
+    const commercialTab = container.querySelector<HTMLButtonElement>('[data-district-id="commercial"]');
+    await act(async () => commercialTab?.click());
+    expect(container.textContent).toContain("店舗3種類 0/3");
+    expect(container.textContent).toContain("ピザ屋");
+    expect(container.textContent).toContain("中華食堂");
+    expect(container.textContent).not.toContain("パン屋");
+
+    const natureTab = container.querySelector<HTMLButtonElement>('[data-district-id="nature-park"]');
+    await act(async () => natureTab?.click());
+    expect(container.textContent).toContain("木");
+    expect(container.textContent).toContain("花");
     expect(container.textContent).not.toContain("ピザ屋");
 
     const buildingTab = [...container.querySelectorAll('[role="tab"]')]
@@ -109,10 +114,15 @@ describe("BuildMenu", () => {
     await act(async () => {
       buildingTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
+    expect(container.textContent).toContain("温泉");
+    expect(container.textContent).not.toContain("牛乳工場");
+
+    const industrialTab = container.querySelector<HTMLButtonElement>('[data-district-id="industrial"]');
+    await act(async () => industrialTab?.click());
+    expect(container.textContent).toContain("工場3種類 0/3");
     expect(container.textContent).toContain("牛乳工場");
-    expect(container.textContent).toContain("ピザ屋");
-    expect(container.textContent).toContain("柵");
-    expect(container.textContent).toContain("道路");
+    expect(container.textContent).toContain("小麦工場");
+    expect(container.textContent).not.toContain("温泉");
 
     await act(async () => root.unmount());
   });
@@ -132,6 +142,7 @@ describe("BuildMenu", () => {
           { id: "pig-2", buildingId: "pig", gridX: 9, gridY: 1 },
         ],
       },
+      selectedDistrictId: "common",
       isBuildMenuOpen: true,
     });
     const container = document.createElement("div");
@@ -139,7 +150,7 @@ describe("BuildMenu", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(BuildMenu)));
-    const natureTab = [...container.querySelectorAll('[role="tab"]')]
+    const natureTab = [...container.querySelectorAll('.building-category-tab')]
       .find((tab) => tab.textContent?.includes("自然"));
     await act(async () => {
       natureTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
