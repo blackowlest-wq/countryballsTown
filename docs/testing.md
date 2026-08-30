@@ -20,12 +20,14 @@
 
 ## 変更から実行範囲を選ぶ
 
-| 変更 | 反復時 | push前 |
+| 変更 | 実装中・スマホ確認用push | ユーザーが全体検証を指示した時 |
 | --- | --- | --- |
-| `src/game` のルール・定義 | `npm run test:domain`、必要なら `npm run test:related -- src/...` | 全suite、lint、build |
-| `src/store` またはStore操作 | `npm run test:store` と関係する `domain` | 全suite、lint、build |
-| `src/ui`、`src/scene`、DOM/ブラウザ接続 | `npm run test:ui` と関係するStore | 全suite、lint、build |
-| テスト設定、分類、共通fixture | 変更したproject | 全suite、lint、build |
+| `src/game` のルール・定義 | 対応するdomainテストファイル。境界をまたぐ場合は `npm run test:related -- src/...` | 全suite、lint、build |
+| `src/store` またはStore操作 | 対応するstoreテストファイルと、直接関係するdomainテスト | 全suite、lint、build |
+| `src/ui`、`src/scene`、DOM/ブラウザ接続 | 対応するuiテストファイルと、直接関係するStoreテスト | 全suite、lint、build |
+| テスト設定、分類、共通fixture | 変更したproject。直接選択が難しい場合だけproject全体 | 全suite、lint、build |
+
+スマホで動作確認するためのpushは、全体検証の完了ゲートではない。pushだけを理由に `npm test` や3projectすべてを実行せず、「全テスト」「最終確認」などユーザーが全体検証を明示した時に実行する。通常のpushでは、変更責務の直接テストまたは `test:related` の結果を確認する。
 
 `GameProgressSystem` の変更では、まず `tests/domain/GameProgressSystem.test.ts` を時間・乱数を注入して反復し、通知・進行後状態・即時保存シグナルをInterfaceから確認する。Storeのtickを通すテストは、Zustandと保存Adapterの接続を確認する最小ケースに限定する。
 
@@ -40,4 +42,4 @@
 
 ## 完了条件
 
-作業中は変更に対応するprojectが成功していることを確認する。push前は `npm run test:layout`、`npm test`、`npm run lint`、`npm run build`、必要に応じて `npm run secrets:scan` を実行し、ファイル数・テスト数が意図せず減っていないことを確認する。
+作業中とスマホ確認用pushでは、変更責務の直接テストまたは `test:related` が成功していることを確認する。テストを追加・移動した場合は `npm run test:layout` も実行する。ユーザーが全体検証を明示した時は、`npm run test:layout`、`npm test`、`npm run lint`、`npm run build`、必要に応じて `npm run secrets:scan` を実行し、ファイル数・テスト数が意図せず減っていないことを確認する。

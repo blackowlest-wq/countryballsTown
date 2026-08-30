@@ -6,6 +6,7 @@
 - 時間経過のゲームルールは `src/game/systems/GameProgressSystem.ts` の Interfaceへ集約し、Storeの `tick` に個別Systemの進行順序を再実装しない。
 - 既存の Module の Interface と依存方向を確認してから、新しい分岐・状態・保存項目を追加する。
 - テストは責務に応じた `tests/domain`、`tests/store`、`tests/ui` のプロジェクトへ置き、変更に対応する最小のsuiteを反復する。
+- 通常の実装とスマホ確認用pushでは、変更責務の直接テストまたは `test:related` を実行する。全suiteはユーザーの明示指示を実行条件とし、push回数からは判断しない。
 - 新しい `*.test.ts` は3つのテスト分類配下へ置き、配置確認の `npm run test:layout` を通す。
 - 実装の詳細ではなく、ModuleのInterfaceから観測できる結果をテストする。
 - 通常のStore更新でゲーム全体をnormalize/repairせず、修復と保存用canonicalizationは `SaveSystem` のload/save Seamへ限定する。
