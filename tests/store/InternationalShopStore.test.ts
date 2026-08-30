@@ -39,6 +39,28 @@ describe("国別店舗のStore接続", () => {
     });
   });
 
+  it("中華食堂で餃子を作れる", () => {
+    const building = {
+      id: "chinese-restaurant-dumplings-test",
+      buildingId: "chinese-restaurant",
+      gridX: 8,
+      gridY: 8,
+    } as const;
+    useGameStore.setState({
+      game: withInventory({
+        ...createInitialGameState(0),
+        buildings: [building],
+      }, { "wheat-flour": 1, pork: 1 }),
+    });
+
+    expect(useGameStore.getState().craftShopProduct(building.id, "dumplings", 1)).toBe(true);
+    expect(useGameStore.getState().game.inventory).toMatchObject({
+      "wheat-flour": 0,
+      pork: 0,
+      dumplings: 1,
+    });
+  });
+
   it("ハンバーガーショップでハンバーガーを作れる", () => {
     const building = {
       id: "burger-shop-test",
@@ -60,6 +82,29 @@ describe("国別店舗のStore接続", () => {
       "wheat-flour": 0,
       pork: 0,
       hamburger: 1,
+    });
+  });
+
+  it("ハンバーガーショップでパンケーキを作れる", () => {
+    const building = {
+      id: "burger-shop-pancakes-test",
+      buildingId: "burger-shop",
+      gridX: 8,
+      gridY: 8,
+    } as const;
+    useGameStore.setState({
+      game: withInventory({
+        ...createInitialGameState(0),
+        buildings: [building],
+      }, { "wheat-flour": 1, eggs: 1, butter: 1 }),
+    });
+
+    expect(useGameStore.getState().craftShopProduct(building.id, "pancakes", 1)).toBe(true);
+    expect(useGameStore.getState().game.inventory).toMatchObject({
+      "wheat-flour": 0,
+      eggs: 0,
+      butter: 0,
+      pancakes: 1,
     });
   });
 });

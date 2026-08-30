@@ -19,10 +19,7 @@ import { syncEncyclopediaCollection } from "./EncyclopediaSystem";
 import { normalizeCaveMiningState } from "./CaveMiningSystem";
 import { normalizeProductionCollections } from "./ProductionRegistry";
 import { normalizeCoinBalance } from "./EconomySystem";
-import {
-  isCanonicalInventory,
-  normalizeInventory,
-} from "./InventorySystem";
+import { normalizeInventory } from "./InventorySystem";
 import { normalizeMarketOrders } from "./MarketOrderSystem";
 import { normalizeBuildingUpgrades } from "./BuildingUpgradeSystem";
 
@@ -34,10 +31,13 @@ export interface StorageLike {
 function isGameState(value: unknown): value is GameState {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<GameState>;
+  const hasInventoryRecord = candidate.inventory !== null &&
+    typeof candidate.inventory === "object" &&
+    !Array.isArray(candidate.inventory);
   return (
     typeof candidate.coins === "number" &&
     typeof candidate.villageLevel === "number" &&
-    isCanonicalInventory(candidate.inventory) &&
+    hasInventoryRecord &&
     Array.isArray(candidate.residents) &&
     Array.isArray(candidate.buildings) &&
     Array.isArray(candidate.unlockedCountries) &&

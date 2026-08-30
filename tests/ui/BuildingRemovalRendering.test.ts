@@ -72,6 +72,32 @@ describe("BuildingRenderer", () => {
     await act(async () => root.unmount());
   });
 
+  it.each([
+    { buildingId: "great-wall", name: "万里の長城" },
+    { buildingId: "statue-of-liberty", name: "自由の女神" },
+  ])("$buildingIdを専用の外観で描画する", async ({ buildingId, name }) => {
+    const initial = createInitialGameState(0);
+    const placed = placeBuilding(
+      { ...initial, coins: 1_000, villageLevel: 5, unlockedBuildings: [buildingId] },
+      buildingId,
+      12,
+      12,
+      `${buildingId}-test`,
+      0,
+    );
+    expect(placed.success).toBe(true);
+    useGameStore.setState({ game: placed.state });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await act(async () => root.render(createElement(BuildingRenderer)));
+
+    expect(container.querySelector(`[name="${name}"]`)).not.toBeNull();
+    await act(async () => root.unmount());
+  });
+
   it("採乳可能な牛へマークを出し、タップで牛乳を受け取る", async () => {
     const placed = placeBuilding(
       createInitialGameState(0),

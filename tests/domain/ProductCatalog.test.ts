@@ -8,8 +8,8 @@ import {
 import { CRAFTING_RECIPES } from "../../src/game/types/Crafting";
 
 describe("ProductCatalog", () => {
-  it("17種類の料理を価格・単位・レシピと一緒に定義する", () => {
-    expect(FOOD_PRODUCT_TYPES).toHaveLength(17);
+  it("19種類の料理を価格・単位・レシピと一緒に定義する", () => {
+    expect(FOOD_PRODUCT_TYPES).toHaveLength(19);
     expect(PRODUCT_CATALOG["pizza"]).toMatchObject({
       unit: "枚",
       basePrice: 8,
@@ -46,6 +46,20 @@ describe("ProductCatalog", () => {
       favoriteCountries: ["usa"],
       recipe: { ingredients: { "wheat-flour": 1, pork: 1 } },
     });
+    expect(PRODUCT_CATALOG["dumplings"]).toMatchObject({
+      name: "餃子",
+      basePrice: 7,
+      stores: ["chinese-restaurant"],
+      favoriteCountries: ["china"],
+      recipe: { ingredients: { "wheat-flour": 1, pork: 1 } },
+    });
+    expect(PRODUCT_CATALOG["pancakes"]).toMatchObject({
+      name: "パンケーキ",
+      basePrice: 8,
+      stores: ["burger-shop"],
+      favoriteCountries: ["usa"],
+      recipe: { ingredients: { "wheat-flour": 1, eggs: 1, butter: 1 } },
+    });
   });
 
   it("店舗の取扱商品と国別好物をCatalogから導出できる", () => {
@@ -63,8 +77,8 @@ describe("ProductCatalog", () => {
       "sushi",
       "fish-sandwich",
     ]);
-    expect(getProductsForStore("chinese-restaurant")).toEqual(["fried-rice"]);
-    expect(getProductsForStore("burger-shop")).toEqual(["hamburger"]);
+    expect(getProductsForStore("chinese-restaurant")).toEqual(["fried-rice", "dumplings"]);
+    expect(getProductsForStore("burger-shop")).toEqual(["hamburger", "pancakes"]);
     expect(getFavoriteProductsForCountry("poland")).toEqual([
       "bread",
       "hot-dog",
@@ -81,8 +95,8 @@ describe("ProductCatalog", () => {
       "butter-rice",
       "fish-sandwich",
     ]);
-    expect(getFavoriteProductsForCountry("china")).toEqual(["fried-rice"]);
-    expect(getFavoriteProductsForCountry("usa")).toEqual(["hamburger"]);
+    expect(getFavoriteProductsForCountry("china")).toEqual(["fried-rice", "dumplings"]);
+    expect(getFavoriteProductsForCountry("usa")).toEqual(["hamburger", "pancakes"]);
   });
 
   it("Crafting recipe projection is generated from the Catalog", () => {

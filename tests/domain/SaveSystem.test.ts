@@ -168,6 +168,32 @@ describe("SaveSystem", () => {
     });
   });
 
+  it("追加料理の在庫キーがない既存セーブを村の状態を保ったまま補完する", () => {
+    const storage = memoryStorage();
+    const state = createInitialGameState(0);
+    const legacyInventory = Object.fromEntries(
+      Object.entries(state.inventory).filter(([itemId]) => !["dumplings", "pancakes"].includes(itemId)),
+    );
+    storage.setItem("world-small-village:save:v1", JSON.stringify({
+      ...state,
+      coins: 432,
+      villageLevel: 5,
+      unlockedBuildings: ["chinese-restaurant", "burger-shop"],
+      inventory: legacyInventory,
+    }));
+
+    const loaded = loadGameState(storage, 1_000);
+    expect(loaded.coins).toBe(432);
+    expect(loaded.inventory).toMatchObject({
+      dumplings: 0,
+      pancakes: 0,
+    });
+    expect(loaded.unlockedBuildings).toEqual(expect.arrayContaining([
+      "great-wall",
+      "statue-of-liberty",
+    ]));
+  });
+
   it("保存境界で所持コインを上限へ正規化する", () => {
     const storage = memoryStorage();
     const state = { ...createInitialGameState(0), coins: MAX_COINS + 500 };

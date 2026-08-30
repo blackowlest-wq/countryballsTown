@@ -19,6 +19,8 @@ import { RiceShop } from "./RiceShop";
 import { FishShop } from "./FishShop";
 import { ChineseRestaurant } from "./ChineseRestaurant";
 import { BurgerShop } from "./BurgerShop";
+import { GreatWall } from "./GreatWall";
+import { StatueOfLiberty } from "./StatueOfLiberty";
 import { OreWorkshop } from "./OreWorkshop";
 import { Field } from "./Field";
 import { Onsen } from "./Onsen";
@@ -47,6 +49,8 @@ const buildingRenderers: Record<string, ComponentType> = {
   "fish-shop": FishShop,
   "chinese-restaurant": ChineseRestaurant,
   "burger-shop": BurgerShop,
+  "great-wall": GreatWall,
+  "statue-of-liberty": StatueOfLiberty,
   "ore-workshop": OreWorkshop,
 };
 

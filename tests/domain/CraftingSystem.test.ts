@@ -114,6 +114,7 @@ describe("CraftingSystem", () => {
       eggs: 1,
       "wheat-flour": 1,
       pork: 1,
+      butter: 1,
     });
 
     expect(craftProduct(state, "fried-rice", 1).state).toMatchObject({
@@ -121,6 +122,12 @@ describe("CraftingSystem", () => {
     });
     expect(craftProduct(state, "hamburger", 1).state).toMatchObject({
       inventory: { "wheat-flour": 0, pork: 0, hamburger: 1 },
+    });
+    expect(craftProduct(state, "dumplings", 1).state).toMatchObject({
+      inventory: { "wheat-flour": 0, pork: 0, dumplings: 1 },
+    });
+    expect(craftProduct(state, "pancakes", 1).state).toMatchObject({
+      inventory: { "wheat-flour": 0, eggs: 0, butter: 0, pancakes: 1 },
     });
   });
 });

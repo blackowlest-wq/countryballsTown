@@ -169,7 +169,7 @@ describe("building definitions", () => {
       category: "building",
       countryId: "china",
       visitorService: {
-        products: ["fried-rice"],
+        products: ["fried-rice", "dumplings"],
       },
     });
     expect(getBuildingDefinition("burger-shop")).toMatchObject({
@@ -179,8 +179,33 @@ describe("building definitions", () => {
       category: "building",
       countryId: "usa",
       visitorService: {
-        products: ["hamburger"],
+        products: ["hamburger", "pancakes"],
       },
+    });
+  });
+
+  it("中国とアメリカの象徴的な建造物を建築可能な定義として登録する", () => {
+    expect(playerBuildingIds).toEqual(expect.arrayContaining([
+      "great-wall",
+      "statue-of-liberty",
+    ]));
+    expect(getBuildingDefinition("great-wall")).toMatchObject({
+      name: "万里の長城",
+      width: 3,
+      height: 1,
+      cost: 120,
+      category: "building",
+      countryId: "china",
+      interactionType: "great-wall",
+    });
+    expect(getBuildingDefinition("statue-of-liberty")).toMatchObject({
+      name: "自由の女神",
+      width: 1,
+      height: 1,
+      cost: 120,
+      category: "building",
+      countryId: "usa",
+      interactionType: "statue-of-liberty",
     });
   });
 });

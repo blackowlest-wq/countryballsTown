@@ -16,7 +16,9 @@ export type FoodProductType =
   | "butter-rice"
   | "fish-sandwich"
   | "fried-rice"
-  | "hamburger";
+  | "hamburger"
+  | "dumplings"
+  | "pancakes";
 
 export type LivestockProductType = "milk" | "pork" | "eggs";
 

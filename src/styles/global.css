@@ -166,6 +166,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-icon-bakery { background: #d77b54; }
 .building-icon-rice-shop { background: #4f8d8b; }
 .building-icon-fish-shop { background: #315f70; }
+.building-icon-great-wall { background: #b97d49; }
+.building-icon-statue-of-liberty { background: #5d8774; }
 .building-option-copy { display: grid; gap: 2px; }
 .building-option-copy strong { font-size: 14px; }
 .building-option-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }

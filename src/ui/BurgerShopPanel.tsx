@@ -15,7 +15,7 @@ export function BurgerShopPanel(): JSX.Element | null {
       ariaLabel="ハンバーガーショップの設定"
       eyebrow="BURGER SHOP"
       title="ハンバーガーショップ"
-      hint="ハンバーガーを作り、来訪客に販売します。"
+      hint="ハンバーガーやパンケーキを作り、来訪客に販売します。"
       close={close}
     />
   );

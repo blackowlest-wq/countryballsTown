@@ -59,7 +59,7 @@ export const villageLevels: VillageLevelDefinition[] = [
       { type: "building-count", targetIds: ["pizza-shop"], minimum: 1 },
     ],
     unlockCountries: ["china"],
-    unlockBuildings: ["chinese-restaurant"],
+    unlockBuildings: ["chinese-restaurant", "great-wall"],
   },
   {
     level: 5,
@@ -68,7 +68,7 @@ export const villageLevels: VillageLevelDefinition[] = [
       { type: "building-count", targetIds: ["chinese-restaurant"], minimum: 1 },
     ],
     unlockCountries: ["usa"],
-    unlockBuildings: ["burger-shop"],
+    unlockBuildings: ["burger-shop", "statue-of-liberty"],
   },
 ];
 

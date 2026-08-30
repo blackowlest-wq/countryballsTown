@@ -114,7 +114,7 @@ export function BuildingPanel(): JSX.Element | null {
               type="button"
               onClick={() => openChineseRestaurantPanel(building.id)}
             >
-              チャーハンを作る
+              中華料理を作る
             </button>
           )}
           {isBurgerShop && (
@@ -123,7 +123,7 @@ export function BuildingPanel(): JSX.Element | null {
               type="button"
               onClick={() => openBurgerShopPanel(building.id)}
             >
-              ハンバーガーを作る
+              アメリカ料理を作る
             </button>
           )}
           {building.buildingId === "house" && (

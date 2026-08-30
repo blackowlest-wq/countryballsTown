@@ -45,8 +45,8 @@ export const countries: CountryDefinition[] = [
     flagColors: ["#d40000", "#ffde00"],
     flagLayout: "horizontal",
     flagPattern: "circle",
-    favoriteBuildingIds: ["chinese-restaurant"],
-    unlockedBuildingIds: ["chinese-restaurant"],
+    favoriteBuildingIds: ["chinese-restaurant", "great-wall"],
+    unlockedBuildingIds: ["chinese-restaurant", "great-wall"],
     accentColor: "#d40000",
   },
   {
@@ -57,8 +57,8 @@ export const countries: CountryDefinition[] = [
     flagColors: ["#b22234", "#fffaf2", "#3c3b6e"],
     flagLayout: "horizontal",
     flagPattern: "canton-stripes",
-    favoriteBuildingIds: ["burger-shop"],
-    unlockedBuildingIds: ["burger-shop"],
+    favoriteBuildingIds: ["burger-shop", "statue-of-liberty"],
+    unlockedBuildingIds: ["burger-shop", "statue-of-liberty"],
     accentColor: "#3c3b6e",
   },
 ];

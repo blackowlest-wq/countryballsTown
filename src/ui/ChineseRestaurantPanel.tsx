@@ -15,7 +15,7 @@ export function ChineseRestaurantPanel(): JSX.Element | null {
       ariaLabel="中華食堂の設定"
       eyebrow="CHINESE RESTAURANT"
       title="中華食堂"
-      hint="チャーハンを作り、来訪客に販売します。"
+      hint="チャーハンや餃子を作り、来訪客に販売します。"
       close={close}
     />
   );

@@ -75,7 +75,8 @@ describe("VillageProgressSystem", () => {
     expect(china.state.unlockedCountries).toContain("china");
     expect(china.state.residents.map((resident) => resident.countryId))
       .toEqual(["poland", "japan", "italy", "china"]);
-    expect(china.state.unlockedBuildings).toContain("chinese-restaurant");
+    expect(china.state.unlockedBuildings)
+      .toEqual(expect.arrayContaining(["chinese-restaurant", "great-wall"]));
 
     state = place({ ...china.state, coins: 1_000 }, "chinese-restaurant", 12, 13, "chinese-restaurant-1");
     const usa = evaluateVillageProgress(state);
@@ -83,6 +84,7 @@ describe("VillageProgressSystem", () => {
     expect(usa.state.unlockedCountries).toContain("usa");
     expect(usa.state.residents.map((resident) => resident.countryId))
       .toEqual(["poland", "japan", "italy", "china", "usa"]);
-    expect(usa.state.unlockedBuildings).toContain("burger-shop");
+    expect(usa.state.unlockedBuildings)
+      .toEqual(expect.arrayContaining(["burger-shop", "statue-of-liberty"]));
   });
 });

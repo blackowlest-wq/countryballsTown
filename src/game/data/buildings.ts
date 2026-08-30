@@ -367,6 +367,36 @@ export const buildingDefinitions: BuildingDefinition[] = [
     description: "ハンバーガーを作り、来訪客に販売するアメリカの店。",
     removable: true,
   },
+  {
+    id: "great-wall",
+    name: "万里の長城",
+    width: 3,
+    height: 1,
+    cost: 120,
+    category: "building",
+    menuIcon: "🧱",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.15, z: 0.2 },
+    countryId: "china",
+    interactionType: "great-wall",
+    description: "中国を象徴する長い城壁を村に再現した建造物。",
+    removable: true,
+  },
+  {
+    id: "statue-of-liberty",
+    name: "自由の女神",
+    width: 1,
+    height: 1,
+    cost: 120,
+    category: "building",
+    menuIcon: "🗽",
+    residentCollision: "blocking",
+    residentCollisionPadding: { x: 0.2, z: 0.2 },
+    countryId: "usa",
+    interactionType: "statue-of-liberty",
+    description: "アメリカを象徴する自由の女神像。",
+    removable: true,
+  },
 ];
 
 export const buildingsById = Object.fromEntries(
@@ -399,4 +429,6 @@ export const playerBuildingIds = [
   "fish-shop",
   "chinese-restaurant",
   "burger-shop",
+  "great-wall",
+  "statue-of-liberty",
 ];

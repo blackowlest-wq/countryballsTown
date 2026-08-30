@@ -414,6 +414,38 @@ const productDefinitions: readonly ProductCatalogEntry[] = [
       ingredients: { "wheat-flour": 1, pork: 1 },
     },
   }),
+  food({
+    id: "dumplings",
+    name: "餃子",
+    icon: "🥟",
+    unit: "個",
+    inventoryKey: "dumplings",
+    description: "小麦粉と豚肉で作る中国の定番料理。",
+    stores: ["chinese-restaurant"],
+    basePrice: 7,
+    favoriteCountries: ["china"],
+    recipe: {
+      outputKey: "dumplings",
+      outputAmount: 1,
+      ingredients: { "wheat-flour": 1, pork: 1 },
+    },
+  }),
+  food({
+    id: "pancakes",
+    name: "パンケーキ",
+    icon: "🥞",
+    unit: "個",
+    inventoryKey: "pancakes",
+    description: "小麦粉、卵、バターで作るアメリカの朝食。",
+    stores: ["burger-shop"],
+    basePrice: 8,
+    favoriteCountries: ["usa"],
+    recipe: {
+      outputKey: "pancakes",
+      outputAmount: 1,
+      ingredients: { "wheat-flour": 1, eggs: 1, butter: 1 },
+    },
+  }),
 ];
 
 /** The single source of truth for stocked materials and craftable food. */
