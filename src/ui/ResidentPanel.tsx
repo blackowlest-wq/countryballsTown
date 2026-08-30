@@ -1,16 +1,23 @@
 import { getCountryDefinition } from "../game/data/countries";
 import { getMapDefinition } from "../game/data/maps";
+import { getProductDefinition } from "../game/data/productCatalog";
+import { getInventoryCount } from "../game/systems/InventorySystem";
+import {
+  canFulfillMarketOrder,
+  getMarketOrderNormalValue,
+} from "../game/systems/MarketOrderSystem";
 import { getResidentStatusLabel } from "../game/systems/ResidentSystem";
 import { useGameStore } from "../store/gameStore";
 
 export function ResidentPanel(): JSX.Element | null {
   const open = useGameStore((store) => store.isResidentPanelOpen);
-  const residents = useGameStore((store) => store.game.residents);
-  const currentMap = useGameStore((store) => store.game.currentMap);
+  const game = useGameStore((store) => store.game);
   const selectedResidentId = useGameStore((store) => store.selectedResidentId);
   const setOpen = useGameStore((store) => store.setResidentPanelOpen);
   const selectResident = useGameStore((store) => store.selectResident);
+  const fulfill = useGameStore((store) => store.fulfillMarketOrder);
   if (!open) return null;
+  const { currentMap, marketOrders, residents } = game;
   const selected = residents.find((resident) => resident.id === selectedResidentId);
   const mapDefinition = getMapDefinition(currentMap);
 
@@ -56,6 +63,58 @@ export function ResidentPanel(): JSX.Element | null {
           </p>
         </div>
       )}
+      <section className="resident-orders" aria-label="注文">
+        <div className="resident-orders-heading">
+          <div>
+            <p className="eyebrow">MARKET ORDERS</p>
+            <h3>納品依頼</h3>
+          </div>
+          <span>{marketOrders.length}件</span>
+        </div>
+        <p className="panel-hint">住民からの注文をここで受け、品物を納品できます。</p>
+        <div className="order-board-list">
+          {marketOrders.map((order) => {
+            const canFulfill = canFulfillMarketOrder(game, order);
+            return (
+              <article className={`order-card ${canFulfill ? "is-ready" : "is-shortage"}`} key={order.id}>
+                <div className="order-card-heading">
+                  <strong>納品オーダー</strong>
+                  <span className={canFulfill ? "order-status-ready" : "order-status-shortage"}>
+                    {canFulfill ? "納品できます" : "材料不足"}
+                  </span>
+                </div>
+                <div className="order-item-list">
+                  {order.items.map((item) => {
+                    const definition = getProductDefinition(item.productType);
+                    const stock = getInventoryCount(game, item.productType);
+                    return (
+                      <div className="order-item" key={item.productType}>
+                        <span className="order-item-icon" aria-hidden="true">{definition?.icon ?? "📦"}</span>
+                        <span className="order-item-copy">
+                          <strong>{definition?.name ?? item.productType}</strong>
+                          <small>必要 {item.quantity}{definition?.unit ?? "個"} ／ 所持 {stock}{definition?.unit ?? "個"}</small>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="order-reward-row">
+                  <span>通常価値 <strong>{getMarketOrderNormalValue(order)}コイン</strong></span>
+                  <span className="order-reward">報酬 <strong>{order.rewardCoins}コイン</strong></span>
+                </div>
+                <button
+                  className="primary-button full-button order-fulfill-button"
+                  type="button"
+                  disabled={!canFulfill}
+                  onClick={() => fulfill(order.id)}
+                >
+                  {canFulfill ? "納品する" : "材料をそろえる"}
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </section>
   );
 }

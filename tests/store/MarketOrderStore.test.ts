@@ -6,20 +6,11 @@ import { withInventory } from "../inventoryFixture";
 afterEach(() => {
   useGameStore.setState({
     game: createInitialGameState(0),
-    isMarketOrderOpen: false,
     notice: null,
   });
 });
 
 describe("market order store interaction", () => {
-  it("注文板を開閉する", () => {
-    useGameStore.getState().openMarketOrderBoard();
-    expect(useGameStore.getState().isMarketOrderOpen).toBe(true);
-
-    useGameStore.getState().closeMarketOrderBoard();
-    expect(useGameStore.getState().isMarketOrderOpen).toBe(false);
-  });
-
   it("在庫不足の納品を拒否し、状態を変えない", () => {
     const before = useGameStore.getState().game;
     const order = before.marketOrders[0];

@@ -11,30 +11,27 @@ import { BottomMenu } from "../../src/ui/BottomMenu";
 afterEach(() => {
   useGameStore.setState({
     game: createInitialGameState(0),
-    isMarketOrderOpen: false,
     notice: null,
   });
   document.body.replaceChildren();
 });
 
 describe("BottomMenu", () => {
-  it("5つのメニューを表示し、注文ボタンで注文板を開閉する", async () => {
+  it("4つのメニューを表示し、注文専用ボタンを持たない", async () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(BottomMenu)));
-    expect(container.querySelectorAll(".bottom-menu-button")).toHaveLength(5);
-    const orderButton = [...container.querySelectorAll<HTMLButtonElement>(".bottom-menu-button")]
-      .find((button) => button.textContent?.includes("注文"));
-    expect(orderButton).not.toBeUndefined();
+    expect(container.querySelectorAll(".bottom-menu-button")).toHaveLength(4);
+    expect(container.textContent).not.toContain("注文");
 
-    await act(async () => orderButton?.click());
-    expect(useGameStore.getState().isMarketOrderOpen).toBe(true);
-    expect(orderButton?.getAttribute("aria-pressed")).toBe("true");
+    const residentButton = [...container.querySelectorAll<HTMLButtonElement>(".bottom-menu-button")]
+      .find((button) => button.textContent?.includes("住民"));
+    expect(residentButton).not.toBeUndefined();
 
-    await act(async () => orderButton?.click());
-    expect(useGameStore.getState().isMarketOrderOpen).toBe(false);
+    await act(async () => residentButton?.click());
+    expect(useGameStore.getState().isResidentPanelOpen).toBe(true);
 
     await act(async () => root.unmount());
   });

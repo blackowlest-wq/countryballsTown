@@ -130,7 +130,6 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .fish-shop-panel { right: 24px; bottom: 116px; width: min(460px, calc(100vw - 32px)); }
 .chinese-restaurant-panel { right: 24px; bottom: 116px; width: min(410px, calc(100vw - 32px)); }
 .burger-shop-panel { right: 24px; bottom: 116px; width: min(430px, calc(100vw - 32px)); }
-.order-board-panel { left: 50%; bottom: 116px; width: min(520px, calc(100vw - 32px)); transform: translateX(-50%); }
 .map-travel-panel { left: 50%; bottom: 116px; width: min(460px, calc(100vw - 32px)); transform: translateX(-50%); }
 .encyclopedia-panel { left: 50%; bottom: 116px; width: min(660px, calc(100vw - 32px)); transform: translateX(-50%); }
 .panel-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
@@ -236,6 +235,10 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .order-fulfill-button:disabled { color: #aaa294; background: #eee7da; border: 1px solid #ddd6c9; box-shadow: none; cursor: not-allowed; }
 
 .resident-list { display: grid; gap: 7px; }
+.resident-orders { margin-top: 16px; padding-top: 15px; border-top: 1px solid #eadfc9; }
+.resident-orders-heading { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.resident-orders-heading h3 { margin: 2px 0 0; color: var(--ink); font-size: 18px; letter-spacing: .02em; }
+.resident-orders-heading > span { padding: 4px 8px; color: #70935b; background: #eef6de; border-radius: 9px; font-size: 10px; font-weight: 900; }
 .resident-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; color: var(--ink); text-align: left; background: transparent; border: 1px solid transparent; border-radius: 13px; cursor: pointer; }
 .resident-row:hover, .resident-row.is-selected { background: #fffdf6; border-color: #e8dcc7; }
 .resident-row > span:nth-child(2) { display: grid; gap: 2px; flex: 1; }
@@ -562,7 +565,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .request-message { font-size: 11px; }
   .request-progress-row { margin-top: 7px; font-size: 9px; }
   .floating-panel { left: 10px; right: 10px; bottom: 93px; width: auto; max-height: calc(100vh - 160px); padding: 16px; border-radius: 19px; }
-  .building-panel, .milk-factory-panel, .pork-factory-panel, .wheat-factory-panel, .pizza-shop-panel, .bakery-panel, .rice-shop-panel, .fish-shop-panel, .chinese-restaurant-panel, .burger-shop-panel, .order-board-panel, .map-travel-panel, .encyclopedia-panel { left: 10px; right: 10px; width: auto; transform: none; }
+  .building-panel, .milk-factory-panel, .pork-factory-panel, .wheat-factory-panel, .pizza-shop-panel, .bakery-panel, .rice-shop-panel, .fish-shop-panel, .chinese-restaurant-panel, .burger-shop-panel, .map-travel-panel, .encyclopedia-panel { left: 10px; right: 10px; width: auto; transform: none; }
   .cave-mining-launcher { right: 10px; bottom: 91px; left: 10px; width: auto; padding: 9px; }
   .cave-mining-overlay { padding: 10px; }
   .cave-mining-window { max-height: calc(100vh - 20px); padding: 16px; border-radius: 20px; }

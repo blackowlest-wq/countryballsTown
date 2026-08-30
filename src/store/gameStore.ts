@@ -119,7 +119,6 @@ interface GameStore {
   isFishingPromptOpen: boolean;
   isFishingGameOpen: boolean;
   isCaveMiningGameOpen: boolean;
-  isMarketOrderOpen: boolean;
   notice: string | null;
   tick: (deltaMs: number, now: number) => void;
   setBuildMenuOpen: (open: boolean) => void;
@@ -136,8 +135,6 @@ interface GameStore {
   recordFishCatch: (fishType: FishType) => void;
   openCaveMiningGame: () => boolean;
   closeCaveMiningGame: () => void;
-  openMarketOrderBoard: () => void;
-  closeMarketOrderBoard: () => void;
   fulfillMarketOrder: (orderId: string) => boolean;
   digCave: (direction: DigDirection) => CaveDigOutcome | null;
   resetCaveMining: () => boolean;
@@ -288,7 +285,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
   isFishingPromptOpen: false,
   isFishingGameOpen: false,
   isCaveMiningGameOpen: false,
-  isMarketOrderOpen: false,
   notice: null,
 
   tick: (deltaMs, now) => {
@@ -315,7 +311,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
-      isMarketOrderOpen: false,
     }
     : { isBuildMenuOpen: false }),
   setResidentPanelOpen: (open) => set(open
@@ -326,7 +321,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
-      isMarketOrderOpen: false,
     }
     : { isResidentPanelOpen: false }),
 
@@ -348,7 +342,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
     isCaveMiningGameOpen: false,
-    isMarketOrderOpen: false,
     notice: null,
   }),
 
@@ -372,7 +365,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isFishingPromptOpen: false,
     isFishingGameOpen: false,
     isCaveMiningGameOpen: false,
-    isMarketOrderOpen: false,
     notice: null,
   }),
 
@@ -396,7 +388,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
     isFishingPromptOpen: true,
     isFishingGameOpen: false,
     isCaveMiningGameOpen: false,
-    isMarketOrderOpen: false,
     notice: null,
   }),
 
@@ -462,7 +453,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: true,
-      isMarketOrderOpen: false,
       notice: null,
     });
     return true;
@@ -470,35 +460,11 @@ export const useGameStore = create<GameStore>((setState, get) => {
 
   closeCaveMiningGame: () => set({ isCaveMiningGameOpen: false }),
 
-  openMarketOrderBoard: () => set({
-    interactionMode: "inspect",
-    selectedBuildingId: null,
-    milkFactoryPanelBuildingId: null,
-    porkFactoryPanelBuildingId: null,
-    wheatFactoryPanelBuildingId: null,
-    pizzaShopPanelBuildingId: null,
-    bakeryPanelBuildingId: null,
-    riceShopPanelBuildingId: null,
-    fishShopPanelBuildingId: null,
-    selectedResidentId: null,
-    isBuildMenuOpen: false,
-    isResidentPanelOpen: false,
-    isMapTravelOpen: false,
-    isEncyclopediaOpen: false,
-    isFishingPromptOpen: false,
-    isFishingGameOpen: false,
-    isCaveMiningGameOpen: false,
-    isMarketOrderOpen: true,
-    notice: null,
-  }),
-
-  closeMarketOrderBoard: () => set({ isMarketOrderOpen: false }),
-
   fulfillMarketOrder: (orderId) => {
     const current = get();
     const result = fulfillMarketOrder(current.game, orderId);
     if (result.outcome === "order-not-found") {
-      set({ notice: "その注文は見つかりません。注文板を更新してください。" });
+      set({ notice: "その注文は見つかりません。注文一覧を確認してください。" });
       return false;
     }
     if (result.outcome === "not-enough-inventory") {
@@ -1337,7 +1303,6 @@ export const useGameStore = create<GameStore>((setState, get) => {
       isFishingPromptOpen: false,
       isFishingGameOpen: false,
       isCaveMiningGameOpen: false,
-      isMarketOrderOpen: false,
       notice: "新しい村を始めました。",
     });
   },

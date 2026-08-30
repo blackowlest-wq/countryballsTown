@@ -24,7 +24,6 @@ import { FishingGamePanel } from "../ui/FishingGamePanel";
 import { CaveMiningLauncher } from "../ui/CaveMiningLauncher";
 import { CaveMiningGameWindow } from "../ui/CaveMiningGameWindow";
 import { VillageScene } from "../scene/VillageScene";
-import { OrderBoardPanel } from "../ui/OrderBoardPanel";
 
 export function App(): JSX.Element {
   const notice = useGameStore((store) => store.notice);
@@ -60,7 +59,6 @@ export function App(): JSX.Element {
       <FishingGamePanel />
       <CaveMiningLauncher />
       <CaveMiningGameWindow />
-      <OrderBoardPanel />
       <FarmControls />
       <div className="interaction-hint">
         <span className="hint-hand">✦</span>
