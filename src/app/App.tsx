@@ -5,6 +5,7 @@ import { useGameStore } from "../store/gameStore";
 import { BuildingPanel } from "../ui/BuildingPanel";
 import { BottomMenu } from "../ui/BottomMenu";
 import { BuildMenu } from "../ui/BuildMenu";
+import { BuildControls } from "../ui/BuildControls";
 import { GameHud } from "../ui/GameHud";
 import { FarmControls } from "../ui/FarmControls";
 import { MilkFactoryPanel } from "../ui/MilkFactoryPanel";
@@ -59,6 +60,7 @@ export function App(): JSX.Element {
       <FishingGamePanel />
       <CaveMiningLauncher />
       <CaveMiningGameWindow />
+      <BuildControls />
       <FarmControls />
       <div className="interaction-hint">
         <span className="hint-hand">✦</span>

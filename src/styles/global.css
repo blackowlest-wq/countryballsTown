@@ -52,7 +52,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .top-hud > * { pointer-events: auto; }
 .hud-right { display: flex; align-items: center; gap: 10px; flex-direction: column; align-items: flex-end; }
 
-.level-card, .resource-pill, .mood-pill, .goal-card, .request-card, .floating-panel, .bottom-menu, .interaction-hint, .farm-controls { background: rgba(255, 250, 238, 0.94); border: 1px solid rgba(255, 255, 255, 0.84); box-shadow: var(--shadow); backdrop-filter: blur(8px); }
+.level-card, .resource-pill, .mood-pill, .goal-card, .request-card, .floating-panel, .bottom-menu, .interaction-hint, .farm-controls, .build-controls { background: rgba(255, 250, 238, 0.94); border: 1px solid rgba(255, 255, 255, 0.84); box-shadow: var(--shadow); backdrop-filter: blur(8px); }
 .level-card { display: flex; gap: 12px; align-items: center; min-width: 245px; padding: 12px 18px 12px 12px; border-radius: 24px; }
 .level-badge { display: grid; width: 62px; height: 62px; place-items: center; color: #fff; font-size: 31px; font-weight: 900; line-height: 1; background: #f3aa3c; border: 4px solid #ffd478; border-radius: 20px 20px 25px 25px; transform: rotate(-4deg); text-shadow: 0 2px 0 rgba(136, 87, 25, 0.2); }
 .eyebrow { margin: 0 0 2px; color: #a0988a; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
@@ -169,6 +169,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-category-tab[aria-selected="true"] { color: #557b47; background: #fffdf6; box-shadow: 0 2px 8px rgba(88, 106, 78, .12); }
 .building-category-tab span { font-size: 15px; line-height: 1; }
 .building-list { display: grid; gap: 8px; margin-top: 10px; }
+.building-selector .building-list { min-height: 0; max-height: min(40vh, 310px); grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); overflow: auto; padding: 2px; overscroll-behavior: contain; }
 .building-category-empty { margin: 6px 0 2px; padding: 16px 12px; color: var(--muted); text-align: center; background: rgba(255,255,255,.38); border: 1px dashed #dfd2be; border-radius: 14px; font-size: 11px; font-weight: 800; }
 .building-option { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 10px; color: var(--ink); text-align: left; background: rgba(255,255,255,.55); border: 1px solid #efe3ce; border-radius: 15px; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
 .building-option:hover { background: #fffdf6; border-color: #b3d28f; transform: translateY(-2px); }
@@ -193,6 +194,18 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .building-icon-great-wall { background: #b97d49; }
 .building-icon-statue-of-liberty { background: #5d8774; }
 .building-icon-warehouse { background: #a46e43; }
+.building-choice-button { grid-template-columns: 36px minmax(0, 1fr) auto; min-height: 58px; gap: 7px; padding: 7px; border-width: 2px; }
+.building-choice-button:hover { background: #fffdf6; border-color: #b3d28f; transform: translateY(-1px); }
+.building-choice-button[aria-pressed="true"] { color: #4f743f; background: #eef6de; border-color: #8abd68; box-shadow: 0 0 0 2px rgba(125,174,94,.16); }
+.building-choice-button:disabled, .building-choice-button:disabled:hover { transform: none; }
+.building-choice-icon { width: 36px; height: 36px; font-size: 21px; }
+.building-choice-copy { gap: 3px; }
+.building-choice-copy > strong { color: inherit; font-size: 12px; font-weight: 900; }
+.building-choice-copy > small { color: var(--muted); font-size: 9px; line-height: 1.35; }
+.building-choice-end { display: flex; min-width: 28px; flex-direction: column; gap: 4px; align-items: flex-end; }
+.building-choice-end .building-cost { font-size: 9px; }
+.building-choice-check { display: grid; width: 21px; height: 21px; place-items: center; color: #fff; background: #7eaf60; border: 1px solid #6f9f52; border-radius: 50%; font-size: 13px; font-weight: 900; }
+.building-choice-button:not([aria-pressed="true"]) .building-choice-check { color: transparent; background: transparent; border-color: #d8cebd; }
 .building-option-copy { display: grid; gap: 2px; }
 .building-option-copy strong { font-size: 14px; }
 .building-option-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }
@@ -309,6 +322,26 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .farm-control-button:hover, .farm-control-button[aria-expanded="true"] { color: #557b47; background: #eef6de; border-color: #9cc982; }
 .farm-panel-close { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; color: #887b6b; background: #f7efe1; border: 1px solid #e4d7c4; border-radius: 11px; cursor: pointer; font-size: 22px; line-height: 1; }
 .farm-panel-close:hover { color: var(--ink); background: #fffdf6; }
+.build-controls { position: absolute; bottom: 106px; left: 50%; z-index: 10; display: flex; width: min(560px, calc(100vw - 40px)); flex-direction: column; gap: 7px; padding: 8px; border-radius: 18px; transform: translateX(-50%); }
+.build-control-bar { display: flex; min-width: 0; gap: 8px; align-items: stretch; }
+.build-selected-building { display: flex; min-width: 0; flex: 1; gap: 9px; align-items: center; padding: 7px 10px; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid #e7dccb; border-radius: 13px; }
+.build-selected-building-icon { width: 39px; height: 39px; flex: 0 0 auto; font-size: 24px; }
+.build-selected-building-copy { display: grid; min-width: 0; gap: 2px; }
+.build-selected-building-copy small { color: var(--muted); font-size: 9px; font-weight: 800; }
+.build-selected-building-copy strong { color: var(--ink); font-size: 15px; font-weight: 900; line-height: 1.1; }
+.build-selected-building-cost { display: flex; gap: 4px; align-items: center; color: #8b806f; font-size: 10px; font-weight: 800; }
+.build-selected-building-cost .building-cost { font-size: 10px; }
+.build-control-actions { display: grid; grid-template-columns: minmax(110px, 1fr); }
+.build-control-row { display: flex; width: 100%; gap: 8px; align-items: center; }
+.build-action-copy { flex: 1; color: #765f2c; font-size: 10px; font-weight: 800; line-height: 1.35; }
+.build-cancel-button { flex: 0 0 auto; min-height: 34px; padding: 6px 10px; color: #887b6b; background: transparent; border: 1px solid #e4d7c4; border-radius: 10px; cursor: pointer; font-size: 10px; font-weight: 900; }
+.build-cancel-button:hover { color: #6e5549; background: #fff0eb; border-color: #dfaa9c; }
+.building-selector { display: grid; gap: 8px; padding: 10px; overflow: hidden; background: rgba(255,255,255,.86); border: 1px solid #e7dccb; border-radius: 14px; }
+.building-selector-heading { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.building-selector-heading > div { display: grid; gap: 2px; min-width: 0; }
+.building-selector-heading strong { color: var(--ink); font-size: 13px; }
+.building-selector-heading small { color: var(--muted); font-size: 9px; font-weight: 800; }
+.building-selector-summary { color: #8b806f; font-size: 9px; font-weight: 800; }
 .crop-selector { display: grid; gap: 8px; padding: 10px; overflow: hidden; background: rgba(255,255,255,.86); border: 1px solid #e7dccb; border-radius: 14px; }
 .crop-selector-heading, .inventory-drawer-heading { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 .crop-selector-heading > div, .inventory-drawer-heading > div { display: grid; gap: 2px; min-width: 0; }
@@ -620,13 +653,21 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .bottom-menu { right: 10px; bottom: 10px; left: 10px; width: auto; max-width: none; gap: 4px; padding: 6px; transform: none; touch-action: pan-x; }
   .bottom-menu-button { min-width: 68px; flex: 0 0 68px; padding: 7px 7px; }
   .farm-controls { bottom: 91px; width: calc(100vw - 20px); gap: 6px; padding: 7px; }
+  .build-controls { bottom: 91px; width: calc(100vw - 20px); gap: 6px; padding: 7px; }
   .farm-control-bar { gap: 5px; }
+  .build-control-bar { gap: 5px; }
   .farm-selected-crop { gap: 6px; padding: 6px 7px; }
   .farm-selected-crop-icon { width: 34px; height: 34px; font-size: 20px; }
   .farm-selected-crop-copy strong { font-size: 13px; }
   .farm-selected-crop-copy small { font-size: 8px; }
+  .build-selected-building { gap: 6px; padding: 6px 7px; }
+  .build-selected-building-icon { width: 34px; height: 34px; font-size: 20px; }
+  .build-selected-building-copy strong { font-size: 13px; }
+  .build-selected-building-copy small { font-size: 8px; }
   .farm-control-actions { gap: 4px; }
   .farm-control-button { min-width: 74px; padding: 5px 6px; font-size: 9px; }
+  .build-control-actions { grid-template-columns: minmax(74px, 1fr); }
+  .build-cancel-button { padding: 5px 8px; font-size: 9px; }
   .crop-selector { padding: 8px; }
   .crop-inventory { max-height: min(38vh, 280px); grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 5px; }
   .crop-choice-button { min-height: 54px; grid-template-columns: 29px minmax(0, 1fr) 19px; gap: 5px; padding: 5px; }
@@ -650,10 +691,15 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .level-title { font-size: 12px; }
   .level-card .eyebrow, .level-card .level-subtitle { display: none; }
   .farm-controls { padding: 6px; }
+  .build-controls { padding: 6px; }
   .bottom-menu-button { min-width: 62px; flex-basis: 62px; padding-inline: 4px; font-size: 10px; }
   .farm-selected-crop-icon { width: 29px; height: 29px; font-size: 17px; }
   .farm-selected-crop-copy strong { font-size: 12px; }
+  .build-selected-building-icon { width: 29px; height: 29px; font-size: 17px; }
+  .build-selected-building-copy strong { font-size: 12px; }
   .farm-control-button { min-width: 66px; padding-inline: 4px; font-size: 8px; }
+  .build-control-actions { grid-template-columns: minmax(66px, 1fr); }
+  .build-cancel-button { padding-inline: 6px; font-size: 8px; }
   .crop-choice-button { grid-template-columns: 25px minmax(0, 1fr) 18px; gap: 4px; padding: 4px; }
   .crop-choice-icon { width: 25px; height: 25px; font-size: 15px; }
   .crop-choice-check { width: 18px; height: 18px; }

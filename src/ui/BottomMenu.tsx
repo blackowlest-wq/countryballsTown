@@ -13,6 +13,7 @@ export function BottomMenu(): JSX.Element {
   const beginFarming = useGameStore((store) => store.beginFarming);
   const openMapTravel = useGameStore((store) => store.openMapTravel);
   const closeMapTravel = useGameStore((store) => store.closeMapTravel);
+  const buildActive = buildOpen || mode === "build";
 
   const toggleBuild = (): void => {
     if (!isVillage) return;
@@ -56,7 +57,8 @@ export function BottomMenu(): JSX.Element {
     <nav className="bottom-menu" aria-label="マップメニュー">
       <button
         type="button"
-        className={`bottom-menu-button ${buildOpen ? "is-active" : ""}`}
+        className={`bottom-menu-button ${buildActive ? "is-active" : ""}`}
+        aria-pressed={buildActive}
         onClick={toggleBuild}
         disabled={!isVillage}
         title={!isVillage ? "村でのみ使えます" : undefined}
