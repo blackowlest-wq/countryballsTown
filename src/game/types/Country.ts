@@ -1,5 +1,5 @@
 export type FlagLayout = "horizontal" | "vertical";
-export type FlagPattern = "horizontal" | "circle" | "vertical" | "canton-stripes";
+export type FlagPattern = "horizontal" | "circle" | "vertical" | "canton-stripes" | "china-star";
 
 export interface CountryDefinition {
   id: string;

@@ -24,6 +24,7 @@ describe("BottomMenu", () => {
 
     await act(async () => root.render(createElement(BottomMenu)));
     expect(container.querySelectorAll(".bottom-menu-button")).toHaveLength(4);
+    expect(container.querySelector(".bottom-menu")?.classList.contains("is-packed")).toBe(true);
     expect(container.textContent).not.toContain("注文");
 
     const residentButton = [...container.querySelectorAll<HTMLButtonElement>(".bottom-menu-button")]

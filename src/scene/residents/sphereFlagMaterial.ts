@@ -2,6 +2,11 @@ import { Color, MeshStandardMaterial } from "three";
 import type { FlagPattern } from "../../game/types/Country";
 import {
   BALL_RADIUS,
+  CHINA_STAR_CENTER_X,
+  CHINA_STAR_CENTER_Y,
+  CHINA_STAR_FRONT_Z,
+  CHINA_STAR_INNER_RADIUS,
+  CHINA_STAR_OUTER_RADIUS,
   CIRCLE_CENTER_Y,
   CIRCLE_FRONT_Z,
   CIRCLE_RADIUS,
@@ -18,6 +23,7 @@ const FLAG_PATTERN_INDEX: Record<FlagPattern, number> = {
   circle: 1,
   vertical: 2,
   "canton-stripes": 3,
+  "china-star": 4,
 };
 
 function toGlslNumber(value: number): string {
@@ -72,7 +78,7 @@ if (uCountryBallPattern == 0) {
   countryBallFlagColor = vCountryBallPosition.x < -${toGlslNumber(VERTICAL_STRIPE_BOUNDARY)}
     ? uFlagColorA
     : vCountryBallPosition.x > ${toGlslNumber(VERTICAL_STRIPE_BOUNDARY)} ? uFlagColorC : uFlagColorB;
-} else {
+} else if (uCountryBallPattern == 3) {
   bool isCanton = vCountryBallPosition.z > ${toGlslNumber(USA_CANTON_FRONT_Z)}
     && vCountryBallPosition.x < ${toGlslNumber(USA_CANTON_LEFT_BOUNDARY)}
     && vCountryBallPosition.y > ${toGlslNumber(USA_CANTON_BOTTOM_BOUNDARY)};
@@ -81,6 +87,21 @@ if (uCountryBallPattern == 0) {
   countryBallFlagColor = isCanton
     ? uFlagColorC
     : mod(stripeIndex, 2.0) < 1.0 ? uFlagColorA : uFlagColorB;
+} else if (uCountryBallPattern == 4) {
+  vec2 starOffset = vCountryBallPosition.xy - vec2(
+    ${toGlslNumber(CHINA_STAR_CENTER_X)},
+    ${toGlslNumber(CHINA_STAR_CENTER_Y)}
+  );
+  float starDistance = length(starOffset);
+  float starAngle = atan(starOffset.y, starOffset.x);
+  float starBoundary = (${toGlslNumber(CHINA_STAR_OUTER_RADIUS)} + ${toGlslNumber(CHINA_STAR_INNER_RADIUS)}) / 2.0
+    + (${toGlslNumber(CHINA_STAR_OUTER_RADIUS)} - ${toGlslNumber(CHINA_STAR_INNER_RADIUS)}) / 2.0
+      * cos(starAngle * 5.0);
+  bool isStar = vCountryBallPosition.z > ${toGlslNumber(CHINA_STAR_FRONT_Z)}
+    && starDistance < starBoundary;
+  countryBallFlagColor = isStar ? uFlagColorB : uFlagColorA;
+} else {
+  countryBallFlagColor = uFlagColorA;
 }
 vec4 diffuseColor = vec4( countryBallFlagColor, opacity );`,
       );

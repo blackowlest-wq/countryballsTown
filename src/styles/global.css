@@ -120,6 +120,8 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
 .request-flag-poland { background: linear-gradient(#fffaf2 0 50%, #e94f64 50%); }
 .request-flag-japan { background: radial-gradient(circle at center, #ed5a67 0 28%, #fffaf2 30%); }
 .request-flag-italy { background: linear-gradient(90deg, #61a978 0 33%, #fffaf2 33% 66%, #e56a62 66%); }
+.request-flag-china { position: relative; overflow: hidden; background: #d40000; }
+.request-flag-china::before { position: absolute; top: 3px; left: 4px; color: #ffde00; content: "★"; font-size: 17px; line-height: 1; }
 .request-label { margin: 0 0 2px; color: #9a8e7e; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
 .request-message { margin: 0; color: #3f4c42; font-size: 13px; font-weight: 900; }
 .request-progress-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; margin-top: 9px; color: #6c756a; font-size: 10px; font-weight: 800; }
@@ -651,7 +653,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .fishing-result-actions { flex-direction: column; }
   .encyclopedia-list { grid-template-columns: minmax(0, 1fr); }
   .bottom-menu { right: 10px; bottom: 10px; left: 10px; width: auto; max-width: none; gap: 4px; padding: 6px; transform: none; touch-action: pan-x; }
-  .bottom-menu-button { min-width: 68px; flex: 0 0 68px; padding: 7px 7px; }
+  .bottom-menu.is-packed .bottom-menu-button { min-width: 0; flex: 1 1 0; padding: 7px 4px; }
   .farm-controls { bottom: 91px; width: calc(100vw - 20px); gap: 6px; padding: 7px; }
   .build-controls { bottom: 91px; width: calc(100vw - 20px); gap: 6px; padding: 7px; }
   .farm-control-bar { gap: 5px; }
@@ -692,7 +694,7 @@ button:focus-visible { outline: 3px solid #4e9dcc; outline-offset: 3px; }
   .level-card .eyebrow, .level-card .level-subtitle { display: none; }
   .farm-controls { padding: 6px; }
   .build-controls { padding: 6px; }
-  .bottom-menu-button { min-width: 62px; flex-basis: 62px; padding-inline: 4px; font-size: 10px; }
+  .bottom-menu.is-packed .bottom-menu-button { min-width: 0; flex-basis: 0; padding-inline: 4px; font-size: 10px; }
   .farm-selected-crop-icon { width: 29px; height: 29px; font-size: 17px; }
   .farm-selected-crop-copy strong { font-size: 12px; }
   .build-selected-building-icon { width: 29px; height: 29px; font-size: 17px; }

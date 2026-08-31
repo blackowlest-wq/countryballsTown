@@ -54,7 +54,7 @@ export function BottomMenu(): JSX.Element {
   };
 
   return (
-    <nav className="bottom-menu" aria-label="マップメニュー">
+    <nav className="bottom-menu is-packed" aria-label="マップメニュー">
       <button
         type="button"
         className={`bottom-menu-button ${buildActive ? "is-active" : ""}`}

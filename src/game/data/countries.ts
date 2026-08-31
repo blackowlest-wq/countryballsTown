@@ -44,7 +44,7 @@ export const countries: CountryDefinition[] = [
     flagTexture: "/assets/textures/flags/china.webp",
     flagColors: ["#d40000", "#ffde00"],
     flagLayout: "horizontal",
-    flagPattern: "circle",
+    flagPattern: "china-star",
     favoriteBuildingIds: ["chinese-restaurant", "great-wall"],
     unlockedBuildingIds: ["chinese-restaurant", "great-wall"],
     accentColor: "#d40000",
